@@ -13,15 +13,12 @@ screen.clear()
 while True:
     key = screen.getch()
     screen.clear()
-    screen.addstr(0, 0, 'key: {}'.format(key))
+    screen.addstr(0, 0, "key: {}".format(key))
     if key == curses.KEY_MOUSE:
         _, x, y, _, button = curses.getmouse()
-        screen.addstr(1, 0, 'x, y, button = {}, {}, {}'.format(x, y, button))
+        screen.addstr(1, 0, "x, y, button = {}, {}, {}".format(x, y, button))
     elif key == 27:
         break
 
 curses.endwin()
 curses.flushinp()
-
-
-
