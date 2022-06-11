@@ -27,6 +27,11 @@ def printDeviceInfo(dev):
     print("USB driver: %s" % dev.get("ID_USB_DRIVER"))
     print("Path id: %s" % dev.get("ID_PATH"))
     print('Usage: %s' % dev.get("ID_FS_USAGE"))
+    print('Serial short: %s' % dev.get("ID_SERIAL_SHORT"))
+    print('Serial: %s' % dev.get("ID_SERIAL"))
+    print('Model: %s' % dev.get("ID_MODEL_ID"))
+    print(os.stat(dev.get("DEVNAME")))
+
     print("</BLOCK INFORMATION>")
     print("")
 
@@ -47,6 +52,9 @@ for device in iter(monitor.poll, None):
                     for partition in psutil.disk_partitions():
                         if partition.device == device.device_node:
                             print("Mounted at {}".format(partition.mountpoint))
+                            statvfs=os.statvfs(partition.mountpoint)
+                            print("size %4.1fGB"% (statvfs.f_frsize * statvfs.f_blocks // 1024 // 1024 / 1024))
+                            print("used %4.1fGB"% (statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)  // 1024 // 1024 / 1024))
                             found = True
                     loop += 1
             else:

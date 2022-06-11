@@ -14,11 +14,9 @@ def initBar():
 
 def updateBar(progress):
     global progress_win
-    rangex = (60 / float(100)) * progress
-    pos = int(rangex)
-    display = "#"
-    if pos != 0:
-        progress_win.addstr(1, pos, "{}".format(display))
+    pos = (60 * progress) // 100 
+    if pos != 0 :
+        progress_win.addstr(1, pos, "{}".format("#"))
         progress_win.refresh()
 
 
@@ -31,5 +29,5 @@ while loading < 100:
 
 time.sleep(1)
 
-curses.endwin()
+#curses.endwin()
 curses.flushinp()
