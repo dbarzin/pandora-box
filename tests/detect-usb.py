@@ -11,7 +11,7 @@ monitor.filter_by('block')
 
 autoMount=False
 
-def printInfo(dev):
+def printDeviceInfo(dev):
     print('')
     print('<BLOCK INFORMATION>')
     print('Device name: %s' % dev.get('DEVNAME'))
@@ -33,7 +33,7 @@ for device in iter(monitor.poll, None):
   if 'ID_FS_TYPE' in device:
     if device.action == 'add':
       if device.device_node[5:7] == 'sd' and device.get('DEVTYPE')=='partition':
-        #printInfo(device)
+        printDeviceInfo(device)
         print("New device {}".format(device.device_node))
         # loop until device is mounted
         if autoMount:
