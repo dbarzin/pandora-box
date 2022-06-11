@@ -8,13 +8,23 @@ Mouse terminal
 ---------------
 sudo apt install gpm
 
-Uner mount device
+User mount device
 ---------------
+
 sudo apt install pmount 
+
+
+Messages on console
+-------------------
+
+Suppress all messages from the kernel (and its drivers) except panic messages from appearing on the console.
+
+   echo "dmesg -n 1" >> /etc/rc.local
 
 
 Python
 ------
+
 pip install psutil pyudev
 
 Progress Bar
@@ -41,11 +51,6 @@ https://patorjk.com/software/taag/#p=display&f=Bloody&t=Pandora-Box
                ░  ░         ░    ░        ░ ░     ░           ░  ░    ░          ░ ░   ░    ░  
                                ░                                           ░                   
 
-
-Colors
-------
-
-pip install colorama
 
 
 

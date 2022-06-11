@@ -1,5 +1,9 @@
 Pandora-BOX
 ============
 
-Pandorabox is a USB scaning station base on Pandora
+Pandora-Box is a USB scaning station based on [Pandora](https://github.com/pandora-analysis).
+
+
+
+
 
