@@ -4,10 +4,18 @@ Pandora-BOX
 
 Pandorabox is a USB scaning station base on Pandora
 
+Mouse terminal
+---------------
+sudo apt install gpm
+
+Uner mount device
+---------------
+sudo apt install pmount 
+
+
 Python
 ------
-pip install glib pyudev
-
+pip install psutil pyudev
 
 Progress Bar
 ------------
