@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+"""Pandora-Box is a USB scaning station based on Pandora."""
+
 import curses
 import pypandora
 import time
@@ -21,8 +23,8 @@ PANDORA_ROOT_URL = "http://127.0.0.1:6100"
 # Screen
 # -----------------------------------------------------------
 
-
-def intitCurses():
+"""Initialise curses"""
+def intit_curses():
     global screen
     screen = curses.initscr()
     screen.keypad(1)
@@ -33,28 +35,33 @@ def intitCurses():
     screen.clear()
 
 
-def printStatus(strStatus):
+"""Print status string"""
+def print_status(strStatus):
     screen.addstr(12, 0, "Status : %-32s" % strStatus)
     screen.refresh()
 
 
-def printFSLabel(strLabel):
+"""Print FS Label"""
+def print_fslabel(strLabel):
     screen.addstr(13, 0, "Device : %-32s" % strLabel)
     screen.refresh()
 
 
-def printAction(strAction):
+"""Print current action"""
+def print_action(strAction):
     screen.addstr(14, 0, "Action : %-64s" % strAction)
     screen.refresh()
 
 
-def initBar():
+"""Initialise progress bar"""
+def init_bar():
     global progress_win
     progress_win = curses.newwin(3, 62, 3, 16)
     progress_win.border(0)
 
 
-def updateBar(progress):
+"""Update progress bar"""
+def update_bar(progress):
     global progress_win
     rangex = (60 / float(100)) * progress
     pos = int(rangex)
@@ -64,7 +71,7 @@ def updateBar(progress):
         progress_win.refresh()
 
 
-def printScreen():
+def print_screen():
     screen.addstr(1, 0, "   ██▓███   ▄▄▄       ███▄    █ ▓█████▄  ▒█████   ██▀███   ▄▄▄          ▄▄▄▄    ▒█████  ▒██   ██▒")
     screen.addstr(2, 0, "  ▓██░  ██▒▒████▄     ██ ▀█   █ ▒██▀ ██▌▒██▒  ██▒▓██ ▒ ██▒▒████▄       ▓█████▄ ▒██▒  ██▒▒▒ █ █ ▒░")
     screen.addstr(3, 0, "  ▓██░ ██▓▒▒██  ▀█▄  ▓██  ▀█ ██▒░██   █▌▒██░  ██▒▓██ ░▄█ ▒▒██  ▀█▄     ▒██▒ ▄██▒██░  ██▒░░  █   ░")
@@ -75,14 +82,14 @@ def printScreen():
     screen.addstr(8, 0, "  ░░         ░   ▒      ░   ░ ░  ░ ░  ░ ░ ░ ░ ▒    ░░   ░   ░   ▒       ░    ░ ░ ░ ░ ▒   ░    ░  ")
     screen.addstr(9, 0, "               ░  ░         ░    ░        ░ ░     ░           ░  ░    ░          ░ ░   ░    ░    ")
     screen.addstr(10, 0, "                               ░                                           ░                     ")
-    printStatus("WAITING")
-    printFSLabel("")
-    printAction("")
-    initBar()
-    updateBar(1)
+    print_status("WAITING")
+    print_fslabel("")
+    print_action("")
+    init_bar()
+    update_bar(1)
 
 
-def endCurses():
+def end_curses():
     curses.endwin()
     curses.flushinp()
 
@@ -92,7 +99,7 @@ def endCurses():
 # -----------------------------------------------------------
 
 
-def mountDevice(device):
+def mount_device(device):
     if USB_AUTO_MOUNT:
         found = False
         loop = 0
@@ -101,42 +108,40 @@ def mountDevice(device):
             time.sleep(1)
             for partition in psutil.disk_partitions():
                 if partition.device == device.device_node:
-                    printAction("Mounted at {}".format(partition.mountpoint))
+                    print_action("Mounted at {}".format(partition.mountpoint))
                     found = True
             loop += 1
     else:
-        printAction("mount device to /media/box")
+        print_action("mount device to /media/box")
         res = os.system("pmount " + device.device_node + " box")
         # print("Return type: ", res)
 
 
-def umountDevice():
+def umount_device():
     if not USB_AUTO_MOUNT:
-        printAction("unmount device /media/box")
+        print_action("unmount device /media/box")
         res = os.system("pumount /media/box")
         # print("Return type: ", res)
 
 
-def deviceLoop():
+def device_loop():
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
     monitor.filter_by("block")
     for device in iter(monitor.poll, None):
-        if "ID_FS_TYPE" in device:
+        if device.get("ID_FS_USAGE") == "filesystem" and device.device_node[5:7] == "sd":
             if device.action == "add":
-                if device.device_node[5:7] == "sd" and device.get("DEVTYPE") == "partition":
-                    # print("New device {}".format(device.device_node))
-                    mountDevice(device)
-                    # display device type
-                    printStatus("KEY INSERTED")
-                    printFSLabel(device.get("ID_FS_LABEL"))
+                # print("New device {}".format(device.device_node))
+                mount_device(device)
+                # display device type
+                print_status("KEY INSERTED")
+                print_fslabel(device.get("ID_FS_LABEL"))
 
             if device.action == "remove":
-                if device.device_node[5:7] == "sd" and device.get("DEVTYPE") == "partition":
-                    printStatus("WAITING")
-                    printAction("Device removed")
-                    printFSLabel("")
-                    umountDevice()
+                print_status("WAITING")
+                print_action("Device removed")
+                print_fslabel("")
+                umount_device()
 
 
 # -----------------------------------------------------------
@@ -168,18 +173,18 @@ def scan(mountPoint):
 # --------------------------------------
 
 
-def pandoraBox():
+def pandorabox():
     try:
-        intitCurses()
-        printScreen()
-        deviceLoop()
+        intit_curses()
+        print_screen()
+        device_loop()
 
     finally:
-        endCurses()
+        end_curses()
 
 
 # --------------------------------------
 
 
 if __name__ == "__main__":
-    pandoraBox()
+    pandorabox()
