@@ -33,7 +33,7 @@ for device in iter(monitor.poll, None):
   if 'ID_FS_TYPE' in device:
     if device.action == 'add':
       if device.device_node[5:7] == 'sd' and device.get('DEVTYPE')=='partition':
-        printInfo(device)
+        #printInfo(device)
         print("New device {}".format(device.device_node))
         # loop until device is mounted
         if autoMount:
@@ -56,6 +56,7 @@ for device in iter(monitor.poll, None):
       if device.device_node[5:7] == 'sd' and device.get('DEVTYPE')=='partition':
         print('Device removed')
         if not autoMount:
+            print("unmount device /media/box")
             res = os.system("pumount /media/box")
             print("Return type: ", res)
 
