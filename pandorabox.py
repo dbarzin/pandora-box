@@ -11,6 +11,7 @@ import pyudev
 import psutil
 import os
 import logging
+import time
 
 # -----------------------------------------------------------
 # Config variables
@@ -114,9 +115,11 @@ def update_bar(progress):
         progress_win.clear()
         progress_win.border(0)
         time.sleep(0)
+        progress_win.addstr(0, 1, "Progress:")
     else:
         pos = (80 * progress) // 100 
         progress_win.addstr(1, 1, "#"*pos)
+        progress_win.addstr(0, 1, "Progress: %d%%" % progress)
     progress_win.refresh()
 
 def init_log():
@@ -179,6 +182,7 @@ def print_screen():
     title_win.refresh()
     status_win = curses.newwin(5, 101, 12, 0)
     status_win.border(0)
+    status_win.addstr(0, 1, "USB Key Information")
     # print_status("WAITING")
     print_fslabel("")
     print_size(None)
@@ -240,51 +244,59 @@ def device_loop():
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
     monitor.filter_by("block")
-    for device in iter(monitor.poll, None):
-        if device.get("ID_FS_USAGE") == "filesystem" and device.device_node[5:7] == "sd":
-            if device.action == "add":
-                log("Device inserted")
-                log_device_info(device)
-                # display device type
-                print_status("KEY INSERTED")
-                print_fslabel(device.get("ID_FS_LABEL"))
-                print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
-                print_model(device.get("ID_MODEL"))
-                print_serial(device.get("ID_SERIAL_SHORT"))
-                # Mount device
-                mount_point = mount_device(device)
-                try:
-                    statvfs=os.statvfs(mount_point)
-                except:
-                    log("Unexpected error: %-80s" % sys.exc_info()[0])
-                    continue
-                print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
-                print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
-                log("Scan started...........")
-                # fake scan
-                if False:
-                    loading = 0
-                    while loading < 100:
-                        loading += 1
-                        time.sleep(0.03)
-                        update_bar(loading)
-                else:
-                    scan(mount_point, statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
-                log("Scan done.")
+    try:
+        for device in iter(monitor.poll, None):
+            if device.get("ID_FS_USAGE") == "filesystem" and device.device_node[5:7] == "sd":
+                if device.action == "add":
+                    log("Device inserted")
+                    log_device_info(device)
+                    # display device type
+                    print_status("KEY INSERTED")
+                    print_fslabel(device.get("ID_FS_LABEL"))
+                    print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
+                    print_model(device.get("ID_MODEL"))
+                    print_serial(device.get("ID_SERIAL_SHORT"))
+                    # Mount device
+                    mount_point = mount_device(device)
+                    try:
+                        statvfs=os.statvfs(mount_point)
+                    except Exception as e :
+                        logging.error("Unexpected error: ", e)
+                        continue
+                    print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
+                    print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
+                    log("Scan started...........")
+                    # fake scan
+                    if False:
+                        loading = 0
+                        while loading < 100:
+                            loading += 1
+                            time.sleep(0.03)
+                            update_bar(loading)
+                    else:
+                        res = scan(mount_point, statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
+                        if res:
+                            log("Scan done.")
+                        else:
+                            log("Scan failed !")
 
-            if device.action == "remove":
-                log("Device removed")
-                #print_status("WAITING")
-                print_action("Device removed")
-                print_fslabel("")
-                print_size(None)
-                print_used(None)
-                print_fstype("")
-                print_action("")
-                print_model("")
-                print_serial("")
-                umount_device()
-                update_bar(0)
+                if device.action == "remove":
+                    log("Device removed")
+                    #print_status("WAITING")
+                    print_action("Device removed")
+                    print_fslabel("")
+                    print_size(None)
+                    print_used(None)
+                    print_fstype("")
+                    print_action("")
+                    print_model("")
+                    print_serial("")
+                    umount_device()
+                    update_bar(0)
+    except Exception as e:
+        log("Unexpected error: %s" % e )
+    finally:
+        log("Done.")
 
 
 def log_device_info(dev):
@@ -312,20 +324,31 @@ def log_device_info(dev):
 
 """Scan a mount point with Pandora"""
 def scan(mount_point, used):
+    global infected_filed 
+    infected_files = array()
     scanned = 0
+    file_count = 0
+    scan_start_time = time.time()
     if FAKE_SCAN:
         for root, dirs, files in os.walk(mount_point):
             for file in files:
-                full_path = os.path.join(root,file)
-                file_size = os.path.getsize(full_path)
-                log("Check %-s [%s]" % (file, human_readable_size(file_size)))
-                time.sleep(0.05)
-                log("Check %s -> %-s" % (file,"SKIPPED"))
-
-                scanned += os.path.getsize(full_path)
-                update_bar(scanned * 100 // used)
+                try :
+                    full_path = os.path.join(root,file)
+                    file_size = os.path.getsize(full_path)
+                    log("Check %-s [%s]" % (file, human_readable_size(file_size)))
+                    file_scan_start_time = time.time()
+                    time.sleep(0.1)
+                    file_scan_end_time = time.time()
+                    log("Check %s (%ds) -> %-s" % (file,(file_scan_end_time - file_scan_start_time),"SKIPPED"))
+                    scanned += os.path.getsize(full_path)
+                    file_count += 1
+                    update_bar(scanned * 100 // used)
+                except Exception as e :
+                    log("Unexpected error: %s" % e)
+                    return False
         update_bar(100)
-
+        log("Scan done in %ds" % (time.time() - scan_start_time))
+        log("%d files scanned" % file_count)
     else:
         pp = pypandora.PyPandora(root_url=PANDORA_ROOT_URL)
         for arg in sys.argv[1:]:
@@ -343,6 +366,7 @@ def scan(mount_point, used):
                 break;
 
             log("Scan %s -> %s" % (arg,res["status"]))
+    return True
 
 
 # --------------------------------------
@@ -350,14 +374,15 @@ def scan(mount_point, used):
 
 """Main entry point"""
 def main(stdscr):
-    try:
+    try :
         init_log()
         intit_curses()
         print_screen()
-        device_loop()
-    except:
-        logging.error("Unexpected error:", sys.exc_info()[0])
-        logging.error(traceback.format_exc())
+        while True:
+            device_loop()
+    except Exception as e :
+        logging.error("Unexpected error: ", e)
+        # logging.error(traceback.format_exc())
     finally:
         end_curses()
 

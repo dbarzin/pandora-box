@@ -6,6 +6,7 @@ Pandorabox is a USB scaning station base on Pandora
 
 Mouse terminal
 ---------------
+
 sudo apt install gpm
 
 User mount device
