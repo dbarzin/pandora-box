@@ -19,6 +19,17 @@ import logging
 NO_SCAN = True
 USB_AUTO_MOUNT = True
 PANDORA_ROOT_URL = "http://127.0.0.1:6100"
+FAKE_SCAN = True
+
+# ----------------------------------------------------------
+
+""" Convert size to human readble string """
+def human_readable_size(size, decimal_places=1):
+    for unit in ['B','KB','MB','GB','TB']:
+        if size < 1024.0:
+            break
+        size /= 1024.0
+    return f"{size:.{decimal_places}f}{unit}"
 
 # -----------------------------------------------------------
 # Screen
@@ -57,21 +68,21 @@ def print_fslabel(label):
 """Print FS Size"""
 def print_size(label):
     global status_win
-    if label == 0.0:
+    if label == None:
         status_win.addstr(2, 1, "Size :            ",curses.color_pair(2))
     else:
-        status_win.addstr(2, 1, "Size : %4.1fGB    " % label,curses.color_pair(2))
-        logging.info("Size: %4.1fGB" % label)
+        status_win.addstr(2, 1, "Size : %s " % label,curses.color_pair(2))
+        logging.info("Size: %s" % label)
     status_win.refresh()
 
 """Print FS Used Size"""
 def print_used(label):
     global status_win
-    if label == 0.0:
+    if label == None:
         status_win.addstr(3, 1, "Used :            ",curses.color_pair(2))
     else:
-        status_win.addstr(3, 1, "Used : %4.1fGB    " % label,curses.color_pair(2))
-        logging.info("Used: %4.1fGB    " % label)
+        status_win.addstr(3, 1, "Used : %s " % label,curses.color_pair(2))
+        logging.info("Used: %s" % label)
     status_win.refresh()
 
 def print_fstype(label):
@@ -92,8 +103,8 @@ def print_serial(label):
 """Initialise progress bar"""
 def init_bar():
     global progress_win
-    progress_win = curses.newwin(3, 83, 17, 10)
-    # progress_win.border(1)
+    progress_win = curses.newwin(3, 82, 17, 10)
+    progress_win.border(0)
     progress_win.refresh()
 
 """Update progress bar"""
@@ -105,7 +116,7 @@ def update_bar(progress):
         time.sleep(0)
     else:
         pos = (80 * progress) // 100 
-        progress_win.addstr(1, pos+1, "#")
+        progress_win.addstr(1, 1, "#"*pos)
     progress_win.refresh()
 
 def init_log():
@@ -128,6 +139,8 @@ def log(str):
     logs.append(str)
     if len(logs)>14:
         logs.pop(0)
+    log_win.clear()
+    log_win.border(0)
     for i in range(min(14,len(logs))):
         log_win.addstr(i+1,1,"%-80s"%logs[i],curses.color_pair(3))
     log_win.refresh()
@@ -168,8 +181,8 @@ def print_screen():
     status_win.border(0)
     # print_status("WAITING")
     print_fslabel("")
-    print_size(0.0)
-    print_used(0.0)
+    print_size(None)
+    print_used(None)
     print_fstype("")
     print_action("")
     print_model("")
@@ -245,15 +258,18 @@ def device_loop():
                 except:
                     log("Unexpected error: %-80s" % sys.exc_info()[0])
                     continue
-                print_size(statvfs.f_frsize * statvfs.f_blocks // 1024 // 1024 / 1024)
-                print_used(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree) // 1024 // 1024 / 1024)
+                print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
+                print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
                 log("Scan started...........")
                 # fake scan
-                loading = 0
-                while loading < 100:
-                    loading += 1
-                    time.sleep(0.03)
-                    update_bar(loading)
+                if False:
+                    loading = 0
+                    while loading < 100:
+                        loading += 1
+                        time.sleep(0.03)
+                        update_bar(loading)
+                else:
+                    scan(mount_point, statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
                 log("Scan done.")
 
             if device.action == "remove":
@@ -261,8 +277,8 @@ def device_loop():
                 #print_status("WAITING")
                 print_action("Device removed")
                 print_fslabel("")
-                print_size(0.0)
-                print_used(0.0)
+                print_size(None)
+                print_used(None)
                 print_fstype("")
                 print_action("")
                 print_model("")
@@ -295,25 +311,38 @@ def log_device_info(dev):
 
 
 """Scan a mount point with Pandora"""
-def scan(mountPoint):
-    pp = pypandora.PyPandora(root_url=PANDORA_ROOT_URL)
+def scan(mount_point, used):
+    scanned = 0
+    if FAKE_SCAN:
+        for root, dirs, files in os.walk(mount_point):
+            for file in files:
+                full_path = os.path.join(root,file)
+                file_size = os.path.getsize(full_path)
+                log("Check %-s [%s]" % (file, human_readable_size(file_size)))
+                time.sleep(0.05)
+                log("Check %s -> %-s" % (file,"SKIPPED"))
 
-    for arg in sys.argv[1:]:
-        print(arg, end="", flush=True)
-        print(":", end="", flush=True)
+                scanned += os.path.getsize(full_path)
+                update_bar(scanned * 100 // used)
+        update_bar(100)
 
-        res = pp.submit_from_disk(arg)
+    else:
+        pp = pypandora.PyPandora(root_url=PANDORA_ROOT_URL)
+        for arg in sys.argv[1:]:
+            log("Scan %-80s" % arg)
 
-        while True:
-            print(".", end="", flush=True)
-            time.sleep(1)
+            res = pp.submit_from_disk(arg)
 
-            res = pp.task_status(res["taskId"])
+            while True:
+                time.sleep(1)
 
-            if res["status"] != "WAITING":
-                break
+                res = pp.task_status(res["taskId"])
 
-        print(res["status"])
+                if res["status"] != "WAITING":
+                    break
+                break;
+
+            log("Scan %s -> %s" % (arg,res["status"]))
 
 
 # --------------------------------------
