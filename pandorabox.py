@@ -61,6 +61,7 @@ def print_size(label):
         status_win.addstr(2, 1, "Size :            ",curses.color_pair(2))
     else:
         status_win.addstr(2, 1, "Size : %4.1fGB    " % label,curses.color_pair(2))
+        logging.info("Size: %4.1fGB" % label)
     status_win.refresh()
 
 """Print FS Used Size"""
@@ -70,6 +71,7 @@ def print_used(label):
         status_win.addstr(3, 1, "Used :            ",curses.color_pair(2))
     else:
         status_win.addstr(3, 1, "Used : %4.1fGB    " % label,curses.color_pair(2))
+        logging.info("Used: %4.1fGB    " % label)
     status_win.refresh()
 
 def print_fstype(label):
@@ -108,25 +110,25 @@ def update_bar(progress):
 
 def init_log():
     global log_win
+    global logging
     log_win = curses.newwin(16, 101, 20, 0)
     log_win.border(0)
     logging.basicConfig(
         filename='pandorabox.log', 
         level=logging.INFO,
         format='%(asctime)s - %(message)s',
-        datefmt='%m/%d/%y %H:%M',
-        filemode='w'
+        datefmt='%m/%d/%y %H:%M'
     )
 
 logs = []
 def log(str):
-    log_win.addstr(1,1,str,curses.color_pair(3))
-    log_win.refresh()
+    global log_win
+    global logging
     logging.info(str)
     logs.append(str)
-    if len(logs)>15:
+    if len(logs)>14:
         logs.pop(0)
-    for i in range(min(15,len(logs))):
+    for i in range(min(14,len(logs))):
         log_win.addstr(i+1,1,"%-80s"%logs[i],curses.color_pair(3))
     log_win.refresh()
 
@@ -174,7 +176,6 @@ def print_screen():
     print_serial("")
     init_bar()
     update_bar(0)
-    init_log()
     log('Ready.')
 
 """Closes curses"""
@@ -239,7 +240,11 @@ def device_loop():
                 print_serial(device.get("ID_SERIAL_SHORT"))
                 # Mount device
                 mount_point = mount_device(device)
-                statvfs=os.statvfs(mount_point)
+                try:
+                    statvfs=os.statvfs(mount_point)
+                except:
+                    log("Unexpected error: %-80s" % sys.exc_info()[0])
+                    continue
                 print_size(statvfs.f_frsize * statvfs.f_blocks // 1024 // 1024 / 1024)
                 print_used(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree) // 1024 // 1024 / 1024)
                 log("Scan started...........")
@@ -317,13 +322,15 @@ def scan(mountPoint):
 """Main entry point"""
 def main(stdscr):
     try:
+        init_log()
         intit_curses()
         print_screen()
         device_loop()
-
+    except:
+        logging.error("Unexpected error:", sys.exc_info()[0])
+        logging.error(traceback.format_exc())
     finally:
         end_curses()
-
 
 # --------------------------------------
 
