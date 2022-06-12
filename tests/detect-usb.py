@@ -31,7 +31,6 @@ def printDeviceInfo(dev):
     print('Serial: %s' % dev.get("ID_SERIAL"))
     print('Model: %s' % dev.get("ID_MODEL_ID"))
     print(os.stat(dev.get("DEVNAME")))
-
     print("</BLOCK INFORMATION>")
     print("")
 

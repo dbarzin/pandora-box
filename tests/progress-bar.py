@@ -16,7 +16,7 @@ def updateBar(progress):
     global progress_win
     pos = (60 * progress) // 100 
     if pos != 0 :
-        progress_win.addstr(1, pos, "{}".format("#"))
+        progress_win.addstr(1, pos, "#")
         progress_win.refresh()
 
 
