@@ -93,6 +93,9 @@ Start Pandora
     poetry run start
 
 
+Homepage
+--------
 
+sudo fbi -T 2 -d /dev/fb1 -noverbose -a demo.png
 
 

@@ -345,7 +345,7 @@ def scan(mount_point, used):
             try :
                 full_path = os.path.join(root,file)
                 file_size = os.path.getsize(full_path)
-                log("Check %s [%s]" % (file, human_readable_size(file_size)))
+                # log("Check %s [%s]" % (file, human_readable_size(file_size)))
                 file_scan_start_time = time.time()
                 if FAKE_SCAN :
                     time.sleep(0.1)
@@ -363,7 +363,11 @@ def scan(mount_point, used):
                                break
                             time.sleep(0.5)
                 file_scan_end_time = time.time()
-                log("Check %s (%ds) -> %-s" % (file,(file_scan_end_time - file_scan_start_time),status))
+                log("Scan %s [%s] -> %s (%ds)" % (
+                    file,
+                    human_readable_size(file_size), 
+                    status, 
+                    (file_scan_end_time - file_scan_start_time)))
                 scanned += os.path.getsize(full_path)
                 file_count += 1
                 update_bar(scanned * 100 // used)
