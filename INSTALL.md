@@ -81,6 +81,16 @@ Screensaver
 
 tty-clock -srt
 
+Start
+-----
+Start ClamAV
+
+    sudo service clamav-daemon start
+    
+Start Pandora
+
+    cd pandora
+    poetry run start
 
 
 
