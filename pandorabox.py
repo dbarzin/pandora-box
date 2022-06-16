@@ -248,12 +248,19 @@ def mount_device(device):
         else:
             return ""
     else:
-        res = os.system("pmount " + device.device_node + " box")
-        if res == 1:
-            return "/media/box"
-        else:
-            return ""
+        res = os.system("pmount " + device.device_node + " /media/box")
+        found = False
+        loop = 0
+        while (not found) and (loop < 10):
+            time.sleep(1)
+            try:
+                statvfs=os.statvfs(mount_point)
+            except Exception as e :
+                loop +=1 
+                continue
+            break;
         log("Device mounted at /media/box")
+        return "/media/box"
 
 
 """Unmount USB device"""
@@ -286,7 +293,8 @@ def device_loop():
                     try:
                         statvfs=os.statvfs(mount_point)
                     except Exception as e :
-                        logging.error("Unexpected error: ", e)
+                        log("Unexpected error1: %s" % e)
+                        logging.exception("An exception was thrown!") 
                         continue
                     print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
                     print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
@@ -319,7 +327,8 @@ def device_loop():
                     umount_device()
                     update_bar(0)
     except Exception as e:
-        log("Unexpected error: %s" % e )
+        log("Unexpected error2: %s" % e )
+        logging.exception("An exception was thrown!") 
     finally:
         log("Done.")
 
@@ -350,47 +359,50 @@ def log_device_info(dev):
 """Scan a mount point with Pandora"""
 def scan(mount_point, used):
     global infected_filed 
-    infected_files = array()
+    infected_files = [] 
     scanned = 0
     file_count = 0
     scan_start_time = time.time()
-    if FAKE_SCAN:
-        for root, dirs, files in os.walk(mount_point):
-            for file in files:
-                try :
-                    full_path = os.path.join(root,file)
-                    file_size = os.path.getsize(full_path)
-                    log("Check %-s [%s]" % (file, human_readable_size(file_size)))
-                    file_scan_start_time = time.time()
+    if not FAKE_SCAN:
+        pandora = pypandora.PyPandora(root_url=PANDORA_ROOT_URL)
+    for root, dirs, files in os.walk(mount_point):
+        for file in files:
+            try :
+                full_path = os.path.join(root,file)
+                file_size = os.path.getsize(full_path)
+                # log("Check %s [%s]" % (file, human_readable_size(file_size)))
+                file_scan_start_time = time.time()
+                if FAKE_SCAN :
                     time.sleep(0.1)
-                    file_scan_end_time = time.time()
-                    log("Check %s (%ds) -> %-s" % (file,(file_scan_end_time - file_scan_start_time),"SKIPPED"))
-                    scanned += os.path.getsize(full_path)
-                    file_count += 1
-                    update_bar(scanned * 100 // used)
-                except Exception as e :
-                    log("Unexpected error: %s" % e)
-                    return False
-        update_bar(100)
-        log("Scan done in %ds" % (time.time() - scan_start_time))
-        log("%d files scanned" % file_count)
-    else:
-        pp = pypandora.PyPandora(root_url=PANDORA_ROOT_URL)
-        for arg in sys.argv[1:]:
-            log("Scan %-80s" % arg)
-
-            res = pp.submit_from_disk(arg)
-
-            while True:
-                time.sleep(1)
-
-                res = pp.task_status(res["taskId"])
-
-                if res["status"] != "WAITING":
-                    break
-                break;
-
-            log("Scan %s -> %s" % (arg,res["status"]))
+                    status = "SKIPPED"
+                else:
+                    if file_size > (1024*1024*1024):
+                        status = "TOO BIG"
+                    else:
+                        res = pandora.submit_from_disk(full_path)
+                        time.sleep(0.1)
+                        while True:
+                            res = pandora.task_status(res["taskId"])
+                            status = res["status"] 
+                            if status != "WAITING":
+                               break
+                            time.sleep(0.5)
+                file_scan_end_time = time.time()
+                log("Scan %s [%s] -> %s (%ds)" % (
+                    file,
+                    human_readable_size(file_size), 
+                    status, 
+                    (file_scan_end_time - file_scan_start_time)))
+                scanned += os.path.getsize(full_path)
+                file_count += 1
+                update_bar(scanned * 100 // used)
+            except Exception as e :
+                log("Unexpected error3: %s" % e)
+                logging.exception("An exception was thrown!") 
+                return False
+    update_bar(100)
+    log("Scan done in %ds" % (time.time() - scan_start_time))
+    log("%d files scanned" % file_count)
     return True
 
 
@@ -410,7 +422,6 @@ def main(stdscr):
         end_curses()
         print("Unexpected error: ", e)
         logging.error("Unexpected error: ", e)
-        # logging.error(traceback.format_exc())
     finally:
         end_curses()
 
