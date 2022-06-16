@@ -12,15 +12,28 @@ import psutil
 import os
 import logging
 import time
+import configparser
 
 # -----------------------------------------------------------
 # Config variables
 # -----------------------------------------------------------
 
 NO_SCAN = True
-USB_AUTO_MOUNT = True
+USB_AUTO_MOUNT = False 
 PANDORA_ROOT_URL = "http://127.0.0.1:6100"
-FAKE_SCAN = True
+FAKE_SCAN = False
+
+""" read configuration file """
+def config():
+    # intantiate a ConfirParser
+    config = configparser.ConfigParser()
+    # read the config file
+    config.read('pandorabox.ini')
+    # set values
+    NO_SCAN=config['DEFAULT']['NO_SCAN']
+    USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT']
+    PANDORA_ROOT_URL=config['DEFAULT']['PANDORA_ROOT_URL']
+    FAKE_SCAN=config['DEFAULT']['FAKE_SCAN']
 
 # ----------------------------------------------------------
 
@@ -160,6 +173,18 @@ s[6] = "  ░▒ ░       ▒   ▒▒ ░░ ░░   ░ ▒░ ░ ▒  ▒ 
 s[7] = "  ░░         ░   ▒      ░   ░ ░  ░ ░  ░ ░ ░ ░ ▒    ░░   ░   ░   ▒       ░    ░ ░ ░ ░ ▒   ░    ░  "
 s[8] = "               ░  ░         ░    ░        ░ ░     ░           ░  ░    ░          ░ ░   ░    ░    "
 s[9] = "                               ░                                           ░                     "
+
+s[0] = "   ██▓███   ▄▄▄       ███▄    █ ▓█████▄  ▒█████   ██▀███   ▄▄▄          ▄▄▄▄    ▒█████  ▒██   ██▒"
+s[1] = "  ▓██░  ██▒▒████▄     ██ ▀█   █ ▒██▀ ██▌▒██▒  ██▒▓██ ▒ ██▒▒████▄       ▓█████▄ ▒██▒  ██▒▒▒ █ █ ▒░"
+s[2] = "  ▓██░ ██▓▒▒██  ▀█▄  ▓██  ▀█ ██▒░██   █▌▒██░  ██▒▓██ ░▄█ ▒▒██  ▀█▄     ▒██▒ ▄██▒██░  ██▒░░  █   ░"
+s[3] = "  ▒██▄█▓▒ ▒░██▄▄▄▄██ ▓██▒  ▐▌██▒░▓█▄   ▌▒██   ██░▒██▀▀█▄  ░██▄▄▄▄██    ▒██░█▀  ▒██   ██░ ░ █ █ ▒ "
+s[4] = "  ▒██▒ ░  ░ ▓█   ▓██▒▒██░   ▓██░░▒████▓ ░ ████▓▒░░██▓ ▒██▒ ▓█   ▓██▒   ░▓█  ▀█▓░ ████▓▒░▒██▒ ▒██▒"
+s[5] = "  ▒▓▒░ ░  ░ ▒▒   ▓▒█░░ ▒░   ▒ ▒  ▒▒▓  ▒ ░ ▒░▒░▒░ ░ ▒▓ ░▒▓░ ▒▒   ▓▒█░   ░▒▓███▀▒░ ▒░▒░▒░ ▒▒ ░ ░▓ ░"
+s[6] = "  ░▒ ░       ▒   ▒▒ ░░ ░░   ░ ▒░ ░ ▒  ▒   ░ ▒ ▒░   ░▒ ░ ▒░  ▒   ▒▒ ░   ▒░▒   ░   ░ ▒ ▒░ ░░   ░▒ ░"
+s[7] = "  ░░         ░   ▒      ░   ░ ░  ░ ░  ░ ░ ░ ░ ▒    ░░   ░   ░   ▒       ░    ░ ░ ░ ░ ▒   ░    ░  "
+s[8] = "               ░  ░         ░    ░        ░ ░     ░           ░  ░    ░          ░ ░   ░    ░    "
+s[9] = "                               ░                                           ░                     "
+
 
 """Print main screen"""
 def print_screen():
@@ -376,11 +401,14 @@ def scan(mount_point, used):
 def main(stdscr):
     try :
         init_log()
+        config()
         intit_curses()
         print_screen()
         while True:
             device_loop()
     except Exception as e :
+        end_curses()
+        print("Unexpected error: ", e)
         logging.error("Unexpected error: ", e)
         # logging.error(traceback.format_exc())
     finally:
