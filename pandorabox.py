@@ -117,7 +117,7 @@ def print_serial(label):
 """Initialise progress bar"""
 def init_bar():
     global progress_win
-    progress_win = curses.newwin(3, 82, 17, 10)
+    progress_win = curses.newwin(3, curses.COLS-12, 17, 5)
     progress_win.border(0)
     progress_win.refresh()
 
@@ -130,7 +130,7 @@ def update_bar(progress):
         time.sleep(0)
         progress_win.addstr(0, 1, "Progress:")
     else:
-        pos = (80 * progress) // 100 
+        pos = ((curses.COLS-12) * progress) // 100 
         progress_win.addstr(1, 1, "#"*pos)
         progress_win.addstr(0, 1, "Progress: %d%%" % progress)
     progress_win.refresh()
@@ -138,7 +138,7 @@ def update_bar(progress):
 def init_log():
     global log_win
     global logging
-    log_win = curses.newwin(16, 101, 20, 0)
+    log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
     log_win.border(0)
     logging.basicConfig(
         filename='pandorabox.log', 
@@ -153,11 +153,11 @@ def log(str):
     global logging
     logging.info(str)
     logs.append(str)
-    if len(logs)>14:
+    if len(logs)>(curses.LINES-20):
         logs.pop(0)
     log_win.clear()
     log_win.border(0)
-    for i in range(min(14,len(logs))):
+    for i in range(min(curses.LINES-20,len(logs))):
         log_win.addstr(i+1,1,"%-80s"%logs[i],curses.color_pair(3))
     log_win.refresh()
 
@@ -174,17 +174,7 @@ s[7] = "  ░░         ░   ▒      ░   ░ ░  ░ ░  ░ ░ ░ ░ 
 s[8] = "               ░  ░         ░    ░        ░ ░     ░           ░  ░    ░          ░ ░   ░    ░    "
 s[9] = "                               ░                                           ░                     "
 
-s[0] = "   ██▓███   ▄▄▄       ███▄    █ ▓█████▄  ▒█████   ██▀███   ▄▄▄          ▄▄▄▄    ▒█████  ▒██   ██▒"
-s[1] = "  ▓██░  ██▒▒████▄     ██ ▀█   █ ▒██▀ ██▌▒██▒  ██▒▓██ ▒ ██▒▒████▄       ▓█████▄ ▒██▒  ██▒▒▒ █ █ ▒░"
-s[2] = "  ▓██░ ██▓▒▒██  ▀█▄  ▓██  ▀█ ██▒░██   █▌▒██░  ██▒▓██ ░▄█ ▒▒██  ▀█▄     ▒██▒ ▄██▒██░  ██▒░░  █   ░"
-s[3] = "  ▒██▄█▓▒ ▒░██▄▄▄▄██ ▓██▒  ▐▌██▒░▓█▄   ▌▒██   ██░▒██▀▀█▄  ░██▄▄▄▄██    ▒██░█▀  ▒██   ██░ ░ █ █ ▒ "
-s[4] = "  ▒██▒ ░  ░ ▓█   ▓██▒▒██░   ▓██░░▒████▓ ░ ████▓▒░░██▓ ▒██▒ ▓█   ▓██▒   ░▓█  ▀█▓░ ████▓▒░▒██▒ ▒██▒"
-s[5] = "  ▒▓▒░ ░  ░ ▒▒   ▓▒█░░ ▒░   ▒ ▒  ▒▒▓  ▒ ░ ▒░▒░▒░ ░ ▒▓ ░▒▓░ ▒▒   ▓▒█░   ░▒▓███▀▒░ ▒░▒░▒░ ▒▒ ░ ░▓ ░"
-s[6] = "  ░▒ ░       ▒   ▒▒ ░░ ░░   ░ ▒░ ░ ▒  ▒   ░ ▒ ▒░   ░▒ ░ ▒░  ▒   ▒▒ ░   ▒░▒   ░   ░ ▒ ▒░ ░░   ░▒ ░"
-s[7] = "  ░░         ░   ▒      ░   ░ ░  ░ ░  ░ ░ ░ ░ ▒    ░░   ░   ░   ▒       ░    ░ ░ ░ ░ ▒   ░    ░  "
-s[8] = "               ░  ░         ░    ░        ░ ░     ░           ░  ░    ░          ░ ░   ░    ░    "
-s[9] = "                               ░                                           ░                     "
-
+#curses.LINES, curses.COLS
 
 """Print main screen"""
 def print_screen():
@@ -192,20 +182,21 @@ def print_screen():
     curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
     curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    title_win = curses.newwin(12, 101, 0, 0)
+    title_win = curses.newwin(12, curses.COLS, 0, 0)
     # title_win.border(0)
-    title_win.addstr(1, 1, s[0], curses.color_pair(1))
-    title_win.addstr(2, 1, s[1], curses.color_pair(1))
-    title_win.addstr(3, 1, s[2], curses.color_pair(1))
-    title_win.addstr(4, 1, s[3], curses.color_pair(1))
-    title_win.addstr(5, 1, s[4], curses.color_pair(1))
-    title_win.addstr(6, 1, s[5], curses.color_pair(1))
-    title_win.addstr(7, 1, s[6], curses.color_pair(1))
-    title_win.addstr(8, 1, s[7], curses.color_pair(1))
-    title_win.addstr(9, 1, s[8], curses.color_pair(1))
-    title_win.addstr(10, 1, s[9], curses.color_pair(1))
+    title_col = (curses.COLS - len(s[0]))//2
+    title_win.addstr(1, title_col, s[0], curses.color_pair(1))
+    title_win.addstr(2, title_col, s[1], curses.color_pair(1))
+    title_win.addstr(3, title_col, s[2], curses.color_pair(1))
+    title_win.addstr(4, title_col, s[3], curses.color_pair(1))
+    title_win.addstr(5, title_col, s[4], curses.color_pair(1))
+    title_win.addstr(6, title_col, s[5], curses.color_pair(1))
+    title_win.addstr(7, title_col, s[6], curses.color_pair(1))
+    title_win.addstr(8, title_col, s[7], curses.color_pair(1))
+    title_win.addstr(9, title_col, s[8], curses.color_pair(1))
+    title_win.addstr(10, title_col, s[9], curses.color_pair(1))
     title_win.refresh()
-    status_win = curses.newwin(5, 101, 12, 0)
+    status_win = curses.newwin(5, curses.COLS, 12, 0)
     status_win.border(0)
     status_win.addstr(0, 1, "USB Key Information")
     # print_status("WAITING")
