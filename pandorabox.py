@@ -25,15 +25,21 @@ FAKE_SCAN = False
 
 """ read configuration file """
 def config():
+    global NO_SCAN
+    global USB_AUTO_MOUNT 
+    global PANDORA_ROOT_URL
+    global FAKE_SCAN 
     # intantiate a ConfirParser
     config = configparser.ConfigParser()
     # read the config file
     config.read('pandorabox.ini')
     # set values
-    NO_SCAN=config['DEFAULT']['NO_SCAN']
-    USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT']
+    NO_SCAN=config['DEFAULT']['NO_SCAN'].lower()=="true" 
+    USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
+    print("USB_AUTO_MOUNT=%s" % USB_AUTO_MOUNT)
+    time.sleep(3)
     PANDORA_ROOT_URL=config['DEFAULT']['PANDORA_ROOT_URL']
-    FAKE_SCAN=config['DEFAULT']['FAKE_SCAN']
+    FAKE_SCAN=config['DEFAULT']['FAKE_SCAN'].lower()=="true"
 
 # ----------------------------------------------------------
 
@@ -130,7 +136,7 @@ def update_bar(progress):
         time.sleep(0)
         progress_win.addstr(0, 1, "Progress:")
     else:
-        pos = ((curses.COLS-12) * progress) // 100 
+        pos = ((curses.COLS-14) * progress) // 100 
         progress_win.addstr(1, 1, "#"*pos)
         progress_win.addstr(0, 1, "Progress: %d%%" % progress)
     progress_win.refresh()
@@ -237,7 +243,7 @@ def mount_device(device):
         if loop < 10:
             return partition.mountpoint
         else:
-            return ""
+            return None
     else:
         res = os.system("pmount " + device.device_node + " /media/box")
         found = False
@@ -252,7 +258,6 @@ def mount_device(device):
             break;
         log("Device mounted at /media/box")
         return "/media/box"
-
 
 """Unmount USB device"""
 def umount_device():
@@ -281,6 +286,9 @@ def device_loop():
                     print_serial(device.get("ID_SERIAL_SHORT"))
                     # Mount device
                     mount_point = mount_device(device)
+                    if mount_point == None:
+                        # no partition (?)
+                        continue
                     try:
                         statvfs=os.statvfs(mount_point)
                     except Exception as e :
