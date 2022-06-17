@@ -13,6 +13,8 @@ import os
 import logging
 import time
 import configparser
+import shutil
+from datetime import datetime
 
 # -----------------------------------------------------------
 # Config variables
@@ -22,7 +24,7 @@ NO_SCAN = True
 USB_AUTO_MOUNT = False 
 PANDORA_ROOT_URL = "http://127.0.0.1:6100"
 FAKE_SCAN = False
-QUARANTINE =
+QUARANTINE = False
 
 """ read configuration file """
 def config():
@@ -38,7 +40,7 @@ def config():
     USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
     PANDORA_ROOT_URL=config['DEFAULT']['PANDORA_ROOT_URL']
     # Quarantine
-    QUARANTINE=config['DEFAULT']['QUARANTINE'].lower()=="true"
+    QUARANTINE = config['DEFAULT']['QUARANTINE'].lower()=="true"
     QUARANTINE_FOLDER = config['DEFAULT']['QUARANTINE_FOLDER']
 # ----------------------------------------------------------
 
@@ -141,8 +143,7 @@ def update_bar(progress):
     progress_win.refresh()
 
 def init_log():
-    global log_win
-    global logging
+    global log_win, logging
     log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
     log_win.border(0)
     logging.basicConfig(
@@ -154,8 +155,7 @@ def init_log():
 
 logs = []
 def log(str):
-    global log_win
-    global logging
+    global log_win, logging
     logging.info(str)
     logs.append(str)
     if len(logs)>(curses.LINES-20):
@@ -163,7 +163,7 @@ def log(str):
     log_win.clear()
     log_win.border(0)
     for i in range(min(curses.LINES-20,len(logs))):
-        log_win.addstr(i+1,1,"%-80s"%logs[i],curses.color_pair(3))
+        log_win.addstr(i+1,1,logs[i][:curses.COLS-2],curses.color_pair(3))
     log_win.refresh()
 
 """Splash screen"""
@@ -291,7 +291,7 @@ def device_loop():
                     try:
                         statvfs=os.statvfs(mount_point)
                     except Exception as e :
-                        log("Unexpected error1: %s" % e)
+                        log("Unexpected error: %s" % e)
                         logging.exception("An exception was thrown!") 
                         continue
                     print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
@@ -325,7 +325,7 @@ def device_loop():
                     umount_device()
                     update_bar(0)
     except Exception as e:
-        log("Unexpected error2: %s" % e )
+        log("Unexpected error: %s" % e )
         logging.exception("An exception was thrown!") 
     finally:
         log("Done.")
@@ -361,6 +361,8 @@ def scan(mount_point, used):
     scanned = 0
     file_count = 0
     scan_start_time = time.time()
+    if QUARANTINE:
+        quanrantine_folder = os.path.join(QUARANTINE_FOLDER,datetime.now().strftime("%y%m%d-%H%M"))
     if not FAKE_SCAN:
         pandora = pypandora.PyPandora(root_url=PANDORA_ROOT_URL)
     for root, dirs, files in os.walk(mount_point):
@@ -379,12 +381,19 @@ def scan(mount_point, used):
                     else:
                         res = pandora.submit_from_disk(full_path)
                         time.sleep(0.1)
-                        while True:
+                        loop = 0
+                        while True and (loop < 60):
                             res = pandora.task_status(res["taskId"])
                             status = res["status"] 
                             if status != "WAITING":
                                break
                             time.sleep(0.5)
+                            loop += 1
+                        if status == "ALERT":
+                            infected_files.append(full_path)
+                            if QUARANTINE:
+                                os.mkdir(quanrantine_folder)
+                                shutil.copyfile(full_path, quanrantine_folder)
                 file_scan_end_time = time.time()
                 log("Scan %s [%s] -> %s (%ds)" % (
                     file,
@@ -395,16 +404,11 @@ def scan(mount_point, used):
                 file_count += 1
                 update_bar(scanned * 100 // used)
             except Exception as e :
-                log("Scan %s [%s] -> %s (%ds)" % (
-                    file,
-                    human_readable_size(file_size), 
-                    "ERROR", -1))
                 log("Unexpected error: %s" % e)
     update_bar(100)
-    log("Scan done in %ds" % (time.time() - scan_start_time))
-    log("%d files scanned" % file_count)
+    log("Scan done in %ds, %d files scanned, %d files infected" % 
+        ((time.time() - scan_start_time),file_count,len(infected_files)))
     return True
-
 
 # --------------------------------------
 
