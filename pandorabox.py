@@ -20,7 +20,6 @@ from datetime import datetime
 # Config variables
 # -----------------------------------------------------------
 
-NO_SCAN = True
 USB_AUTO_MOUNT = False 
 PANDORA_ROOT_URL = "http://127.0.0.1:6100"
 FAKE_SCAN = False
@@ -28,14 +27,13 @@ QUARANTINE = False
 
 """ read configuration file """
 def config():
-    global NO_SCAN, USB_AUTO_MOUNT, PANDORA_ROOT_URL
+    global USB_AUTO_MOUNT, PANDORA_ROOT_URL
     global FAKE_SCAN, QUARANTINE, QUARANTINE_FOLDER
     # intantiate a ConfirParser
     config = configparser.ConfigParser()
     # read the config file
     config.read('pandorabox.ini')
     # set values
-    NO_SCAN=config['DEFAULT']['NO_SCAN'].lower()=="true" 
     FAKE_SCAN=config['DEFAULT']['FAKE_SCAN'].lower()=="true"
     USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
     PANDORA_ROOT_URL=config['DEFAULT']['PANDORA_ROOT_URL']
@@ -158,11 +156,11 @@ def log(str):
     global log_win, logging
     logging.info(str)
     logs.append(str)
-    if len(logs)>(curses.LINES-20):
+    if len(logs)>(curses.LINES-22):
         logs.pop(0)
     log_win.clear()
     log_win.border(0)
-    for i in range(min(curses.LINES-20,len(logs))):
+    for i in range(min(curses.LINES-22,len(logs))):
         log_win.addstr(i+1,1,logs[i][:curses.COLS-2],curses.color_pair(3))
     log_win.refresh()
 
@@ -286,30 +284,33 @@ def device_loop():
                     # Mount device
                     mount_point = mount_device(device)
                     if mount_point == None:
-                        # no partition (?)
+                        # no partition
                         continue
                     try:
                         statvfs=os.statvfs(mount_point)
                     except Exception as e :
                         log("Unexpected error: %s" % e)
-                        logging.exception("An exception was thrown!") 
                         continue
                     print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
                     print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
+
+                    # Scan files
                     log("Scan started...........")
-                    # fake scan
-                    if False:
-                        loading = 0
-                        while loading < 100:
-                            loading += 1
-                            time.sleep(0.03)
-                            update_bar(loading)
-                    else:
-                        res = scan(mount_point, statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
-                        if res:
-                            log("Scan done.")
-                        else:
-                            log("Scan failed !")
+                    infected_files = scan(mount_point, statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
+
+                    # Clean files
+                    if len(infected_files) > 0:
+                        log('%d infected files found !' % len(infected_files))
+                        log('PRESS KEY TO CLEAN')
+                        screen.getch()
+                        # Remove infected files
+                        for file in infected_files:
+                            try :
+                                os.remove(file)
+                                log('%s removed' % file)
+                            except Exception as e :
+                                log("Unexpected error: %s" % str(e))
+                        log("Clean done.")
 
                 if device.action == "remove":
                     log("Device removed")
@@ -325,8 +326,7 @@ def device_loop():
                     umount_device()
                     update_bar(0)
     except Exception as e:
-        log("Unexpected error: %s" % e )
-        logging.exception("An exception was thrown!") 
+        log("Unexpected error: %s" % str(e) )
     finally:
         log("Done.")
 
@@ -368,6 +368,7 @@ def scan(mount_point, used):
     for root, dirs, files in os.walk(mount_point):
         for file in files:
             try :
+                status = None
                 full_path = os.path.join(root,file)
                 file_size = os.path.getsize(full_path)
                 # log("Check %s [%s]" % (file, human_readable_size(file_size)))
@@ -375,6 +376,7 @@ def scan(mount_point, used):
                 if FAKE_SCAN :
                     time.sleep(0.1)
                     status = "SKIPPED"
+                    # status = "ALERT"
                 else:
                     if file_size > (1024*1024*1024):
                         status = "TOO BIG"
@@ -389,11 +391,6 @@ def scan(mount_point, used):
                                break
                             time.sleep(0.5)
                             loop += 1
-                        if status == "ALERT":
-                            infected_files.append(full_path)
-                            if QUARANTINE:
-                                os.mkdir(quanrantine_folder)
-                                shutil.copyfile(full_path, quanrantine_folder)
                 file_scan_end_time = time.time()
                 log("Scan %s [%s] -> %s (%ds)" % (
                     file,
@@ -403,12 +400,20 @@ def scan(mount_point, used):
                 scanned += os.path.getsize(full_path)
                 file_count += 1
                 update_bar(scanned * 100 // used)
+
+                if status == "ALERT":
+                    infected_files.append(full_path)
+                    if QUARANTINE:
+                        if not os.path.isdir(quanrantine_folder) :
+                            os.mkdir(quanrantine_folder)
+                        shutil.copyfile(full_path, os.path.join(quanrantine_folder,file))
+
             except Exception as e :
                 log("Unexpected error: %s" % e)
     update_bar(100)
     log("Scan done in %ds, %d files scanned, %d files infected" % 
         ((time.time() - scan_start_time),file_count,len(infected_files)))
-    return True
+    return infected_files
 
 # --------------------------------------
 
@@ -425,7 +430,6 @@ def main(stdscr):
     except Exception as e :
         end_curses()
         print("Unexpected error: ", e)
-        logging.error("Unexpected error: ", e)
     finally:
         end_curses()
 
