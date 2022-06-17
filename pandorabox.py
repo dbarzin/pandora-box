@@ -22,25 +22,24 @@ NO_SCAN = True
 USB_AUTO_MOUNT = False 
 PANDORA_ROOT_URL = "http://127.0.0.1:6100"
 FAKE_SCAN = False
+QUARANTINE =
 
 """ read configuration file """
 def config():
-    global NO_SCAN
-    global USB_AUTO_MOUNT 
-    global PANDORA_ROOT_URL
-    global FAKE_SCAN 
+    global NO_SCAN, USB_AUTO_MOUNT, PANDORA_ROOT_URL
+    global FAKE_SCAN, QUARANTINE, QUARANTINE_FOLDER
     # intantiate a ConfirParser
     config = configparser.ConfigParser()
     # read the config file
     config.read('pandorabox.ini')
     # set values
     NO_SCAN=config['DEFAULT']['NO_SCAN'].lower()=="true" 
-    USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
-    print("USB_AUTO_MOUNT=%s" % USB_AUTO_MOUNT)
-    time.sleep(3)
-    PANDORA_ROOT_URL=config['DEFAULT']['PANDORA_ROOT_URL']
     FAKE_SCAN=config['DEFAULT']['FAKE_SCAN'].lower()=="true"
-
+    USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
+    PANDORA_ROOT_URL=config['DEFAULT']['PANDORA_ROOT_URL']
+    # Quarantine
+    QUARANTINE=config['DEFAULT']['QUARANTINE'].lower()=="true"
+    QUARANTINE_FOLDER = config['DEFAULT']['QUARANTINE_FOLDER']
 # ----------------------------------------------------------
 
 """ Convert size to human readble string """
@@ -396,9 +395,11 @@ def scan(mount_point, used):
                 file_count += 1
                 update_bar(scanned * 100 // used)
             except Exception as e :
-                log("Unexpected error3: %s" % e)
-                logging.exception("An exception was thrown!") 
-                return False
+                log("Scan %s [%s] -> %s (%ds)" % (
+                    file,
+                    human_readable_size(file_size), 
+                    "ERROR", -1))
+                log("Unexpected error: %s" % e)
     update_bar(100)
     log("Scan done in %ds" % (time.time() - scan_start_time))
     log("%d files scanned" % file_count)
