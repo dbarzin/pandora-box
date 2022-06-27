@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-"""Pandora-Box is a USB scaning station based on Pandora."""
+"""Pandora-box is a USB scaning station based on Pandora."""
 
 import curses
 from curses import wrapper

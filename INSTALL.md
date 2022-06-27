@@ -96,6 +96,22 @@ Start Pandora
 Homepage
 --------
 
-sudo fbi -T 2 -d /dev/fb1 -noverbose -a demo.png
+convert -resize 1920x1080 -background black -gravity center -extent 1920x1080 image1.png bgra:/dev/fb0
 
+AUtoLogin
+---------
+
+
+sudo systemctl edit getty@tty1
+
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty -a user1 --noclear %I $TERM
+Type=idle
+
+
+https://wiki.archlinux.org/title/Getty#Automatic_login_to_virtual_console
+
+
+The option Type=idle found in the default getty@.service will delay the service startup until all jobs are completed in order to avoid polluting the login prompt with boot-up messages.
 
