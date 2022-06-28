@@ -25,6 +25,7 @@ PANDORA_ROOT_URL = "http://127.0.0.1:6100"
 FAKE_SCAN = False
 QUARANTINE = False
 CURSES = True
+SCREEN_SIZE = None
 
 """ read configuration file """
 def config():
@@ -43,6 +44,8 @@ def config():
     QUARANTINE_FOLDER = config['DEFAULT']['QUARANTINE_FOLDER']
     # Curses
     CURSES = config['DEFAULT']['CURSES'].lower()=="true"
+    # Screen size
+    SCREEN_SIZE = config['DEFAULT']['SCREEN_SIZE']
 
 # ----------------------------------------------------------
 
@@ -61,11 +64,17 @@ def human_readable_size(size, decimal_places=1):
 
 def display_image(status):
     if status=="WAIT":
+        image = "pandora-box1.png"
     elif status=="WORK":
+        image = "pandora-box2.png"
     elif status=="OK":
+        image = "pandora-box3.png"
     elif status=="BAD":
+        image = "pandora-box4.png"
     else
-        
+        return
+    os.system("convert -resize %s -background black -gravity center -extent %s %s bgra:/dev/fb0" % (SCREEN_SIZE, SCREEN_SIZE, image))
+
 # -----------------------------------------------------------
 # CURSES Screen
 # -----------------------------------------------------------
@@ -73,75 +82,85 @@ def display_image(status):
 """Initialise curses"""
 def intit_curses():
     global screen
-    screen = curses.initscr()
-    screen.keypad(1)
-    curses.curs_set(0)
-    curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
-    curses.flushinp()
-    curses.noecho()
-#    screen.clear()
+    if CURSES:
+        screen = curses.initscr()
+        screen.keypad(1)
+        curses.curs_set(0)
+        curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
+        curses.flushinp()
+        curses.noecho()
+    else:
+        display_image("WAIT")
 
 """Print FS Label"""
 def print_fslabel(label):
     global status_win
-    status_win.addstr(1, 1, "Partition : %-32s" % label, curses.color_pair(2))
-    status_win.refresh()
+    if CURSES:
+        status_win.addstr(1, 1, "Partition : %-32s" % label, curses.color_pair(2))
+        status_win.refresh()        
 
 """Print FS Size"""
 def print_size(label):
     global status_win
-    if label == None:
-        status_win.addstr(2, 1, "Size :            ",curses.color_pair(2))
-    else:
-        status_win.addstr(2, 1, "Size : %s " % label,curses.color_pair(2))
-        logging.info("Size: %s" % label)
-    status_win.refresh()
+    if CURSES:
+        if label == None:
+            status_win.addstr(2, 1, "Size :            ",curses.color_pair(2))
+        else:
+            status_win.addstr(2, 1, "Size : %s " % label,curses.color_pair(2))
+            logging.info("Size: %s" % label)
+        status_win.refresh()
 
 """Print FS Used Size"""
 def print_used(label):
     global status_win
-    if label == None:
-        status_win.addstr(3, 1, "Used :            ",curses.color_pair(2))
-    else:
-        status_win.addstr(3, 1, "Used : %s " % label,curses.color_pair(2))
-        logging.info("Used: %s" % label)
-    status_win.refresh()
+    if CURSES:
+        if label == None:
+            status_win.addstr(3, 1, "Used :            ",curses.color_pair(2))
+        else:
+            status_win.addstr(3, 1, "Used : %s " % label,curses.color_pair(2))
+            logging.info("Used: %s" % label)
+        status_win.refresh()
 
 def print_fstype(label):
     global status_win
-    status_win.addstr(1, 50, "Part / Type : %-32s" % label, curses.color_pair(2))
-    status_win.refresh()
+    if CURSES:
+        status_win.addstr(1, 50, "Part / Type : %-32s" % label, curses.color_pair(2))
+        status_win.refresh()
 
 def print_model(label):
     global status_win
-    status_win.addstr(2, 50, "Model : %-32s" % label, curses.color_pair(2))
-    status_win.refresh()
+    if CURSES:
+        status_win.addstr(2, 50, "Model : %-32s" % label, curses.color_pair(2))
+        status_win.refresh()
 
 def print_serial(label):
     global status_win
-    status_win.addstr(3, 50, "Serial : %-32s" % label, curses.color_pair(2))
-    status_win.refresh()
+    if CURSES:
+        status_win.addstr(3, 50, "Serial : %-32s" % label, curses.color_pair(2))
+        status_win.refresh()
 
 """Initialise progress bar"""
 def init_bar():
     global progress_win
-    progress_win = curses.newwin(3, curses.COLS-12, 17, 5)
-    progress_win.border(0)
-    progress_win.refresh()
+    if CURSES:
+        progress_win = curses.newwin(3, curses.COLS-12, 17, 5)
+        progress_win.border(0)
+        progress_win.refresh()
 
 """Update progress bar"""
 def update_bar(progress):
     global progress_win
-    if progress == 0:
-        progress_win.clear()
-        progress_win.border(0)
-        time.sleep(0)
-        progress_win.addstr(0, 1, "Progress:")
-    else:
-        pos = ((curses.COLS-14) * progress) // 100 
-        progress_win.addstr(1, 1, "#"*pos)
-        progress_win.addstr(0, 1, "Progress: %d%%" % progress)
-    progress_win.refresh()
+    if CURSES:
+        if progress == 0:
+            progress_win.clear()
+            progress_win.border(0)
+            time.sleep(0)
+            progress_win.addstr(0, 1, "Progress:")
+        else:
+            pos = ((curses.COLS-14) * progress) // 100 
+            progress_win.addstr(1, 1, "#"*pos)
+            progress_win.addstr(0, 1, "Progress: %d%%" % progress)
+        progress_win.refresh()
 
 """Splash screen"""
 s = [None] * 10;
@@ -161,40 +180,42 @@ s[9] = "                               ░                                      
 """Print main screen"""
 def print_screen():
     global status_win
-    curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
-    curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
-    curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
-    title_win = curses.newwin(12, curses.COLS, 0, 0)
-    # title_win.border(0)
-    title_col = (curses.COLS - len(s[0]))//2
-    title_win.addstr(1, title_col, s[0], curses.color_pair(1))
-    title_win.addstr(2, title_col, s[1], curses.color_pair(1))
-    title_win.addstr(3, title_col, s[2], curses.color_pair(1))
-    title_win.addstr(4, title_col, s[3], curses.color_pair(1))
-    title_win.addstr(5, title_col, s[4], curses.color_pair(1))
-    title_win.addstr(6, title_col, s[5], curses.color_pair(1))
-    title_win.addstr(7, title_col, s[6], curses.color_pair(1))
-    title_win.addstr(8, title_col, s[7], curses.color_pair(1))
-    title_win.addstr(9, title_col, s[8], curses.color_pair(1))
-    title_win.addstr(10, title_col, s[9], curses.color_pair(1))
-    title_win.refresh()
-    status_win = curses.newwin(5, curses.COLS, 12, 0)
-    status_win.border(0)
-    status_win.addstr(0, 1, "USB Key Information")
-    print_fslabel("")
-    print_size(None)
-    print_used(None)
-    print_fstype("")
-    print_model("")
-    print_serial("")
-    init_bar()
-    update_bar(0)
+    if CURSES:
+        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        title_win = curses.newwin(12, curses.COLS, 0, 0)
+        # title_win.border(0)
+        title_col = (curses.COLS - len(s[0]))//2
+        title_win.addstr(1, title_col, s[0], curses.color_pair(1))
+        title_win.addstr(2, title_col, s[1], curses.color_pair(1))
+        title_win.addstr(3, title_col, s[2], curses.color_pair(1))
+        title_win.addstr(4, title_col, s[3], curses.color_pair(1))
+        title_win.addstr(5, title_col, s[4], curses.color_pair(1))
+        title_win.addstr(6, title_col, s[5], curses.color_pair(1))
+        title_win.addstr(7, title_col, s[6], curses.color_pair(1))
+        title_win.addstr(8, title_col, s[7], curses.color_pair(1))
+        title_win.addstr(9, title_col, s[8], curses.color_pair(1))
+        title_win.addstr(10, title_col, s[9], curses.color_pair(1))
+        title_win.refresh()
+        status_win = curses.newwin(5, curses.COLS, 12, 0)
+        status_win.border(0)
+        status_win.addstr(0, 1, "USB Key Information")
+        print_fslabel("")
+        print_size(None)
+        print_used(None)
+        print_fstype("")
+        print_model("")
+        print_serial("")
+        init_bar()
+        update_bar(0)
     log('Ready.')
 
 """Closes curses"""
 def end_curses():
-    curses.endwin()
-    curses.flushinp()
+    if CURSES:
+        curses.endwin()
+        curses.flushinp()
 
 # -----------------------------------------------------------
 # Logging windows
@@ -202,8 +223,9 @@ def end_curses():
 
 def init_log():
     global log_win, logging
-    log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
-    log_win.border(0)
+    if CURSES:
+        log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
+        log_win.border(0)
     logging.basicConfig(
         filename='pandora-box.log', 
         level=logging.INFO,
@@ -215,14 +237,16 @@ logs = []
 def log(str):
     global log_win, logging
     logging.info(str)
-    logs.append(str)
-    if len(logs)>(curses.LINES-22):
-        logs.pop(0)
-    log_win.clear()
-    log_win.border(0)
-    for i in range(min(curses.LINES-22,len(logs))):
-        log_win.addstr(i+1,1,logs[i][:curses.COLS-2],curses.color_pair(3))
-    log_win.refresh()
+    if CURSES:
+        # display log on screen
+        logs.append(str)
+        if len(logs)>(curses.LINES-22):
+            logs.pop(0)
+        log_win.clear()
+        log_win.border(0)
+        for i in range(min(curses.LINES-22,len(logs))):
+            log_win.addstr(i+1,1,logs[i][:curses.COLS-2],curses.color_pair(3))
+        log_win.refresh()
 
 # -----------------------------------------------------------
 # Device
@@ -279,11 +303,14 @@ def device_loop():
                 if device.action == "add":
                     log("Device inserted")
                     log_device_info(device)
-                    # display device type
-                    print_fslabel(device.get("ID_FS_LABEL"))
-                    print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
-                    print_model(device.get("ID_MODEL"))
-                    print_serial(device.get("ID_SERIAL_SHORT"))
+                    if !CURSES:
+                        display_image("WORK")
+                    else:
+                        # display device type
+                        print_fslabel(device.get("ID_FS_LABEL"))
+                        print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
+                        print_model(device.get("ID_MODEL"))
+                        print_serial(device.get("ID_SERIAL_SHORT"))
                     # Mount device
                     mount_point = mount_device(device)
                     if mount_point == None:
@@ -304,7 +331,10 @@ def device_loop():
                     # Clean files
                     if len(infected_files) > 0:
                         log('%d infected files found !' % len(infected_files))
-                        log('PRESS KEY TO CLEAN')
+                        if !CURSES:
+                            display_image("BAD")
+                        else:
+                            log('PRESS KEY TO CLEAN')
                         screen.getch()
                         # Remove infected files
                         for file in infected_files:
@@ -314,17 +344,23 @@ def device_loop():
                             except Exception as e :
                                 log("Unexpected error: %s" % str(e))
                         log("Clean done.")
+                    else:
+                        if !CURSES:
+                            display_image("OK")
 
                 if device.action == "remove":
                     log("Device removed")
-                    print_fslabel("")
-                    print_size(None)
-                    print_used(None)
-                    print_fstype("")
-                    print_model("")
-                    print_serial("")
-                    umount_device()
-                    update_bar(0)
+                    if !CURSES:
+                        display_image("WAIT")
+                    else:
+                        print_fslabel("")
+                        print_size(None)
+                        print_used(None)
+                        print_fstype("")
+                        print_model("")
+                        print_serial("")
+                        umount_device()
+                        update_bar(0)
     except Exception as e:
         log("Unexpected error: %s" % str(e) )
     finally:
@@ -425,13 +461,15 @@ def main(stdscr):
         while True:
             device_loop()
     except Exception as e :
-        end_curses()
+        if CURSES:
+            end_curses()
         print("Unexpected error: ", e)
     finally:
-        end_curses()
+        if CURSES:
+            end_curses()
 
 # --------------------------------------
 
-
 if __name__ == "__main__":
     wrapper(main)
+
