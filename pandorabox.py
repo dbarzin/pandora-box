@@ -40,6 +40,7 @@ def config():
     # Quarantine
     QUARANTINE = config['DEFAULT']['QUARANTINE'].lower()=="true"
     QUARANTINE_FOLDER = config['DEFAULT']['QUARANTINE_FOLDER']
+
 # ----------------------------------------------------------
 
 """ Convert size to human readble string """
@@ -64,19 +65,6 @@ def intit_curses():
     curses.flushinp()
     curses.noecho()
 #    screen.clear()
-
-
-"""Print status string"""
-def print_status(strStatus):
-    global status_win
-    #status_win.addstr(1, 1, "Status : %-32s" % strStatus, curses.color_pair(2))
-    #status_win.refresh()
-
-"""Print current action"""
-def print_action(label):
-    global status_win
-    #status_win.addstr(3, 1, "Action : %-32s" % label, curses.color_pair(2))
-    #status_win.refresh()
 
 """Print FS Label"""
 def print_fslabel(label):
@@ -140,30 +128,6 @@ def update_bar(progress):
         progress_win.addstr(0, 1, "Progress: %d%%" % progress)
     progress_win.refresh()
 
-def init_log():
-    global log_win, logging
-    log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
-    log_win.border(0)
-    logging.basicConfig(
-        filename='pandorabox.log', 
-        level=logging.INFO,
-        format='%(asctime)s - %(message)s',
-        datefmt='%m/%d/%y %H:%M'
-    )
-
-logs = []
-def log(str):
-    global log_win, logging
-    logging.info(str)
-    logs.append(str)
-    if len(logs)>(curses.LINES-22):
-        logs.pop(0)
-    log_win.clear()
-    log_win.border(0)
-    for i in range(min(curses.LINES-22,len(logs))):
-        log_win.addstr(i+1,1,logs[i][:curses.COLS-2],curses.color_pair(3))
-    log_win.refresh()
-
 """Splash screen"""
 s = [None] * 10;
 s[0] = "   ██▓███   ▄▄▄       ███▄    █ ▓█████▄  ▒█████   ██▀███   ▄▄▄          ▄▄▄▄    ▒█████  ▒██   ██▒"
@@ -202,12 +166,10 @@ def print_screen():
     status_win = curses.newwin(5, curses.COLS, 12, 0)
     status_win.border(0)
     status_win.addstr(0, 1, "USB Key Information")
-    # print_status("WAITING")
     print_fslabel("")
     print_size(None)
     print_used(None)
     print_fstype("")
-    print_action("")
     print_model("")
     print_serial("")
     init_bar()
@@ -219,6 +181,33 @@ def end_curses():
     curses.endwin()
     curses.flushinp()
 
+# -----------------------------------------------------------
+# Logging windows
+# -----------------------------------------------------------
+
+def init_log():
+    global log_win, logging
+    log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
+    log_win.border(0)
+    logging.basicConfig(
+        filename='pandorabox.log', 
+        level=logging.INFO,
+        format='%(asctime)s - %(message)s',
+        datefmt='%m/%d/%y %H:%M'
+    )
+
+logs = []
+def log(str):
+    global log_win, logging
+    logging.info(str)
+    logs.append(str)
+    if len(logs)>(curses.LINES-22):
+        logs.pop(0)
+    log_win.clear()
+    log_win.border(0)
+    for i in range(min(curses.LINES-22,len(logs))):
+        log_win.addstr(i+1,1,logs[i][:curses.COLS-2],curses.color_pair(3))
+    log_win.refresh()
 
 # -----------------------------------------------------------
 # Device
@@ -276,7 +265,6 @@ def device_loop():
                     log("Device inserted")
                     log_device_info(device)
                     # display device type
-                    print_status("KEY INSERTED")
                     print_fslabel(device.get("ID_FS_LABEL"))
                     print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
                     print_model(device.get("ID_MODEL"))
@@ -314,13 +302,10 @@ def device_loop():
 
                 if device.action == "remove":
                     log("Device removed")
-                    #print_status("WAITING")
-                    print_action("Device removed")
                     print_fslabel("")
                     print_size(None)
                     print_used(None)
                     print_fstype("")
-                    print_action("")
                     print_model("")
                     print_serial("")
                     umount_device()
@@ -353,7 +338,6 @@ def log_device_info(dev):
 # pandora
 # -----------------------------------------------------------
 
-
 """Scan a mount point with Pandora"""
 def scan(mount_point, used):
     global infected_filed 
@@ -376,7 +360,6 @@ def scan(mount_point, used):
                 if FAKE_SCAN :
                     time.sleep(0.1)
                     status = "SKIPPED"
-                    # status = "ALERT"
                 else:
                     if file_size > (1024*1024*1024):
                         status = "TOO BIG"
@@ -416,7 +399,6 @@ def scan(mount_point, used):
     return infected_files
 
 # --------------------------------------
-
 
 """Main entry point"""
 def main(stdscr):

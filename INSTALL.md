@@ -9,6 +9,14 @@ Mouse terminal
 
 sudo apt install gpm
 
+imagemagick
+-----------
+
+imagemagick for convert command
+
+sudo apt install imagemagick
+
+
 User mount device
 ---------------
 
