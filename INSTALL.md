@@ -28,7 +28,7 @@ Messages on console
 
 Suppress all messages from the kernel (and its drivers) except panic messages from appearing on the console.
 
-   echo "dmesg -n 1" >> /etc/rc.local
+echo "kernel.printk = 3 4 1 3" | sudo tee -a /etc/sysctl.conf
 
 
 Python
