@@ -106,7 +106,7 @@ Homepage
 
 convert -resize 1920x1080 -background black -gravity center -extent 1920x1080 image1.png bgra:/dev/fb0
 
-AUtoLogin
+AutoLogin
 ---------
 
 
@@ -122,4 +122,12 @@ https://wiki.archlinux.org/title/Getty#Automatic_login_to_virtual_console
 
 
 The option Type=idle found in the default getty@.service will delay the service startup until all jobs are completed in order to avoid polluting the login prompt with boot-up messages.
+
+
+Quarantine Folder
+-----------------
+
+mkdir /var/quarantine
+chmod 0777 /var/quarantine
+
 
