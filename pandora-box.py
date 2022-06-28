@@ -24,6 +24,7 @@ USB_AUTO_MOUNT = False
 PANDORA_ROOT_URL = "http://127.0.0.1:6100"
 FAKE_SCAN = False
 QUARANTINE = False
+CURSES = True
 
 """ read configuration file """
 def config():
@@ -40,6 +41,8 @@ def config():
     # Quarantine
     QUARANTINE = config['DEFAULT']['QUARANTINE'].lower()=="true"
     QUARANTINE_FOLDER = config['DEFAULT']['QUARANTINE_FOLDER']
+    # Curses
+    CURSES = config['DEFAULT']['CURSES'].lower()=="true"
 
 # ----------------------------------------------------------
 
@@ -51,8 +54,20 @@ def human_readable_size(size, decimal_places=1):
         size /= 1024.0
     return f"{size:.{decimal_places}f}{unit}"
 
+
 # -----------------------------------------------------------
-# Screen
+# Image Screen
+# -----------------------------------------------------------
+
+def display_image(status):
+    if status=="WAIT":
+    elif status=="WORK":
+    elif status=="OK":
+    elif status=="BAD":
+    else
+        
+# -----------------------------------------------------------
+# CURSES Screen
 # -----------------------------------------------------------
 
 """Initialise curses"""
@@ -190,7 +205,7 @@ def init_log():
     log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
     log_win.border(0)
     logging.basicConfig(
-        filename='pandorabox.log', 
+        filename='pandora-box.log', 
         level=logging.INFO,
         format='%(asctime)s - %(message)s',
         datefmt='%m/%d/%y %H:%M'
