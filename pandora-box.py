@@ -31,10 +31,11 @@ SCREEN_SIZE = None
 def config():
     global USB_AUTO_MOUNT, PANDORA_ROOT_URL
     global FAKE_SCAN, QUARANTINE, QUARANTINE_FOLDER
+    global CURSES, SCREEN_SIZE
     # intantiate a ConfirParser
     config = configparser.ConfigParser()
     # read the config file
-    config.read('pandorabox.ini')
+    config.read('pandora-box.ini')
     # set values
     FAKE_SCAN=config['DEFAULT']['FAKE_SCAN'].lower()=="true"
     USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
@@ -64,14 +65,14 @@ def human_readable_size(size, decimal_places=1):
 
 def display_image(status):
     if status=="WAIT":
-        image = "pandora-box1.png"
+        image = "images/pandora-box1.png"
     elif status=="WORK":
-        image = "pandora-box2.png"
+        image = "images/pandora-box2.png"
     elif status=="OK":
-        image = "pandora-box3.png"
+        image = "images/pandora-box3.png"
     elif status=="BAD":
-        image = "pandora-box4.png"
-    else
+        image = "images/pandora-box4.png"
+    else:
         return
     os.system("convert -resize %s -background black -gravity center -extent %s %s bgra:/dev/fb0" % (SCREEN_SIZE, SCREEN_SIZE, image))
 
@@ -80,16 +81,17 @@ def display_image(status):
 # -----------------------------------------------------------
 
 """Initialise curses"""
-def intit_curses():
+def init_curses():
     global screen
+    screen = curses.initscr()
+    screen.keypad(1)
+    curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
+    curses.flushinp()
+    curses.noecho()
     if CURSES:
-        screen = curses.initscr()
-        screen.keypad(1)
+        # remove blinking cursor
         curses.curs_set(0)
-        curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
-        curses.flushinp()
-        curses.noecho()
-    else:
+    else: 
         display_image("WAIT")
 
 """Print FS Label"""
@@ -213,9 +215,8 @@ def print_screen():
 
 """Closes curses"""
 def end_curses():
-    if CURSES:
-        curses.endwin()
-        curses.flushinp()
+    curses.endwin()
+    curses.flushinp()
 
 # -----------------------------------------------------------
 # Logging windows
@@ -303,7 +304,7 @@ def device_loop():
                 if device.action == "add":
                     log("Device inserted")
                     log_device_info(device)
-                    if !CURSES:
+                    if not CURSES:
                         display_image("WORK")
                     else:
                         # display device type
@@ -331,7 +332,7 @@ def device_loop():
                     # Clean files
                     if len(infected_files) > 0:
                         log('%d infected files found !' % len(infected_files))
-                        if !CURSES:
+                        if not CURSES:
                             display_image("BAD")
                         else:
                             log('PRESS KEY TO CLEAN')
@@ -343,14 +344,18 @@ def device_loop():
                                 log('%s removed' % file)
                             except Exception as e :
                                 log("Unexpected error: %s" % str(e))
+                        os.system("sync")
                         log("Clean done.")
+                        if not CURSES:
+                            display_image("OK")
                     else:
-                        if !CURSES:
+                        if not CURSES:
                             display_image("OK")
 
                 if device.action == "remove":
                     log("Device removed")
-                    if !CURSES:
+                    umount_device()
+                    if not CURSES:
                         display_image("WAIT")
                     else:
                         print_fslabel("")
@@ -359,7 +364,6 @@ def device_loop():
                         print_fstype("")
                         print_model("")
                         print_serial("")
-                        umount_device()
                         update_bar(0)
     except Exception as e:
         log("Unexpected error: %s" % str(e) )
@@ -456,17 +460,15 @@ def main(stdscr):
     try :
         init_log()
         config()
-        intit_curses()
+        init_curses()
         print_screen()
         while True:
             device_loop()
     except Exception as e :
-        if CURSES:
-            end_curses()
+        end_curses()
         print("Unexpected error: ", e)
     finally:
-        if CURSES:
-            end_curses()
+        end_curses()
 
 # --------------------------------------
 
