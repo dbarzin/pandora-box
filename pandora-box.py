@@ -455,9 +455,15 @@ def scan(mount_point, used):
 
 # --------------------------------------
 
+def moveToScriptFolder():
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
+
 """Main entry point"""
 def main(stdscr):
     try :
+        moveToScriptFolder()
         init_log()
         config()
         init_curses()
