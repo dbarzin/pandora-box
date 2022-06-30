@@ -5,7 +5,7 @@
 import os
 import time
 
-size = "1020x600"
+size = "1024x600"
 #size = "1920x1080"
 
 images = ["pandora-box1.png", "pandora-box2.png", "pandora-box3.png", "pandora-box4.png"]
