@@ -72,6 +72,8 @@ def display_image(status):
         image = "images/pandora-box3.png"
     elif status=="BAD":
         image = "images/pandora-box4.png"
+    elif status=="ERROR":
+        image = "images/pandora-box5.png"
     else:
         return
     os.system("convert -resize %s -background black -gravity center -extent %s %s bgra:/dev/fb0" % (SCREEN_SIZE, SCREEN_SIZE, image))
@@ -304,6 +306,9 @@ def umount_device():
 
 """Main device loop"""
 def device_loop():
+    # First unmount remaining device
+    umount_device()
+    # Loop
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
     monitor.filter_by("block")
@@ -414,9 +419,9 @@ def scan(mount_point, used):
         quanrantine_folder = os.path.join(QUARANTINE_FOLDER,datetime.now().strftime("%y%m%d-%H%M"))
     if not FAKE_SCAN:
         pandora = pypandora.PyPandora(root_url=PANDORA_ROOT_URL)
-    for root, dirs, files in os.walk(mount_point):
-        for file in files:
-            try :
+    try:
+        for root, dirs, files in os.walk(mount_point):
+            for file in files:
                 status = None
                 full_path = os.path.join(root,file)
                 file_size = os.path.getsize(full_path)
@@ -455,9 +460,12 @@ def scan(mount_point, used):
                         if not os.path.isdir(quanrantine_folder) :
                             os.mkdir(quanrantine_folder)
                         shutil.copyfile(full_path, os.path.join(quanrantine_folder,file))
-
-            except Exception as e :
-                log("Unexpected error: %s" % e)
+    except Exception as e :
+        log("Unexpected error: %s" % e)
+        if not CURSES:
+            display_image("ERROR")
+            waitMouseClick()
+        raise
     update_bar(100)
     log("Scan done in %ds, %d files scanned, %d files infected" % 
         ((time.time() - scan_start_time),file_count,len(infected_files)))
