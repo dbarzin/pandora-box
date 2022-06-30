@@ -299,10 +299,9 @@ def mount_device(device):
 """Unmount USB device"""
 def umount_device():
     if not USB_AUTO_MOUNT:
-        log("Unmounting device /media/box")
-        res = os.system("pumount /media/box")
-        # print("Return type: ", res)
-
+        if os.path.exists("/media/box"):
+           log("Unmounting device /media/box")
+           res = os.system("pumount /media/box")
 
 """Main device loop"""
 def device_loop():
@@ -462,9 +461,9 @@ def scan(mount_point, used):
                         shutil.copyfile(full_path, os.path.join(quanrantine_folder,file))
     except Exception as e :
         log("Unexpected error: %s" % e)
+        log("Scan failed !")
         if not CURSES:
             display_image("ERROR")
-            waitMouseClick()
         raise
     update_bar(100)
     log("Scan done in %ds, %d files scanned, %d files infected" % 
