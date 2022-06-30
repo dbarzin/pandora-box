@@ -116,9 +116,14 @@ ExecStart=
 ExecStart=-su - didier -c ./pandora-box/pandora-box.py 
 StandardInput=tty
 StandardOutput=tty
+Type=idle
 
 
-https://wiki.archlinux.org/title/Getty#Automatic_login_to_virtual_console
+Restert getty1
+
+sudo systemctl daemon-reload; sudo systemctl restart getty@tty1.service
+
+src: https://wiki.archlinux.org/title/Getty#Automatic_login_to_virtual_console
 
 
 The option Type=idle found in the default getty@.service will delay the service startup until all jobs are completed in order to avoid polluting the login prompt with boot-up messages.

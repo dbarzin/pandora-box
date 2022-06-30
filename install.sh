@@ -1,4 +1,6 @@
 #/usr/bin/bash -e
+# Install procedure for Pandora-Box
+
 set -e
 
 cd ..
@@ -83,13 +85,17 @@ sudo mkdir /var/quarantine
 sudo chown $USER /var/quarantine
 
 # Mouse terminal
-sudo apt install gpm imagemagick pmount
+sudo apt install imagemagick pmount
 
 # Suppress all messages from the kernel (and its drivers) except panic messages from appearing on the console.
 echo "kernel.printk = 3 4 1 3" | sudo tee -a /etc/sysctl.conf
 
 # allow write to /dev/fb0
 sudo usermod -a -G video $USER
+
+# allow read mouse input
+sudo usermod -a -G input $USER
+
 
 # Start Poetry
 echo "cd /home/$USER/pandora" >> /etc/rc.local
