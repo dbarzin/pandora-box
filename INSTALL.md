@@ -106,16 +106,16 @@ Homepage
 
 convert -resize 1920x1080 -background black -gravity center -extent 1920x1080 image1.png bgra:/dev/fb0
 
-AutoLogin
----------
+AutoStart on console
+--------------------
 
-
-sudo systemctl edit getty@tty1
+cat > /etc/systemd/system/getty@tty1.service.d/override.conf
 
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty -a user1 --noclear %I $TERM
-Type=idle
+ExecStart=-su - didier -c ./pandora-box/pandora-box.py 
+StandardInput=tty
+StandardOutput=tty
 
 
 https://wiki.archlinux.org/title/Getty#Automatic_login_to_virtual_console
@@ -130,4 +130,11 @@ Quarantine Folder
 mkdir /var/quarantine
 chmod 0777 /var/quarantine
 
+
+Move to pandora-box folder
+---------------------------
+
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 
