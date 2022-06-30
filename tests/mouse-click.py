@@ -6,7 +6,7 @@ def waitMouseClick():
         buf = mouse.read(3)
         if ((buf[0] & 0x1)==1):
             break;
-    close(mouse)
+    mouse.close()
 
 waitMouseClick()
 
