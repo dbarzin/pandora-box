@@ -77,19 +77,28 @@ def display_image(status):
     os.system("convert -resize %s -background black -gravity center -extent %s %s bgra:/dev/fb0" % (SCREEN_SIZE, SCREEN_SIZE, image))
 
 # -----------------------------------------------------------
+
+def waitMouseClick():
+    mouse = open( "/dev/input/mice", "rb" )
+    while True:
+        buf = mouse.read(3)
+        if ((buf[0] & 0x1)==1):
+            break;
+    mouse.close()
+
+# -----------------------------------------------------------
 # CURSES Screen
 # -----------------------------------------------------------
 
 """Initialise curses"""
 def init_curses():
     global screen
-    screen = curses.initscr()
-    screen.keypad(1)
-    curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
-    curses.flushinp()
-    curses.noecho()
     if CURSES:
-        # remove blinking cursor
+        screen = curses.initscr()
+        screen.keypad(1)
+        curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
+        curses.flushinp()
+        curses.noecho()
         curses.curs_set(0)
     else: 
         display_image("WAIT")
@@ -334,9 +343,10 @@ def device_loop():
                         log('%d infected files found !' % len(infected_files))
                         if not CURSES:
                             display_image("BAD")
+                            waitMouseClick()
                         else:
                             log('PRESS KEY TO CLEAN')
-                        screen.getch()
+                            screen.getch()
                         # Remove infected files
                         for file in infected_files:
                             try :
