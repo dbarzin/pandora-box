@@ -20,7 +20,7 @@ cd redis
 git checkout 6.2
 make
 # Optionally, you can run the tests:
-# make test
+make test
 cd ..
 
 chown -R $SUDO_USER redis
@@ -34,7 +34,7 @@ cd kvrocks
 git checkout 2.0
 make -j4
 # Optionally, you can run the tests:
-# make test
+make test
 cd ..
 
 chown -R $SUDO_USER kvrocks
@@ -105,10 +105,10 @@ usermod -a -G video $SUDO_USER
 usermod -a -G input $SUDO_USER
 
 # Start Poetry at boot
-echo "su - $SUDO_USER -c \"cd /home/$SUDO_USER/pandora ; poetry run start\" 2>&1 >storage/pandora.log" > /etc/rc.local
+echo "su - $SUDO_USER -c \"cd /home/$SUDO_USER/pandora ; poetry run start\"" > /etc/rc.local
 chmod +x /etc/rc.local
 
-# getty1 autostart
+# Getty1 autostart
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 echo "[Service]" > /etc/systemd/system/getty@tty1.service.d/override.conf
 echo "ExecStart=" >> /etc/systemd/system/getty@tty1.service.d/override.conf
