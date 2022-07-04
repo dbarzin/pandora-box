@@ -10,8 +10,8 @@ curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poet
 poetry --version
 
 # REDIS
-sudo apt-get update
-sudo apt install build-essential tcl
+apt-get update
+apt install build-essential tcl
 
 git clone https://github.com/redis/redis.git
 cd redis
@@ -21,9 +21,11 @@ make
 make test
 cd ..
 
+chown -R $SUDO_USER redis
+
 # Kvrocks
-sudo apt-get update
-sudo apt install gcc g++ make libsnappy-dev autoconf automake libtool googletest libgtest-dev
+apt-get update
+apt install gcc g++ make libsnappy-dev autoconf automake libtool googletest libgtest-dev
 
 git clone --recursive https://github.com/apache/incubator-kvrocks.git kvrocks
 cd kvrocks
@@ -33,15 +35,17 @@ make -j4
 make test
 cd ..
 
+chown -R $SUDO_USER kvrocks
+
 # Pandora
 git clone https://github.com/pandora-analysis/pandora.git
 
-sudo apt install python3-dev  # for compiling things
-sudo apt install libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
-sudo apt install libreoffice-base-nogui libreoffice-calc-nogui libreoffice-draw-nogui libreoffice-impress-nogui libreoffice-math-nogui libreoffice-writer-nogui  # For Office -> PDF
-sudo apt install exiftool  # for extracting exif information
-sudo apt install unrar  # for extracting rar files
-sudo apt install libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
+apt install python3-dev  # for compiling things
+apt install libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
+apt install libreoffice-base-nogui libreoffice-calc-nogui libreoffice-draw-nogui libreoffice-impress-nogui libreoffice-math-nogui libreoffice-writer-nogui  # For Office -> PDF
+apt install exiftool  # for extracting exif information
+apt install unrar  # for extracting rar files
+apt install libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
 
 cd pandora  
 poetry install
@@ -49,55 +53,56 @@ echo PANDORA_HOME="`pwd`" >> .env
 
 cp config/generic.json.sample config/generic.json
 
-#ClamAV
-sudo apt-get install clamav-daemon
+# ClamAV
+apt-get install clamav-daemon
 # In order for the module to work, you need the signatures. 
 # Running the command "freshclam" will do it but if the script is already running
 # (it is started by the systemd service clamav-freshclam)
 # You might want to run the commands below: 
-sudo systemctl stop clamav-freshclam.service  # Stop the service
-sudo freshclam  # Run the signatures update
-sudo systemctl start clamav-freshclam.service # Start the service so we keep getting the updates
+systemctl stop clamav-freshclam.service  # Stop the service
+freshclam  # Run the signatures update
+systemctl start clamav-freshclam.service # Start the service so we keep getting the updates
 
-sudo service clamav-daemon start
+service clamav-daemon start
 
 # Comodo
 wget https://download.comodo.com/cis/download/installs/linux/cav-linux_x64.deb
-sudo dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
+dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 
-sudo wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
+wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
 # Workers
 
 for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done
 
+chown -R $SUDO_USER .
+
 poetry run update --yes
 
 #---------------------
-# Pandora 
+# Pandora-box
 #---------------------
 
 # Python libraries
 pip install psutil pyudev
 
 # Quarantine folder
-sudo mkdir /var/quarantine
-sudo chown $USER /var/quarantine
+mkdir /var/quarantine
+chown $SUDO_USER /var/quarantine
 
 # Mouse terminal
-sudo apt install imagemagick pmount
+apt install imagemagick pmount
 
 # Suppress all messages from the kernel (and its drivers) except panic messages from appearing on the console.
-echo "kernel.printk = 3 4 1 3" | sudo tee -a /etc/sysctl.conf
+echo "kernel.printk = 3 4 1 3" | tee -a /etc/sysctl.conf
 
 # allow write to /dev/fb0
-sudo usermod -a -G video $USER
+usermod -a -G video $SUDO_USER
 
 # allow read mouse input
-sudo usermod -a -G input $USER
+usermod -a -G input $SUDO_USER
 
-
-# Start Poetry
-echo "cd /home/$USER/pandora" >> /etc/rc.local
-echo "poetry run update --yes" >> /etc/rc.local
+# Start Poetry at boot
+echo "su - $USER -c \"cd /home/$USER/pandora ; poetry run update --yes\" 2>&1 >storage/pandora.log" >> /etc/rc.local
+chmod +x /etc/rc.local
 
