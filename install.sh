@@ -117,6 +117,9 @@ echo "StandardInput=tty" >> /etc/systemd/system/getty@tty1.service.d/override.co
 echo "StandardOutput=tty" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 echo "Type=idle" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
-reboot
+# Update pandora now
+su - $SUDO_USER -c "cd /home/$SUDO_USER/pandora ; poetry run update --yes"
 
+# Then reboot !
+reboot
 

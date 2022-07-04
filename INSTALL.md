@@ -9,7 +9,7 @@ Choose to "install OpenSSH server"
 
 That's all, no other packages needed
 
-After reboot, login with the user create during the install and type :
+After reboot, login with the user created during the install and type :
 
     sudo apt install git
     git clone https://github.com/dbarzin/pandora-box
