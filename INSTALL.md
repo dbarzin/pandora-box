@@ -4,6 +4,30 @@ Pandora-BOX
 
 Pandorabox is a USB scaning station base on Pandora
 
+Install
+-------
+
+Install Ubuntu 22.04 server LTS
+
+select (x) Ubuntu Server (minumized)
+
+Choose to install OpenSSH server
+
+That's all, no other packages needed
+
+After reboot, login with the user create during the install and type :
+
+   sudo apt install git
+   git clone https://github.com/dbarzin/pandora-box
+   cd pandora-box
+   sudo ./install.sh
+
+
+
+
+=========================================================================
+
+
 Mouse terminal
 ---------------
 
@@ -109,14 +133,15 @@ convert -resize 1920x1080 -background black -gravity center -extent 1920x1080 im
 AutoStart on console
 --------------------
 
-cat > /etc/systemd/system/getty@tty1.service.d/override.conf
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+echo "[Service]" > /etc/systemd/system/getty@tty1.service.d/override.conf
+echo "ExecStart=" >> /etc/systemd/system/getty@tty1.service.d/override.conf
+echo "ExecStart=-su - pandora -c ./pandora-box/pandora-box.py" >> /etc/systemd/system/getty@tty1.service.d/override.conf
+echo "StandardInput=tty" >> /etc/systemd/system/getty@tty1.service.d/override.conf
+echo "StandardOutput=tty" >> /etc/systemd/system/getty@tty1.service.d/override.conf
+echo "Type=idle" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
-[Service]
-ExecStart=
-ExecStart=-su - didier -c ./pandora-box/pandora-box.py 
-StandardInput=tty
-StandardOutput=tty
-Type=idle
+
 
 
 Restert getty1
