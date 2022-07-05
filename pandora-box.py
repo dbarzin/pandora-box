@@ -436,7 +436,7 @@ def scan(mount_point, used):
                         res = pandora.submit_from_disk(full_path)
                         time.sleep(0.1)
                         loop = 0
-                        while True and (loop < 60):
+                        while True and (loop < 960):
                             res = pandora.task_status(res["taskId"])
                             status = res["status"] 
                             if status != "WAITING":
@@ -448,7 +448,7 @@ def scan(mount_point, used):
                     file,
                     human_readable_size(file_size), 
                     status, 
-                    (file_scan_end_time - file_scan_start_time)))
+                   (file_scan_end_time - file_scan_start_time)))
                 scanned += os.path.getsize(full_path)
                 file_count += 1
                 update_bar(scanned * 100 // used)
