@@ -4,14 +4,20 @@
 set -e
 cd ..
 
+#---------------------
 # Python 
+#---------------------
 apt install -y python-is-python3 python3-pip
 
+#---------------------
 # Peotry
+#---------------------
 su - $SUDO_USER -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
 su - $SUDO_USER -c "poetry --version"
 
+#---------------------
 # REDIS
+#---------------------
 apt-get update
 apt install -y build-essential tcl
 
@@ -25,7 +31,9 @@ cd ..
 
 chown -R $SUDO_USER redis
 
+#---------------------
 # Kvrocks
+#---------------------
 apt-get update
 apt install -y gcc g++ make libsnappy-dev autoconf automake libtool googletest libgtest-dev
 
@@ -39,9 +47,13 @@ cd ..
 
 chown -R $SUDO_USER kvrocks
 
+#---------------------
 # Pandora
+#---------------------
 su - $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
+cd pandorra 
 
+# install packages
 apt install -y python3-dev  # for compiling things
 apt install -y libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
 apt install -y libreoffice-base-nogui libreoffice-calc-nogui libreoffice-draw-nogui libreoffice-impress-nogui libreoffice-math-nogui libreoffice-writer-nogui  # For Office -> PDF
@@ -49,9 +61,14 @@ apt install -y exiftool  # for extracting exif information
 apt install -y unrar  # for extracting rar files
 apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
 
-cd pandora  
-su - $SUDO_USER -c "cd ~/pandora; poetry install"
+# install yara-python
+su - $SUDO_USER -c "python3 -m pip show yara-python"
+
+# set .env
 echo PANDORA_HOME="`pwd`" >> .env
+chown $SUDO_USER .env
+
+su - $SUDO_USER -c "cd ~/pandora; poetry install"
 su - $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
 
 # ClamAV
@@ -72,12 +89,8 @@ dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
-# Workers
-
+# Configure workers
 su - $SUDO_USER -c "cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done"
-# remove not working 
-su - $SUDO_USER -c "cd pandora; rm pandora/workers/yara*.yml"
-su - $SUDO_USER -c "cd pandora; poetry run update --yes"
 
 #---------------------
 # Pandora-box
@@ -106,7 +119,7 @@ usermod -a -G video $SUDO_USER
 usermod -a -G input $SUDO_USER
 
 # Start Poetry at boot
-echo "su - $SUDO_USER -c \"cd pandora ; poetry run update -yes\""  > /etc/rc.local
+echo "su - $SUDO_USER -c \"cd pandora ; poetry run update --yes\""  > /etc/rc.local
 chmod +x /etc/rc.local
 
 # getty1 autostart
