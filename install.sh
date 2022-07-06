@@ -7,11 +7,13 @@
 set -e
 cd /home/$SUDO_USER
 
+# remove need restart
+apt remove needrestart
+
 #---------------------
 # Python 
 #---------------------
 apt update && apt upgrade -y
-apt remove needrestart
 apt install -y python-is-python3 python3-pip 
 apt install -y libssl-dev
 
