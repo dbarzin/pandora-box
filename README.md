@@ -23,7 +23,7 @@ It has a graphic user interface :
 
 and a text user interface for advanced users :
 
-
+[<img src="images/pandora-curses.png" width="400">](images/pandora-curses.png)
 
 ## Roadmap
 
