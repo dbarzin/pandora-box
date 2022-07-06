@@ -10,8 +10,8 @@ cd ~
 #---------------------
 # Python 
 #---------------------
-apt update && sudo apt update -y
-apt install -y python-is-python3 python3-pip
+apt update && apt upgrade -y
+apt install -y python-is-python3 python3-pip 
 apt install -y libssl-dev
 
 #---------------------
@@ -125,10 +125,10 @@ usermod -a -G video $SUDO_USER
 usermod -a -G input $SUDO_USER
 
 # Start Pandora at boot
-sudo cp pandora.service.sample /etc/systemd/system/pandora.service
-sudpo sed -i "s/_USER_/$SUDO_USER/g" /etc/systemd/system/pandora.service
-sudo systemctl daemon-reload
-sudo systemctl enable pandora
+cp pandora.service.sample /etc/systemd/system/pandora.service
+sed -i "s/_USER_/$SUDO_USER/g" /etc/systemd/system/pandora.service
+systemctl daemon-reload
+systemctl enable pandora
 
 # Start Pandora-box on getty1 at boot
 mkdir -p /etc/systemd/system/getty@tty1.service.d
