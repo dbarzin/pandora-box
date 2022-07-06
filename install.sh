@@ -8,7 +8,7 @@ set -e
 cd /home/$SUDO_USER
 
 # remove need restart
-apt remove needrestart
+apt remove -y needrestart
 
 #---------------------
 # Python 

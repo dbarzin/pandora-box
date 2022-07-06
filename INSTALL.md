@@ -11,7 +11,7 @@ That's all, no other packages needed
 
 After reboot, login with the user created during the install and type :
 
-    sudo apt install git
+    sudo apt install -y git
     git clone https://github.com/dbarzin/pandora-box
     cd pandora-box
     sudo ./install.sh
