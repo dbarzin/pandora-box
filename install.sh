@@ -127,8 +127,9 @@ usermod -a -G input $SUDO_USER
 sudo cp pandora.service.sample /etc/systemd/system/pandora.service
 sudpo sed -i "s/_USER_/$SUDO_USER/g" /etc/systemd/system/pandora.service
 sudo systemctl daemon-reload
+sudo systemctl enable pandora
 
-# getty1 autostart
+# Start Pandora-box on getty1 at boot
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 echo "[Service]" > /etc/systemd/system/getty@tty1.service.d/override.conf
 echo "ExecStart=" >> /etc/systemd/system/getty@tty1.service.d/override.conf
@@ -138,4 +139,3 @@ echo "StandardOutput=tty" >> /etc/systemd/system/getty@tty1.service.d/override.c
 echo "Type=idle" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
 reboot
-
