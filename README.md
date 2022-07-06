@@ -11,5 +11,16 @@ It is based on recycled ThinkCenter and an integrated HDMI touch screen.
 [<img src="images/box3.jpg" width="400">](images/box3.jpg)
 [<img src="images/box4.jpg" width="400">](images/box4.jpg)
 
-The installation procedure is described [here](INSTALL.md).
+It has a graphic user interface :
+
+[<img src="images/pandora-box1.png" width="400">](images/pandora-box1.png)
+[<img src="images/pandora-box2.png" width="400">](images/pandora-box2.png)
+[<img src="images/pandora-box3.png" width="400">](images/pandora-box3.png)
+[<img src="images/pandora-box4.png" width="400">](images/pandora-box4.png)
+
+and a text user interface for advanced users :
+
+
+
+There is an [installation and configuration procedure](INSTALL.md).
 
