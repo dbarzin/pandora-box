@@ -1,13 +1,17 @@
 #/usr/bin/bash -e
-# Install procedure for Pandora-Box
+
+#================================
+# Install script for Pandora-Box
+#================================
 
 set -e
-cd ..
+cd ~
 
 #---------------------
 # Python 
 #---------------------
-apt install -y python-is-python3 python3-pip
+sudo apt install -y python-is-python3 python3-pip
+sudo apt install -y libssl-dev
 
 #---------------------
 # Peotry
@@ -51,7 +55,6 @@ chown -R $SUDO_USER kvrocks
 # Pandora
 #---------------------
 su - $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
-cd pandorra 
 
 # install packages
 apt install -y python3-dev  # for compiling things
@@ -61,15 +64,16 @@ apt install -y exiftool  # for extracting exif information
 apt install -y unrar  # for extracting rar files
 apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
 
-# install yara-python
-su - $SUDO_USER -c "python3 -m pip show yara-python"
-
 # set .env
+cd ~/pandora
 echo PANDORA_HOME="`pwd`" >> .env
 chown $SUDO_USER .env
 
 su - $SUDO_USER -c "cd ~/pandora; poetry install"
 su - $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
+
+# install yara-python
+su - $SUDO_USER -c "pip install yara-python"
 
 # ClamAV
 apt-get install -y clamav-daemon
@@ -95,6 +99,7 @@ su - $SUDO_USER -c "cd pandora; for file in pandora/workers/*.sample; do cp -i $
 #---------------------
 # Pandora-box
 #---------------------
+cd ~/pandora-box
 
 # Python libraries
 su - $SUDO_USER -c "pip install pypandora psutil pyudev"
@@ -118,9 +123,10 @@ usermod -a -G video $SUDO_USER
 # allow read mouse input
 usermod -a -G input $SUDO_USER
 
-# Start Poetry at boot
-echo "su - $SUDO_USER -c \"cd pandora ; poetry run update --yes\""  > /etc/rc.local
-chmod +x /etc/rc.local
+# Start Pandora at boot
+sudo cp pandora.service.sample /etc/systemd/system/pandora.service
+sudpo sed -i "s/_USER_/$SUDO_USER/g" /etc/systemd/system/pandora.service
+sudo systemctl daemon-reload
 
 # getty1 autostart
 mkdir -p /etc/systemd/system/getty@tty1.service.d
@@ -132,5 +138,4 @@ echo "StandardOutput=tty" >> /etc/systemd/system/getty@tty1.service.d/override.c
 echo "Type=idle" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
 reboot
-
 

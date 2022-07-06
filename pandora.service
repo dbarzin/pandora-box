@@ -1,0 +1,19 @@
+[Unit]
+Description=Pandora service
+After=network.target
+
+[Service]
+User=_USER_
+Group=_USER_
+Type=forking
+WorkingDirectory=/home/_USER_/pandora
+Environment="PATH=/home/_USER_/.poetry/bin:/usr/bin"
+Environment="PANDORA_HOME=/home/_USER_/pandora"
+ExecStart=/bin/bash -c "exec poetry run start"
+ExecStop=/bin/bash -c "exec poetry run stop"
+StandardOutput=append:/var/log/pandora_message.log
+StandardError=append:/var/log/pandora_error.log
+
+
+[Install]
+WantedBy=multi-user.target
