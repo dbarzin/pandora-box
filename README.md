@@ -25,6 +25,10 @@ and a text user interface for advanced users :
 
 
 
+## Roadmap
+
+If you want to contribute, we have a [roadmap](ROADMAP.md).
+
 ## Installation
 
 The [installation and configuration procedure](INSTALL.md) is documented.
