@@ -10,9 +10,9 @@ cd ~
 #---------------------
 # Python 
 #---------------------
-sudo apt update && sudo apt update -y
-sudo apt install -y python-is-python3 python3-pip
-sudo apt install -y libssl-dev
+apt update && sudo apt update -y
+apt install -y python-is-python3 python3-pip
+apt install -y libssl-dev
 
 #---------------------
 # Peotry
