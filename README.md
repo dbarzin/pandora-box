@@ -11,6 +11,9 @@ It is based on recycled ThinkCenter and an integrated HDMI touch screen.
 [<img src="images/box3.jpg" width="400">](images/box3.jpg)
 [<img src="images/box4.jpg" width="400">](images/box4.jpg)
 
+
+## Interface
+
 It has a graphic user interface :
 
 [<img src="images/pandora-box1.png" width="400">](images/pandora-box1.png)
@@ -22,5 +25,11 @@ and a text user interface for advanced users :
 
 
 
-There is an [installation and configuration procedure](INSTALL.md).
+## Installation
+
+The [installation and configuration procedure](INSTALL.md) is documented.
+
+## License
+
+Pandora-box is an open source software distributed under [GPL](https://www.gnu.org/licenses/licenses.html).
 
