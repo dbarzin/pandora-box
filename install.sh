@@ -97,7 +97,8 @@ wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/CO
 # Configure workers
 su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
 
-su - pandora -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
+# Update Pandora
+su - $SUDO_USER -c 'cd pandora; poetry run update --yes'
 
 #---------------------
 # Pandora-box
