@@ -5,7 +5,7 @@
 #================================
 
 set -e
-cd ~
+cd /home/$SUDO_USER
 
 #---------------------
 # Python 
@@ -24,7 +24,6 @@ su - $SUDO_USER -c "poetry --version"
 #---------------------
 # REDIS
 #---------------------
-apt-get update
 apt install -y build-essential tcl
 
 git clone https://github.com/redis/redis.git
@@ -96,7 +95,9 @@ dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
 # Configure workers
-su - $SUDO_USER -c "cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done"
+su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
+
+su - pandora -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
 
 #---------------------
 # Pandora-box
@@ -126,7 +127,7 @@ usermod -a -G video $SUDO_USER
 usermod -a -G input $SUDO_USER
 
 # Start Pandora at boot
-cp pandora.service.sample /etc/systemd/system/pandora.service
+cp pandora.service /etc/systemd/system/pandora.service
 sed -i "s/_USER_/$SUDO_USER/g" /etc/systemd/system/pandora.service
 systemctl daemon-reload
 systemctl enable pandora
