@@ -1,6 +1,14 @@
 Pandora-BOX
 ============
 
+Host
+----
+
+CORE i5 - 4G RAM - 20G disk
+
+Installation
+------------
+
 Install Ubuntu 22.04 server LTS
 
 select (x) Ubuntu Server (minumized)
@@ -16,7 +24,10 @@ After reboot, login with the user created during the install and type :
     cd pandora-box
     sudo ./install.sh
 
-You can configura Pandora-box in the _pandora-box.ini_ file :
+Configuration
+-------------
+
+You can configure Pandora-box in the _pandora-box.ini_ file :
 
     [DEFAULT]
     ; Curses mode (full text)
