@@ -66,7 +66,7 @@ apt install -y unrar  # for extracting rar files
 apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
 
 # set .env
-cd ~/pandora
+cd /home/$SUDO_USER/pandora
 echo PANDORA_HOME="`pwd`" >> .env
 chown $SUDO_USER .env
 
@@ -100,7 +100,7 @@ su - $SUDO_USER -c "cd pandora; for file in pandora/workers/*.sample; do cp -i $
 #---------------------
 # Pandora-box
 #---------------------
-cd ~/pandora-box
+cd /home/$SUDO_USER/pandora-box
 
 # Python libraries
 su - $SUDO_USER -c "pip install pypandora psutil pyudev"
