@@ -1,11 +1,29 @@
-#/usr/bin/bash -e
+#/usr/bin/bash
+
+# 
+# This file is part of the Pandora-box distribution (https://github.com/dbarzin/pandora-box).
+# Copyright (c) 2022 Didier Barzin.
+# 
+# This program is free software: you can redistribute it and/or modify  
+# it under the terms of the GNU General Public License as published by  
+# the Free Software Foundation, version 3.
+#
+# This program is distributed in the hope that it will be useful, but 
+# WITHOUT ANY WARRANTY; without even the implied warranty of 
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License 
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+
+set -e # stop on error
+set -x # echo on
 
 #================================
 # Install script for Pandora-Box
 #================================
 
-set -e # stop on error
-set -x # echo on
 cd /home/$SUDO_USER
 
 # remove need restart
