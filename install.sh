@@ -4,7 +4,8 @@
 # Install script for Pandora-Box
 #================================
 
-set -e
+set -e # stop on error
+set -x # echo on
 cd /home/$SUDO_USER
 
 # remove need restart
