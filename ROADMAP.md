@@ -3,15 +3,16 @@ Pandora-box Roadmap
 
 User interface
 
-- [ ] animation during scan
-- [ ] internationalisation
+- [ ] Animations during scan
+- [ ] Internationalisation
 
 Technical
 
+- [ ] Deployment on Raspberry Pi
 - [ ] logrotate on pandora-box.log
 - [ ] place logs in /var/logs
 - [ ] update procedure
 - [ ] Docker script for github continuous integration
-- [ ] improve logs during scan
+- [ ] Improve logs during scan
 
 
