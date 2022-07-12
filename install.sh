@@ -148,6 +148,9 @@ usermod -a -G video $SUDO_USER
 # allow read mouse input
 usermod -a -G input $SUDO_USER
 
+# allow read mouse input
+usermod -a -G tty $SUDO_USER
+
 # Start Pandora at boot
 cp pandora.service /etc/systemd/system/pandora.service
 sed -i "s/_USER_/$SUDO_USER/g" /etc/systemd/system/pandora.service
