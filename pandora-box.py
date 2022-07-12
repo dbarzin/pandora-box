@@ -91,7 +91,9 @@ def display_image(status):
         image = "images/pandora-box5.png"
     else:
         return
-    os.system("convert -resize %s -background black -gravity center -extent %s %s bgra:/dev/fb0" % (SCREEN_SIZE, SCREEN_SIZE, image))
+    #os.system("convert -resize %s -background black -gravity center -extent %s %s bgra:/dev/fb0" % (SCREEN_SIZE, SCREEN_SIZE, image))
+    os.system("killall fim 2>/dev/null")
+    os.system("fim -qa %s </dev/null 2>/dev/null &" % image)
 
 # -----------------------------------------------------------
 
