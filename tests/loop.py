@@ -11,9 +11,9 @@ def waitMouseClick():
 
 while True:
     os.system("killall fim")
-    os.system("fim -qa image1.png &")
+    os.system("fim -qa image1.png 2>/dev/null &")
     waitMouseClick()
     os.system("killall fim")
-    os.system("fim -qa image2.png &")
+    os.system("fim -qa image2.png 2>/dev/null &")
     waitMouseClick()
 
