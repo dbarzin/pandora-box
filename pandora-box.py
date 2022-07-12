@@ -378,10 +378,10 @@ def device_loop():
                     else:
                         if not CURSES:
                             display_image("OK")
+                    umount_device()
 
                 if device.action == "remove":
                     log("Device removed")
-                    umount_device()
                     if not CURSES:
                         display_image("WAIT")
                     else:
