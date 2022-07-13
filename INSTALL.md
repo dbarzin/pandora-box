@@ -33,9 +33,6 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
     ; Curses mode (full text)
     CURSES = False 
 
-    ; Screen size (graphic mode)
-    SCREEN_SIZE = "1024x600"
-
     ; Set USB_AUTO_MOUNT to true is if the OS mount automaticaly mount USB keys
     USB_AUTO_MOUNT = False 
 
