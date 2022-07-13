@@ -1,5 +1,4 @@
-#/usr/bin/bash
-
+#!/usr/bin/bash
 # 
 # This file is part of the Pandora-box distribution (https://github.com/dbarzin/pandora-box).
 # Copyright (c) 2022 Didier Barzin.
@@ -133,9 +132,9 @@ su - $SUDO_USER -c "pip install pypandora psutil pyudev"
 mkdir -p /var/quarantine
 chown $SUDO_USER /var/quarantine
 
-# ImageMagick and pmount 
+# FIM and pmount 
 apt --fix-broken install -y 
-apt install -y imagemagick pmount
+apt install -y fim pmount
 
 # Suppress all messages from the kernel (and its drivers) except panic messages from appearing on the console.
 echo "kernel.printk = 3 4 1 3" | tee -a /etc/sysctl.conf
