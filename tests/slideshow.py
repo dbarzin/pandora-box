@@ -11,4 +11,4 @@ def waitMouseClick():
 
 os.system("fim *.png -qa -c 'while(1){display;sleep 1;next;}' </dev/null 2>/dev/null &")
 waitMouseClick()
-os.system("killall fim")
+os.system("killall -s 9 fim")
