@@ -74,27 +74,29 @@ def human_readable_size(size, decimal_places=1):
 # -----------------------------------------------------------
 
 def display_image(status):
-    if status=="WAIT":
-        image = "images/key*.png"
-    elif status=="WORK":
-        image = "images/wait*.png"
-    elif status=="OK":
-        image = "images/ok.png"
-    elif status=="BAD":
-        image = "images/bad.png"
-    elif status=="ERROR":
-        image = "images/error.png"
-    else:
-        return
-    # hide old image
-    os.system("killall -s 9 fim 2>/dev/null")
-    # display image
-    if "*" in image:
-        # slide show
-        os.system("fim -qa -c 'while(1){display;sleep 1;next;}' %s </dev/null 2>/dev/null &" % image)
-    else :
-        # only one image
-        os.system("fim -qa %s </dev/null 2>/dev/null &" % image)
+    if not CURSES:
+        if status=="WAIT":
+            image = "images/key*.png"
+        elif status=="WORK":
+            image = "images/wait*.png"
+        elif status=="OK":
+            image = "images/ok.png"
+        elif status=="BAD":
+            image = "images/bad.png"
+        elif status=="ERROR":
+            image = "images/error.png"
+        else:
+            return
+        # hide old image
+        os.system("killall -s 9 fim 2>/dev/null")
+        # display image
+        if "*" in image:
+            # slide show
+            os.system("fim -qa -c 'while(1){display;sleep 1;next;}' %s </dev/null 2>/dev/null &" % image)
+        else :
+            # only one image
+            os.system("fim -qa %s </dev/null 2>/dev/null &" % image)
+
 
 # -----------------------------------------------------------
 
@@ -247,8 +249,12 @@ def print_screen():
 
 """Closes curses"""
 def end_curses():
-    curses.endwin()
-    curses.flushinp()
+    if CURSES:
+        curses.endwin()
+        curses.flushinp()
+    else:
+        # hide old image
+        os.system("killall -s 9 fim 2>/dev/null")
 
 # -----------------------------------------------------------
 # Logging windows
@@ -280,6 +286,8 @@ def log(str):
         for i in range(min(curses.LINES-22,len(logs))):
             log_win.addstr(i+1,1,logs[i][:curses.COLS-2],curses.color_pair(3))
         log_win.refresh()
+    else:
+        print(str,end="\n\r")
 
 # -----------------------------------------------------------
 # Device
@@ -335,80 +343,83 @@ def device_loop():
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
     monitor.filter_by("block")
-    #try:
-    for device in iter(monitor.poll, None):
-        if device.get("ID_FS_USAGE") == "filesystem" and device.device_node[5:7] == "sd":
-            if device.action == "add":
-                log("Device inserted")
-                log_device_info(device)
-                if not CURSES:
-                    display_image("WORK")
-                else:
-                    # display device type
-                    print_fslabel(device.get("ID_FS_LABEL"))
-                    print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
-                    print_model(device.get("ID_MODEL"))
-                    print_serial(device.get("ID_SERIAL_SHORT"))
-                # Mount device
-                mount_point = mount_device(device)
-                log('Partition mounted at %s' % mount_point)
-                if mount_point == None:
-                    # no partition
-                    continue
-                try:
-                    statvfs=os.statvfs(mount_point)
-                except Exception as e :
-                    log("Unexpected error: %s" % e)
-                    continue
-                print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
-                print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
-
-                # Scan files
-                log("Scan started...........")
-                infected_files = scan(mount_point, statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
-
-                # Clean files
-                if len(infected_files) > 0:
-                    log('%d infected files found !' % len(infected_files))
+    try:
+        for device in iter(monitor.poll, None):
+            if device.get("ID_FS_USAGE") == "filesystem" and device.device_node[5:7] == "sd":
+                if device.action == "add":
+                    log("Device inserted")
+                    log_device_info(device)
                     if not CURSES:
-                        display_image("BAD")
-                        waitMouseClick()
+                        display_image("WORK")
                     else:
-                        log('PRESS KEY TO CLEAN')
-                        screen.getch()
-                    # Remove infected files
-                    for file in infected_files:
-                        try :
-                            os.remove(file)
-                            log('%s removed' % file)
-                        except Exception as e :
-                            log("Unexpected error: %s" % str(e))
-                    os.system("sync")
-                    log("Clean done.")
-                    if not CURSES:
-                        display_image("OK")
-                else:
-                    if not CURSES:
-                        display_image("OK")
-                umount_device()
+                        # display device type
+                        print_fslabel(device.get("ID_FS_LABEL"))
+                        print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
+                        print_model(device.get("ID_MODEL"))
+                        print_serial(device.get("ID_SERIAL_SHORT"))
+                    # Mount device
+                    mount_point = mount_device(device)
+                    log('Partition mounted at %s' % mount_point)
+                    if mount_point == None:
+                        # no partition
+                        if not CURSES:
+                            display_image("WAIT")
+                        continue
+                    try:
+                        statvfs=os.statvfs(mount_point)
+                    except Exception as e :
+                        log("Unexpected error: %s" % e)
+                        if not CURSES:
+                            display_image("WAIT")
+                        continue
+                    print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
+                    print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
 
-            if device.action == "remove":
-                log("Device removed")
-                if not CURSES:
-                    display_image("WAIT")
-                else:
-                    print_fslabel("")
-                    print_size(None)
-                    print_used(None)
-                    print_fstype("")
-                    print_model("")
-                    print_serial("")
-                    update_bar(0)
-#    except Exception as e:
-#        log("Unexpected error: %s" % str(e) )
-#    finally:
-#        log("Done.")
+                    # Scan files
+                    log("Scan started...........")
+                    infected_files = scan(mount_point, statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
 
+                    # Clean files
+                    if len(infected_files) > 0:
+                        log('%d infected files found !' % len(infected_files))
+                        if not CURSES:
+                            display_image("BAD")
+                            waitMouseClick()
+                        else:
+                            log('PRESS KEY TO CLEAN')
+                            screen.getch()
+                        # Remove infected files
+                        for file in infected_files:
+                            try :
+                                os.remove(file)
+                                log('%s removed' % file)
+                            except Exception as e :
+                                log("Unexpected error: %s" % str(e))
+                        os.system("sync")
+                        log("Clean done.")
+                        if not CURSES:
+                            display_image("OK")
+                    else:
+                        if not CURSES:
+                            display_image("OK")
+                    umount_device()
+
+                if device.action == "remove":
+                    log("Device removed")
+                    if not CURSES:
+                        display_image("WAIT")
+                    else:
+                        print_fslabel("")
+                        print_size(None)
+                        print_used(None)
+                        print_fstype("")
+                        print_model("")
+                        print_serial("")
+                        update_bar(0)
+    except Exception as e:
+        log("Unexpected error: %s" % str(e) )
+    finally:
+        log("Done.")
 
 def log_device_info(dev):
     logging.info("Device name: %s" % dev.get("DEVNAME"))
@@ -510,8 +521,7 @@ def main(stdscr):
         while True:
             device_loop()
     except Exception as e :
-        end_curses()
-        print("Unexpected error: ", e)
+        log("Unexpected error: %s" % e)
     finally:
         end_curses()
 
