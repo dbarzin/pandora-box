@@ -16,10 +16,10 @@ It is based on recycled ThinkCenter and an integrated HDMI touch screen.
 
 It has a graphic user interface :
 
-[<img src="images/pandora-box1.png" width="400">](images/pandora-box1.png)
-[<img src="images/pandora-box2.png" width="400">](images/pandora-box2.png)
-[<img src="images/pandora-box3.png" width="400">](images/pandora-box3.png)
-[<img src="images/pandora-box4.png" width="400">](images/pandora-box4.png)
+[<img src="images/key1.png" width="400">](images/key1.png)
+[<img src="images/wait1.png" width="400">](images/wait1.png)
+[<img src="images/ok.png" width="400">](images/ok.png)
+[<img src="images/bad.png" width="400">](images/bad.png)
 
 and a text user interface for advanced users :
 
