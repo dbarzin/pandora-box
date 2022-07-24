@@ -12,6 +12,6 @@ Technical
 - [ ] logrotate on pandora-box.log
 - [ ] place logs in /var/logs
 - [ ] update procedure
-- [x] Docker script for github continuous integration
+- [ ] Docker script for github continuous integration
 - [x] Improve logs during scan
 
