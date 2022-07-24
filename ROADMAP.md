@@ -3,7 +3,7 @@ Pandora-box Roadmap
 
 User interface
 
-- [ ] Animations during scan
+- [x] Animations during scan
 - [ ] Internationalisation
 
 Technical
@@ -12,7 +12,6 @@ Technical
 - [ ] logrotate on pandora-box.log
 - [ ] place logs in /var/logs
 - [ ] update procedure
-- [ ] Docker script for github continuous integration
-- [ ] Improve logs during scan
-
+- [x] Docker script for github continuous integration
+- [x] Improve logs during scan
 
