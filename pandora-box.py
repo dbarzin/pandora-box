@@ -75,27 +75,37 @@ def human_readable_size(size, decimal_places=1):
 
 def display_image(status):
     if status=="WAIT":
-        image = "images/pandora-box1.png"
+        image = "images/key*.png"
     elif status=="WORK":
-        image = "images/pandora-box2.png"
+        image = "images/wait*.png"
     elif status=="OK":
-        image = "images/pandora-box3.png"
+        image = "images/ok.png"
     elif status=="BAD":
-        image = "images/pandora-box4.png"
+        image = "images/bad.png"
     elif status=="ERROR":
-        image = "images/pandora-box5.png"
+        image = "images/error.png"
     else:
         return
-    os.system("killall fim 2>/dev/null")
-    os.system("fim -qa %s </dev/null 2>/dev/null &" % image)
+    # hide old image
+    os.system("killall -s 9 fim 2>/dev/null")
+    # display image
+    if "*" in image:
+        # slide show
+        os.system("fim -qa -c 'while(1){display;sleep 1;next;}' %s </dev/null 2>/dev/null &" % image)
+    else :
+        # only one image
+        os.system("fim -qa %s </dev/null 2>/dev/null &" % image)
 
 # -----------------------------------------------------------
 
 def waitMouseClick():
     mouse = open( "/dev/input/mice", "rb" )
+    down = False;
     while True:
         buf = mouse.read(3)
         if ((buf[0] & 0x1)==1):
+            down = True
+        if (((buf[0] & 0x1)==0) and down):        
             break;
     mouse.close()
 
@@ -277,22 +287,27 @@ def log(str):
 
 """Mount USB device"""
 def mount_device(device):
+    log('Try to mount partition')
     if USB_AUTO_MOUNT:
         found = False
         loop = 0
-        while (not found) and (loop < 10):
+        while (not found) and (loop < 15):
             # need to sleep before devide is mounted
             time.sleep(1)
             for partition in psutil.disk_partitions():
                 if partition.device == device.device_node:
-                    log("Device mounted at {}".format(partition.mountpoint))
+                    log("Partition mounted at {}".format(partition.mountpoint))
                     found = True
             loop += 1
         if loop < 10:
             return partition.mountpoint
         else:
+            log('No partition mounted')
             return None
     else:
+        if not os.path.exists("/media/box"):
+            log("folder /media/box does not exists")
+            return None
         res = os.system("pmount " + device.device_node + " /media/box")
         found = False
         loop = 0
@@ -304,15 +319,13 @@ def mount_device(device):
                 loop +=1 
                 continue
             break;
-        log("Device mounted at /media/box")
+        log("Partition mounted at /media/box")
         return "/media/box"
 
 """Unmount USB device"""
 def umount_device():
-    if not USB_AUTO_MOUNT:
-        if os.path.exists("/media/box"):
-           log("Unmounting device /media/box")
-           res = os.system("pumount /media/box")
+    log("Sync partitions")
+    res = os.system("sync")
 
 """Main device loop"""
 def device_loop():
@@ -322,78 +335,79 @@ def device_loop():
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
     monitor.filter_by("block")
-    try:
-        for device in iter(monitor.poll, None):
-            if device.get("ID_FS_USAGE") == "filesystem" and device.device_node[5:7] == "sd":
-                if device.action == "add":
-                    log("Device inserted")
-                    log_device_info(device)
+    #try:
+    for device in iter(monitor.poll, None):
+        if device.get("ID_FS_USAGE") == "filesystem" and device.device_node[5:7] == "sd":
+            if device.action == "add":
+                log("Device inserted")
+                log_device_info(device)
+                if not CURSES:
+                    display_image("WORK")
+                else:
+                    # display device type
+                    print_fslabel(device.get("ID_FS_LABEL"))
+                    print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
+                    print_model(device.get("ID_MODEL"))
+                    print_serial(device.get("ID_SERIAL_SHORT"))
+                # Mount device
+                mount_point = mount_device(device)
+                log('Partition mounted at %s' % mount_point)
+                if mount_point == None:
+                    # no partition
+                    continue
+                try:
+                    statvfs=os.statvfs(mount_point)
+                except Exception as e :
+                    log("Unexpected error: %s" % e)
+                    continue
+                print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
+                print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
+
+                # Scan files
+                log("Scan started...........")
+                infected_files = scan(mount_point, statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
+
+                # Clean files
+                if len(infected_files) > 0:
+                    log('%d infected files found !' % len(infected_files))
                     if not CURSES:
-                        display_image("WORK")
+                        display_image("BAD")
+                        waitMouseClick()
                     else:
-                        # display device type
-                        print_fslabel(device.get("ID_FS_LABEL"))
-                        print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
-                        print_model(device.get("ID_MODEL"))
-                        print_serial(device.get("ID_SERIAL_SHORT"))
-                    # Mount device
-                    mount_point = mount_device(device)
-                    if mount_point == None:
-                        # no partition
-                        continue
-                    try:
-                        statvfs=os.statvfs(mount_point)
-                    except Exception as e :
-                        log("Unexpected error: %s" % e)
-                        continue
-                    print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
-                    print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
-
-                    # Scan files
-                    log("Scan started...........")
-                    infected_files = scan(mount_point, statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
-
-                    # Clean files
-                    if len(infected_files) > 0:
-                        log('%d infected files found !' % len(infected_files))
-                        if not CURSES:
-                            display_image("BAD")
-                            waitMouseClick()
-                        else:
-                            log('PRESS KEY TO CLEAN')
-                            screen.getch()
-                        # Remove infected files
-                        for file in infected_files:
-                            try :
-                                os.remove(file)
-                                log('%s removed' % file)
-                            except Exception as e :
-                                log("Unexpected error: %s" % str(e))
-                        os.system("sync")
-                        log("Clean done.")
-                        if not CURSES:
-                            display_image("OK")
-                    else:
-                        if not CURSES:
-                            display_image("OK")
-                    umount_device()
-
-                if device.action == "remove":
-                    log("Device removed")
+                        log('PRESS KEY TO CLEAN')
+                        screen.getch()
+                    # Remove infected files
+                    for file in infected_files:
+                        try :
+                            os.remove(file)
+                            log('%s removed' % file)
+                        except Exception as e :
+                            log("Unexpected error: %s" % str(e))
+                    os.system("sync")
+                    log("Clean done.")
                     if not CURSES:
-                        display_image("WAIT")
-                    else:
-                        print_fslabel("")
-                        print_size(None)
-                        print_used(None)
-                        print_fstype("")
-                        print_model("")
-                        print_serial("")
-                        update_bar(0)
-    except Exception as e:
-        log("Unexpected error: %s" % str(e) )
-    finally:
-        log("Done.")
+                        display_image("OK")
+                else:
+                    if not CURSES:
+                        display_image("OK")
+                umount_device()
+
+            if device.action == "remove":
+                log("Device removed")
+                if not CURSES:
+                    display_image("WAIT")
+                else:
+                    print_fslabel("")
+                    print_size(None)
+                    print_used(None)
+                    print_fstype("")
+                    print_model("")
+                    print_serial("")
+                    update_bar(0)
+#    except Exception as e:
+#        log("Unexpected error: %s" % str(e) )
+#    finally:
+#        log("Done.")
 
 
 def log_device_info(dev):
@@ -406,13 +420,10 @@ def log_device_info(dev):
     logging.info("Partition type: %s" % dev.get("ID_PART_TABLE_TYPE"))
     logging.info("FS type: %s" % dev.get("ID_FS_TYPE"))
     logging.info("Partition label: %s" % dev.get("ID_FS_LABEL"))
-    # logging.info("FS: %s" % dev.get("ID_FS_SYSTEM_ID"))
     logging.info("Device model: %s" % dev.get("ID_MODEL"))
-    # logging.info('Usage: %s' % dev.get("ID_FS_USAGE"))
     logging.info('Model: %s' % dev.get("ID_MODEL_ID"))
     logging.info('Serial short: %s' % dev.get("ID_SERIAL_SHORT"))
     logging.info('Serial: %s' % dev.get("ID_SERIAL"))
-    # logging.info(os.stat(dev.get("DEVNAME")))
 
 # -----------------------------------------------------------
 # pandora
