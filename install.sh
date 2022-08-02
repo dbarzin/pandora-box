@@ -156,6 +156,9 @@ sed -i "s/_USER_/$SUDO_USER/g" /etc/systemd/system/pandora.service
 systemctl daemon-reload
 systemctl enable pandora
 
+# Do not print messages on console
+echo "mesg n" >> /home/$SUDO_USER/.profile
+
 # Start Pandora-box on getty1 at boot
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 echo "[Service]" > /etc/systemd/system/getty@tty1.service.d/override.conf
