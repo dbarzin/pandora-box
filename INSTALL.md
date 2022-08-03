@@ -11,7 +11,7 @@ Installation
 
 Install Ubuntu 22.04 server LTS
 
-select (x) Ubuntu Server (minumized)
+select (x) Ubuntu Server (minimized)
 
 Choose to "install OpenSSH server"
 
@@ -33,7 +33,7 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
     ; Curses mode (full text)
     CURSES = False 
 
-    ; Set USB_AUTO_MOUNT to true is if the OS mount automaticaly mount USB keys
+    ; Set USB_AUTO_MOUNT to true is if the OS automaticaly mount USB keys
     USB_AUTO_MOUNT = False 
 
     ; Set PANDORA_ROOT_URL to the URL of the Pandora server
