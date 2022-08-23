@@ -331,14 +331,17 @@ def mount_device(device):
         return "/media/box"
 
 """Unmount USB device"""
-def umount_device():
-    log("Sync partitions")
-    res = os.system("sync")
+def umount_device(mount_point):
+    if USB_AUTO_MOUNT:
+        os.system("umount " + mount_point)
+    else:
+        os.system("punmount /media/box")
 
 """Main device loop"""
 def device_loop():
     # First unmount remaining device
-    umount_device()
+    if not USB_AUTO_MOUNT:
+        umount_device("/media/box")
     # Loop
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
@@ -402,7 +405,7 @@ def device_loop():
                     else:
                         if not CURSES:
                             display_image("OK")
-                    umount_device()
+                    umount_device(mount_point)
 
                 if device.action == "remove":
                     log("Device removed")
