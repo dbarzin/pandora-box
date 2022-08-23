@@ -27,6 +27,10 @@ After reboot, login with the user created during the install and type :
 Configuration
 -------------
 
+Copy your configuration file to _pandora-box.ini_
+
+    cp pandora-box.ini.ubuntu pandora-box.ini
+
 You can configure Pandora-box in the _pandora-box.ini_ file :
 
     [DEFAULT]
