@@ -45,18 +45,22 @@ def config():
     global FAKE_SCAN, QUARANTINE, QUARANTINE_FOLDER
     global CURSES
     # intantiate a ConfirParser
-    config = configparser.ConfigParser()
-    # read the config file
-    config.read('pandora-box.ini')
-    # set values
-    FAKE_SCAN=config['DEFAULT']['FAKE_SCAN'].lower()=="true"
-    USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
-    PANDORA_ROOT_URL=config['DEFAULT']['PANDORA_ROOT_URL']
-    # Quarantine
-    QUARANTINE = config['DEFAULT']['QUARANTINE'].lower()=="true"
-    QUARANTINE_FOLDER = config['DEFAULT']['QUARANTINE_FOLDER']
-    # Curses
-    CURSES = config['DEFAULT']['CURSES'].lower()=="true"
+    try :
+        config = configparser.ConfigParser()
+        # read the config file
+        config.read('pandora-box.ini')
+        # set values
+        FAKE_SCAN = config['DEFAULT']['FAKE_SCAN'].lower()=="true"
+        USB_AUTO_MOUNT = config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
+        PANDORA_ROOT_URL = config['DEFAULT']['PANDORA_ROOT_URL']
+        # Quarantine
+        QUARANTINE = config['DEFAULT']['QUARANTINE'].lower()=="true"
+        QUARANTINE_FOLDER = config['DEFAULT']['QUARANTINE_FOLDER']
+        # Curses
+        CURSES = config['DEFAULT']['CURSES'].lower()=="true"
+    except Exception as e :
+        log("Could not read config file: %s" % e)
+        raise e
 
 # ----------------------------------------------------------
 
@@ -445,7 +449,7 @@ def log_device_info(dev):
 
 """Scan a mount point with Pandora"""
 def scan(mount_point, used):
-    global infected_filed 
+    global infected_filed, FAKE_SCAN 
     infected_files = [] 
     scanned = 0
     file_count = 0
@@ -462,7 +466,7 @@ def scan(mount_point, used):
                 file_size = os.path.getsize(full_path)
                 # log("Check %s [%s]" % (file, human_readable_size(file_size)))
                 file_scan_start_time = time.time()
-                if FAKE_SCAN :
+                if FAKE_SCAN:
                     time.sleep(0.1)
                     status = "SKIPPED"
                 else:
