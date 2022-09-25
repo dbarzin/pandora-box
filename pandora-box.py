@@ -45,22 +45,18 @@ def config():
     global FAKE_SCAN, QUARANTINE, QUARANTINE_FOLDER
     global CURSES
     # intantiate a ConfirParser
-    try :
-        config = configparser.ConfigParser()
-        # read the config file
-        config.read('pandora-box.ini')
-        # set values
-        FAKE_SCAN = config['DEFAULT']['FAKE_SCAN'].lower()=="true"
-        USB_AUTO_MOUNT = config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
-        PANDORA_ROOT_URL = config['DEFAULT']['PANDORA_ROOT_URL']
-        # Quarantine
-        QUARANTINE = config['DEFAULT']['QUARANTINE'].lower()=="true"
-        QUARANTINE_FOLDER = config['DEFAULT']['QUARANTINE_FOLDER']
-        # Curses
-        CURSES = config['DEFAULT']['CURSES'].lower()=="true"
-    except Exception as e :
-        log("Could not read config file: %s" % e)
-        raise e
+    config = configparser.ConfigParser()
+    # read the config file
+    config.read('pandora-box.ini')
+    # set values
+    FAKE_SCAN=config['DEFAULT']['FAKE_SCAN'].lower()=="true"
+    USB_AUTO_MOUNT=config['DEFAULT']['USB_AUTO_MOUNT'].lower()=="true"
+    PANDORA_ROOT_URL=config['DEFAULT']['PANDORA_ROOT_URL']
+    # Quarantine
+    QUARANTINE = config['DEFAULT']['QUARANTINE'].lower()=="true"
+    QUARANTINE_FOLDER = config['DEFAULT']['QUARANTINE_FOLDER']
+    # Curses
+    CURSES = config['DEFAULT']['CURSES'].lower()=="true"
 
 # ----------------------------------------------------------
 
@@ -96,10 +92,10 @@ def display_image(status):
         # display image
         if "*" in image:
             # slide show
-            os.system("fim -qa -c 'while(1){display;sleep 1;next;}' %s </dev/null 2>/dev/null &" % image)
+            os.system("fim -qa -c 'while(1){display;sleep 1;next;}' %s </dev/null 2>/dev/null >/dev/null &" % image)
         else :
             # only one image
-            os.system("fim -qa %s </dev/null 2>/dev/null &" % image)
+            os.system("fim -qa %s </dev/null 2>/dev/null >/dev/null &" % image)
 
 
 # -----------------------------------------------------------
@@ -290,8 +286,8 @@ def log(str):
         for i in range(min(curses.LINES-22,len(logs))):
             log_win.addstr(i+1,1,logs[i][:curses.COLS-2],curses.color_pair(3))
         log_win.refresh()
-    else:
-        print(str,end="\n\r")
+#   else:
+#        print(str,end="\n\r")
 
 # -----------------------------------------------------------
 # Device
@@ -320,7 +316,7 @@ def mount_device(device):
         if not os.path.exists("/media/box"):
             log("folder /media/box does not exists")
             return None
-        res = os.system("pmount " + device.device_node + " /media/box")
+        res = os.system("pmount " + device.device_node + " /media/box >/dev/null 2>/dev/null")
         found = False
         loop = 0
         while (not found) and (loop < 10):
@@ -335,17 +331,18 @@ def mount_device(device):
         return "/media/box"
 
 """Unmount USB device"""
-def umount_device(mount_point):
-    if USB_AUTO_MOUNT:
-        os.system("umount " + mount_point)
+def umount_device():
+    if USB_AUTO_MOUNT: 
+       log("Sync partitions")
+       res = os.system("sync")
     else:
-        os.system("punmount /media/box")
+       log("Unmount partitions")
+       res = os.system("pumount /media/box 2>/dev/null >/dev/null")
 
 """Main device loop"""
 def device_loop():
     # First unmount remaining device
-    if not USB_AUTO_MOUNT:
-        umount_device("/media/box")
+    umount_device()
     # Loop
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
@@ -376,6 +373,7 @@ def device_loop():
                         statvfs=os.statvfs(mount_point)
                     except Exception as e :
                         log("Unexpected error: %s" % e)
+                        logging.info("An exception was thrown!", exc_info=True)
                         if not CURSES:
                             display_image("WAIT")
                         continue
@@ -402,6 +400,7 @@ def device_loop():
                                 log('%s removed' % file)
                             except Exception as e :
                                 log("Unexpected error: %s" % str(e))
+                                logging.info("An exception was thrown!", exc_info=True)
                         os.system("sync")
                         log("Clean done.")
                         if not CURSES:
@@ -409,7 +408,7 @@ def device_loop():
                     else:
                         if not CURSES:
                             display_image("OK")
-                    umount_device(mount_point)
+                    umount_device()
 
                 if device.action == "remove":
                     log("Device removed")
@@ -425,6 +424,7 @@ def device_loop():
                         update_bar(0)
     except Exception as e:
         log("Unexpected error: %s" % str(e) )
+        logging.info("An exception was thrown!", exc_info=True)
     finally:
         log("Done.")
 
@@ -449,7 +449,7 @@ def log_device_info(dev):
 
 """Scan a mount point with Pandora"""
 def scan(mount_point, used):
-    global infected_filed, FAKE_SCAN 
+    global infected_filed 
     infected_files = [] 
     scanned = 0
     file_count = 0
@@ -466,13 +466,14 @@ def scan(mount_point, used):
                 file_size = os.path.getsize(full_path)
                 # log("Check %s [%s]" % (file, human_readable_size(file_size)))
                 file_scan_start_time = time.time()
-                if FAKE_SCAN:
+                if FAKE_SCAN :
                     time.sleep(0.1)
                     status = "SKIPPED"
                 else:
                     if file_size > (1024*1024*1024):
                         status = "TOO BIG"
                     else:
+                        log("ppypandora : [%s] " % full_path)
                         res = pandora.submit_from_disk(full_path)
                         time.sleep(0.1)
                         loop = 0
@@ -528,7 +529,8 @@ def main(stdscr):
         while True:
             device_loop()
     except Exception as e :
-        log("Unexpected error: %s" % e)
+         log("Unexpected error: %s" % e)
+         logging.info("An exception was thrown!", exc_info=True)
     finally:
         end_curses()
 
