@@ -19,14 +19,18 @@ jobs:
       - name: Install Pandora
         run: |
           sudo ./install.sh
+          
+      - name: Reboot server
+        hosts: server
+        become: yes
+        roles:
+          - reboot
 
-      - name: Copy ini file
-        run: |
-          cp pandora-box.ini.curses pandora-dox.ini
-
-      - name: Start pandora-box
-        run: |
-          ./pandora-box.py
+        vars_prompt:
+          - name: "reboot"
+            prompt: "Are you sure you want to reboot server (yes/no)?"
+            private: no
+            default: "no"
 
       - name: Upload Screenshots
         if: failure()
