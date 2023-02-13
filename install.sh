@@ -23,10 +23,6 @@ set -x # echo on
 # Pandora-box
 #---------------------
 pwd
-ls
-ls /home
-ls /home/$SUDO_USER
-cd /home/$SUDO_USER/pandora-box
 
 # Python libraries
 su - $SUDO_USER -c "pip install pypandora psutil pyudev"
