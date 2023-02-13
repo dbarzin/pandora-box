@@ -19,111 +19,14 @@
 set -e # stop on error
 set -x # echo on
 
-#================================
-# Install script for Pandora-Box
-#================================
-
-cd /home/$SUDO_USER
-
-# remove need restart
-apt remove -y needrestart
-
-#---------------------
-# Python 
-#---------------------
-apt update && apt upgrade -y
-apt install -y python-is-python3 python3-pip 
-apt install -y libssl-dev
-
-#---------------------
-# Peotry
-#---------------------
-su - $SUDO_USER -c "curl -sSL https://install.python-poetry.org | python3 -"
-su - $SUDO_USER -c "poetry --version"
-
-#---------------------
-# REDIS
-#---------------------
-apt install -y build-essential tcl
-
-git clone https://github.com/redis/redis.git
-cd redis
-git checkout 6.2
-make
-# Optionally, you can run the tests:
-# make test
-cd ..
-
-chown -R $SUDO_USER redis
-
-#---------------------
-# Kvrocks
-#---------------------
-apt-get update
-apt install -y gcc g++ make libsnappy-dev autoconf automake libtool googletest libgtest-dev
-
-git clone --recursive https://github.com/apache/incubator-kvrocks.git kvrocks
-cd kvrocks
-git checkout 2.0
-make -j4
-# Optionally, you can run the tests:
-# make test
-cd ..
-
-chown -R $SUDO_USER kvrocks
-
-#---------------------
-# Pandora
-#---------------------
-su - $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
-
-# install packages
-apt install -y python3-dev  # for compiling things
-apt install -y libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
-apt install -y libreoffice-base-nogui libreoffice-calc-nogui libreoffice-draw-nogui libreoffice-impress-nogui libreoffice-math-nogui libreoffice-writer-nogui  # For Office -> PDF
-apt install -y exiftool  # for extracting exif information
-apt install -y unrar  # for extracting rar files
-apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
-
-# set .env
-cd /home/$SUDO_USER/pandora
-echo PANDORA_HOME="`pwd`" >> .env
-chown $SUDO_USER .env
-
-su - $SUDO_USER -c "cd ~/pandora; poetry install"
-su - $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
-
-# install yara-python
-su - $SUDO_USER -c "pip install yara-python"
-
-# ClamAV
-apt-get install -y clamav-daemon
-# In order for the module to work, you need the signatures. 
-# Running the command "freshclam" will do it but if the script is already running
-# (it is started by the systemd service clamav-freshclam)
-# You might want to run the commands below: 
-systemctl stop clamav-freshclam.service  # Stop the service
-freshclam  # Run the signatures update
-systemctl start clamav-freshclam.service # Start the service so we keep getting the updates
-
-service clamav-daemon start
-
-# Comodo
-wget https://download.comodo.com/cis/download/installs/linux/cav-linux_x64.deb
-dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
-
-wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
-
-# Configure workers
-su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
-
-# Update Pandora
-su - $SUDO_USER -c 'cd pandora; poetry run update --yes'
-
 #---------------------
 # Pandora-box
 #---------------------
-cd ~/pandora-box
+pwd
+ls
+ls /home
+ls /home/$SUDO_USER
+cd /home/$SUDO_USER/pandora-box
 
 # Python libraries
 su - $SUDO_USER -c "pip install pypandora psutil pyudev"
