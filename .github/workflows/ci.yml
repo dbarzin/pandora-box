@@ -28,14 +28,6 @@ jobs:
         run: shutdown -r now
         ignore_errors: true
 
-      - name: Wait on server to return
-        local_action: 
-          module: wait_for
-            host={{ env.ip_address }} 
-            port=22
-            delay=60
-            timeout=300
-
       - name: Done
         run: |
           echo "Done."
