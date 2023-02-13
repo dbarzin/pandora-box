@@ -16,18 +16,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install Pandora
+      - name: Install Pandora-box
         run: |
-          echo "ip_address=$(curl -s ifconfig.me)" >> $GITHUB_ENV
+          sudo ./install.sh
 
-      - name: test
+      - name: Start Pandora-box
         run: |
-          echo IP Adress is: ${{ env.ip_address }}
+          cd pandora-box && ./pandora-box.py
 
-      - name: Restart and wait on server 
-        run: shutdown -r now
+      - name: Upload Screenshots
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: screenshots
+          path: tests/Browser/screenshots
 
-      - name: Done
-        run: |
-          uptime && ls && echo "Done."
+      - name: Upload Console Logs
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: console
+          path: tests/Browser/console
 
