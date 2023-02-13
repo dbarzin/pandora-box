@@ -26,7 +26,6 @@ jobs:
 
       - name: Restart and wait on server 
         run: shutdown -r now
-        ignore_errors: true
 
       - name: Done
         run: |
