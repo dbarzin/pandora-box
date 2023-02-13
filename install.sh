@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # 
-# This file is part of the Pandora-box distribution (https://github.com/dbarzin/pandora-box).
+# This file is part of the Pandora-box distribution 
 # Copyright (c) 2022 Didier Barzin.
 # 
 # This program is free software: you can redistribute it and/or modify  
@@ -38,7 +38,7 @@ apt install -y libssl-dev
 #---------------------
 # Peotry
 #---------------------
-su - $SUDO_USER -c "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -"
+su - $SUDO_USER -c "curl -sSL https://install.python-poetry.org | python3 -"
 su - $SUDO_USER -c "poetry --version"
 
 #---------------------
