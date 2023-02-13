@@ -18,31 +18,4 @@ jobs:
 
       - name: Install Pandora
         run: |
-          sudo ./install.sh
-          
-      - name: Reboot server
-        hosts: server
-        become: yes
-        roles:
-          - reboot
-
-        vars_prompt:
-          - name: "reboot"
-            prompt: "Are you sure you want to reboot server (yes/no)?"
-            private: no
-            default: "no"
-
-      - name: Upload Screenshots
-        if: failure()
-        uses: actions/upload-artifact@v2
-        with:
-          name: screenshots
-          path: tests/Browser/screenshots
-
-      - name: Upload Console Logs
-        if: failure()
-        uses: actions/upload-artifact@v2
-        with:
-          name: console
-          path: tests/Browser/console
-
+          ifconfig && ip a
