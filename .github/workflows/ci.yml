@@ -3,9 +3,9 @@ name: Continuous Integration
 on:
   push:
     branches: 
-      - master
+      - main
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
 
