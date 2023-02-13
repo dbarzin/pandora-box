@@ -18,7 +18,7 @@ jobs:
 
       - name: Install Pandora
         run: |
-          ./install.sh
+          sudo ./install.sh
 
       - name: Copy ini file
         run: |
