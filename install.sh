@@ -123,7 +123,7 @@ su - $SUDO_USER -c 'cd pandora; poetry run update --yes'
 #---------------------
 # Pandora-box
 #---------------------
-cd /home/$SUDO_USER/pandora-box
+cd ~/pandora-box
 
 # Python libraries
 su - $SUDO_USER -c "pip install pypandora psutil pyudev"
