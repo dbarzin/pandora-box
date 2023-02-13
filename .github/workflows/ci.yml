@@ -18,4 +18,7 @@ jobs:
 
       - name: Install Pandora
         run: |
-          ifconfig && ip a
+          echo "ip_address=$(curl -s ifconfig.me)" >> $GITHUB_ENV
+        run: |
+          echo IP Adress is: ${{ env.ip_address }}
+
