@@ -67,4 +67,4 @@ echo "StandardInput=tty" >> /etc/systemd/system/getty@tty1.service.d/override.co
 echo "StandardOutput=tty" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 echo "Type=idle" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
-reboot
+sleep 2 && shutdown -r now "Reboot"
