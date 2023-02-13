@@ -25,9 +25,7 @@ jobs:
           echo IP Adress is: ${{ env.ip_address }}
 
       - name: Restart and wait on server 
-        shell: sleep 2 && shutdown -r now
-        async: 1
-        poll: 0
+        run: shutdown -r now
         ignore_errors: true
 
       - name: Wait on server to return
