@@ -1,19 +1,19 @@
 #!/usr/bin/python3
-# 
+#
 # This file is part of the Pandora-box distribution.
 # https://github.com/dbarzin/pandora-box
 # Copyright (c) 2022 Didier Barzin.
 #
-# This program is free software: you can redistribute it and/or modify  
-# it under the terms of the GNU General Public License as published by  
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 #
-# This program is distributed in the hope that it will be useful, but 
-# WITHOUT ANY WARRANTY; without even the implied warranty of 
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License 
+# You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
@@ -21,7 +21,6 @@ import curses
 from curses import wrapper
 import pypandora
 import time
-import sys
 import pyudev
 import psutil
 import os
@@ -34,7 +33,7 @@ from datetime import datetime
 # Config variables
 # -----------------------------------------------------------
 
-USB_AUTO_MOUNT = False 
+USB_AUTO_MOUNT = False
 PANDORA_ROOT_URL = "http://127.0.0.1:6100"
 FAKE_SCAN = False
 QUARANTINE = False
@@ -93,7 +92,9 @@ def display_image(status):
         # display image
         if "*" in image:
             # slide show
-            os.system("fim -qa -c 'while(1){display;sleep 1;next;}' %s </dev/null 2>/dev/null >/dev/null &" % image)
+            os.system("fim -qa -c 'while(1){display;sleep 1;next;}' %s "\
+                "</dev/null 2>/dev/null >/dev/null &"
+                % image)
         else :
             # only one image
             os.system("fim -qa %s </dev/null 2>/dev/null >/dev/null &" % image)
@@ -103,12 +104,12 @@ def display_image(status):
 
 def waitMouseClick():
     mouse = open( "/dev/input/mice", "rb" )
-    down = False;
+    down = False
     while True:
         buf = mouse.read(3)
-        if ((buf[0] & 0x1)==1):
+        if (buf[0] & 0x1)==1:
             down = True
-        if (((buf[0] & 0x1)==0) and down):        
+        if ((buf[0] & 0x1)==0) and down:
             break;
     mouse.close()
 
@@ -126,7 +127,7 @@ def init_curses():
         curses.flushinp()
         curses.noecho()
         curses.curs_set(0)
-    else: 
+    else:
         display_image("WAIT")
 
 """Print FS Label"""
@@ -325,7 +326,7 @@ def mount_device():
             try:
                 statvfs=os.statvfs(mount_point)
             except Exception as e :
-                loop +=1 
+                loop +=1
                 continue
             break;
         return "/media/box"
@@ -333,8 +334,8 @@ def mount_device():
 """Unmount USB device"""
 def umount_device():
     if USB_AUTO_MOUNT: 
-       log("Sync partitions")
-       res = os.system("sync")
+        log("Sync partitions")
+        res = os.system("sync")
     else:
        log("Unmount partitions")
        res = os.system("pumount /media/box 2>/dev/null >/dev/null")
@@ -361,8 +362,8 @@ def log_device_info(dev):
 
 """Scan a mount point with Pandora"""
 def scan(mount_point, used):
-    global device, infected_filed 
-    infected_files = [] 
+    global device, infected_filed
+    infected_files = []
     scanned = 0
     file_count = 0
     scan_start_time = time.time()
@@ -391,7 +392,7 @@ def scan(mount_point, used):
                         loop = 0
                         while True and (loop < 960):
                             res = pandora.task_status(res["taskId"])
-                            status = res["status"] 
+                            status = res["status"]
                             if status != "WAITING":
                                break
                             time.sleep(0.5)
@@ -399,8 +400,8 @@ def scan(mount_point, used):
                 file_scan_end_time = time.time()
                 log("file=%s, size=%s, status=%s, duration=%ds" % (
                     file,
-                    human_readable_size(file_size), 
-                    status, 
+                    human_readable_size(file_size),
+                    status,
                    (file_scan_end_time - file_scan_start_time)))
                 scanned += os.path.getsize(full_path)
                 file_count += 1

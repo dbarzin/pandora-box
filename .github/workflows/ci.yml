@@ -13,17 +13,17 @@ jobs:
     name: Quality check
     runs-on: ubuntu-latest 
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: main
 
       - name: Set up Python
         uses: actions/setup-python@master
         with:
           python-version: 3.8
 
-      - name: Wemake Python Stylguide
-        uses: wemake-services/wemake-python-styleguide@0.13.4
-        continue-on-error: true
-        with:
-          reporter: 'github-pr-review'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: code quality checkout
+        run: |
+          pip install pylint
+          pylint ./pandora-box.py
