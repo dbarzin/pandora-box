@@ -8,7 +8,7 @@ User interface
 
 Technical
 
-- [ ] Deployment on Raspberry Pi
+- [ ] ~~Deployment on Raspberry Pi~~
 - [ ] logrotate on pandora-box.log
 - [ ] place logs in /var/logs
 - [ ] update procedure
