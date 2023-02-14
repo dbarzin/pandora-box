@@ -26,7 +26,6 @@ jobs:
       - name: code quality checkout
         run: |
           pip install pylint
-          ls
-          pwd
-          pylint ./pandora-box/pandora-box.py
+          ls main
+          pylint ./main/pandora-box.py
 

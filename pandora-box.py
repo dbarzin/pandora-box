@@ -17,17 +17,19 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
-import curses
-from curses import wrapper
-import pypandora
-import time
-import pyudev
-import psutil
 import os
+import time
 import logging
+from curses import wrapper
+from datetime import datetime
 import configparser
 import shutil
-from datetime import datetime
+import curses
+
+import pyudev
+import psutil
+
+import pypandora
 
 # -----------------------------------------------------------
 # Config variables
@@ -110,7 +112,7 @@ def waitMouseClick():
         if (buf[0] & 0x1)==1:
             down = True
         if ((buf[0] & 0x1)==0) and down:
-            break;
+            break
     mouse.close()
 
 # -----------------------------------------------------------
@@ -135,7 +137,7 @@ def print_fslabel(label):
     global status_win
     if CURSES:
         status_win.addstr(1, 1, "Partition : %-32s" % label, curses.color_pair(2))
-        status_win.refresh()        
+        status_win.refresh()
 
 """Print FS Size"""
 def print_size(label):
@@ -195,13 +197,13 @@ def update_bar(progress):
             time.sleep(0)
             progress_win.addstr(0, 1, "Progress:")
         else:
-            pos = ((curses.COLS-14) * progress) // 100 
+            pos = ((curses.COLS-14) * progress) // 100
             progress_win.addstr(1, 1, "#"*pos)
             progress_win.addstr(0, 1, "Progress: %d%%" % progress)
         progress_win.refresh()
 
 """Splash screen"""
-s = [None] * 10;
+s = [None] * 10
 s[0] = "   ██▓███   ▄▄▄       ███▄    █ ▓█████▄  ▒█████   ██▀███   ▄▄▄          ▄▄▄▄    ▒█████  ▒██   ██▒"
 s[1] = "  ▓██░  ██▒▒████▄     ██ ▀█   █ ▒██▀ ██▌▒██▒  ██▒▓██ ▒ ██▒▒████▄       ▓█████▄ ▒██▒  ██▒▒▒ █ █ ▒░"
 s[2] = "  ▓██░ ██▓▒▒██  ▀█▄  ▓██  ▀█ ██▒░██   █▌▒██░  ██▒▓██ ░▄█ ▒▒██  ▀█▄     ▒██▒ ▄██▒██░  ██▒░░  █   ░"
@@ -268,7 +270,7 @@ def init_log():
         log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
         log_win.border(0)
     logging.basicConfig(
-        filename='pandora-box.log', 
+        filename='pandora-box.log',
         level=logging.INFO,
         format='%(asctime)s - %(message)s',
         datefmt='%m/%d/%y %H:%M'
@@ -328,17 +330,17 @@ def mount_device():
             except Exception as e :
                 loop +=1
                 continue
-            break;
+            break
         return "/media/box"
 
 """Unmount USB device"""
 def umount_device():
-    if USB_AUTO_MOUNT: 
+    if USB_AUTO_MOUNT:
         log("Sync partitions")
         res = os.system("sync")
     else:
-       log("Unmount partitions")
-       res = os.system("pumount /media/box 2>/dev/null >/dev/null")
+        log("Unmount partitions")
+        res = os.system("pumount /media/box 2>/dev/null >/dev/null")
 
 def log_device_info(dev):
     logging.info(
@@ -394,7 +396,7 @@ def scan(mount_point, used):
                             res = pandora.task_status(res["taskId"])
                             status = res["status"]
                             if status != "WAITING":
-                               break
+                                break
                             time.sleep(0.5)
                             loop += 1
                 file_scan_end_time = time.time()
@@ -492,7 +494,7 @@ def mount():
 # --------------------------------------
 
 def scan_device():
-    global mount_point, infected_files
+    global infected_files
     try:
         statvfs=os.statvfs(mount_point)
     except Exception as e :
@@ -580,11 +582,11 @@ def loop(state):
 def main():
     try :
         state="START"
-        while (state!="STOP"):
+        while state!="STOP":
             state = loop(state)
     except Exception as e :
-         log("error=%s" % e)
-         logging.info("An exception was thrown!", exc_info=True)
+        log("error=%s" % e)
+        logging.info("An exception was thrown!", exc_info=True)
     finally:
         end_curses()
 
