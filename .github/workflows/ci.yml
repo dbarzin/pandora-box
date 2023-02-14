@@ -9,32 +9,21 @@ on:
 
 jobs:
 
-  deploy:
+  qa:
+    name: Quality check
     runs-on: ubuntu-latest 
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v1
 
-      - name: Install Pandora-box
-        run: |
-          sudo ./install.sh
-
-      - name: Start Pandora-box
-        run: |
-          cd pandora-box && ./pandora-box.py
-
-      - name: Upload Screenshots
-        if: failure()
-        uses: actions/upload-artifact@v2
+      - name: Set up Python
+        uses: actions/setup-python@master
         with:
-          name: screenshots
-          path: tests/Browser/screenshots
+          python-version: 3.8
 
-      - name: Upload Console Logs
-        if: failure()
-        uses: actions/upload-artifact@v2
+      - name: Wemake Python Stylguide
+        uses: wemake-services/wemake-python-styleguide@0.13.4
+        continue-on-error: true
         with:
-          name: console
-          path: tests/Browser/console
-
+          reporter: 'github-pr-review'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
