@@ -392,7 +392,7 @@ def scan(mount_point, used):
                         res = pandora.submit_from_disk(full_path)
                         time.sleep(0.1)
                         loop = 0
-                        while True and (loop < 960):
+                        while loop < 960:
                             res = pandora.task_status(res["taskId"])
                             status = res["status"]
                             if status != "WAITING":
@@ -400,11 +400,11 @@ def scan(mount_point, used):
                             time.sleep(0.5)
                             loop += 1
                 file_scan_end_time = time.time()
-                log("file=%s, size=%s, status=%s, duration=%ds" % (
-                    file,
-                    human_readable_size(file_size),
-                    status,
-                   (file_scan_end_time - file_scan_start_time)))
+                log(
+                    f"file = { file } , "\
+                    f"size={human_readable_size(file_size)}, "\
+                    f"status={status}, "\
+                    f"duration={int(file_scan_end_time - file_scan_start_time)}")
                 scanned += os.path.getsize(full_path)
                 file_count += 1
                 update_bar(scanned * 100 // used)
@@ -416,7 +416,7 @@ def scan(mount_point, used):
                             os.mkdir(quanrantine_folder)
                         shutil.copyfile(full_path, os.path.join(quanrantine_folder,file))
     except Exception as e :
-        log("Unexpected error: %s" % e)
+        log(f"Unexpected error: {e}")
         log("Scan failed !")
         if not CURSES:
             display_image("ERROR")
@@ -476,7 +476,7 @@ def mount():
     # Mount device
     mount_point = mount_device()
     log('Partition mounted at %s' % mount_point)
-    if mount_point == None:
+    if mount_point is None:
         # no partition
         if not CURSES:
             display_image("WAIT")
@@ -484,7 +484,7 @@ def mount():
     try:
         os.statvfs(mount_point)
     except Exception as e :
-        log("error=%s" % e)
+        log(f"error={e}")
         logging.info("An exception was thrown!", exc_info=True)
         if not CURSES:
             display_image("WAIT")
@@ -498,7 +498,7 @@ def scan_device():
     try:
         statvfs=os.statvfs(mount_point)
     except Exception as e :
-        log("error=%s" % e)
+        log(f"error={e}")
         logging.info("An exception was thrown!", exc_info=True)
         if not CURSES:
             display_image("WAIT")
@@ -514,7 +514,7 @@ def clean():
     global infected_files
     # Clean files
     if len(infected_files) > 0:
-        log('%d infected files found !' % len(infected_files))
+        log(f"infeted_files={len(infected_files)}")
         if not CURSES:
             display_image("BAD")
             waitMouseClick()
@@ -525,9 +525,9 @@ def clean():
         for file in infected_files:
             try :
                 os.remove(file)
-                log('%s removed' % file)
+                log(f"{file} removed")
             except Exception as e :
-                log("Unexpected error: %s" % str(e))
+                log(f"Unexpected error: {e}")
                 logging.info("An exception was thrown!", exc_info=True)
         os.system("sync")
         log("Clean done.")
@@ -579,7 +579,7 @@ def loop(state):
 # --------------------------------------
 
 """Main entry point"""
-def main():
+def main(unused):
     try :
         state="START"
         while state!="STOP":
