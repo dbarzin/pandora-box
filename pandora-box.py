@@ -470,7 +470,7 @@ def wait_device():
 # --------------------------------------
 
 def mount():
-    global device, mount_point
+    global mount_point
     # Mount device
     mount_point = mount_device()
     log('Partition mounted at %s' % mount_point)
@@ -480,7 +480,7 @@ def mount():
             display_image("WAIT")
         return "WAIT"
     try:
-        statvfs=os.statvfs(mount_point)
+        os.statvfs(mount_point)
     except Exception as e :
         log("error=%s" % e)
         logging.info("An exception was thrown!", exc_info=True)
@@ -577,7 +577,7 @@ def loop(state):
 # --------------------------------------
 
 """Main entry point"""
-def main(stdscr):
+def main():
     try :
         state="START"
         while (state!="STOP"):
