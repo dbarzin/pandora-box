@@ -311,7 +311,7 @@ def mount_device():
                 if partition.device == device.device_node:
                     found = True
             loop += 1
-        if loop < 10:
+        if found:
             return partition.mountpoint
         else:
             log('No partition mounted')

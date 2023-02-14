@@ -15,15 +15,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          path: main
 
       - name: Set up Python
         uses: actions/setup-python@master
         with:
-          python-version: 3.10
+          python-version: '3.10'
 
       - name: code quality checkout
         run: |
           pip install pylint
-          pylint ./main/pandora-box.py
+          pylint ./pandora-box.py
