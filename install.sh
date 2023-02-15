@@ -141,9 +141,9 @@ fi
 mkdir -p /var/quarantine
 chown $SUDO_USER /var/quarantine
 
-# FIM and pmount 
+# FIM, pmount and pmish (for killall)
 apt --fix-broken install -y 
-apt install -y fim pmount
+apt install -y fim pmount pmisc
 
 # Suppress all messages from the kernel (and its drivers) except panic messages from appearing on the console.
 echo "kernel.printk = 3 4 1 3" | tee -a /etc/sysctl.conf
