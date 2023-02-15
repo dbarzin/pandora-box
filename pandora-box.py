@@ -424,15 +424,13 @@ class PandoraBox:
         except Exception as ex :
             self._log(f"Unexpected error: {ex}")
             self._log("Scan failed !")
-            if not self.has_curses:
-                self.display_image("ERROR")
-            raise
+            return "ERROR"
         self._update_bar(100)
         self._log(
             f'duration="{int(time.time() - scan_start_time)}s", '\
             f'files_scanned="{file_count}", '\
             f'files_infected="{len(self.infected_files)}"')
-        return self.infected_files
+        return "CLEAN"
 
     # --------------------------------------
 
@@ -518,9 +516,16 @@ class PandoraBox:
             return "WAIT"
         self._print_size(self._human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
         self._print_used(
-            self._human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
-        self.scan(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
-        return "CLEAN"
+        self._human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
+        return self.scan(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
+
+    # --------------------------------------
+
+    def error(self):
+        """ Display error message """
+        if not self.has_curses:
+            self.display_image("ERROR")
+        return "WAIT"
 
     # --------------------------------------
 
@@ -594,6 +599,8 @@ class PandoraBox:
                 return self.scan_device()
             case "CLEAN":
                 return self.clean()
+            case "ERROR":
+                return self.error()
             case _:
                 return "STOP"
 
