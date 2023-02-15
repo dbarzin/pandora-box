@@ -128,6 +128,15 @@ cd /home/$SUDO_USER/pandora-box
 # Python libraries
 su - $SUDO_USER -c "pip install pypandora psutil pyudev"
 
+# create /media/box folder
+if [ -d "/media" ];
+then
+	echo "Create /media/box folder."
+    mkdir /media/box
+else
+	echo "No /media/box folder needed."
+fi
+
 # Quarantine folder
 mkdir -p /var/quarantine
 chown $SUDO_USER /var/quarantine
@@ -172,4 +181,4 @@ echo "Type=idle" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 cp pandora-box.ini.curses pandora-dox.ini
 
 # Reboot
-echo "You may reboot the server"
+echo "You may reboot the server."
