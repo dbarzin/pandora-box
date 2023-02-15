@@ -36,7 +36,6 @@ import pypandora
 class PandoraBox:
     """The PandoraBox class"""
 
-
     # -----------------------------------------------------------
     # Config variables
     # -----------------------------------------------------------
@@ -165,7 +164,7 @@ class PandoraBox:
     def print_size(self, label):
         """Print FS Size"""
         if self.has_curses:
-            if label == None:
+            if label is None:
                 self.status_win.addstr(2, 1, "Size :            ",curses.color_pair(2))
             else:
                 self.status_win.addstr(2, 1, "Size : %s " % label,curses.color_pair(2))
@@ -175,7 +174,7 @@ class PandoraBox:
     def print_used(self, label):
         """Print FS Used Size"""
         if self.has_curses:
-            if label == None:
+            if label is None:
                 self.status_win.addstr(3, 1, "Used :            ",curses.color_pair(2))
             else:
                 self.status_win.addstr(3, 1, "Used : %s " % label,curses.color_pair(2))
@@ -218,7 +217,7 @@ class PandoraBox:
             else:
                 pos = ((curses.COLS-14) * progress) // 100
                 self.progress_win.addstr(1, 1, "#"*pos)
-                self.progress_win.addstr(0, 1, "Progress: %d%%" % progress)
+                self.progress_win.addstr(0, 1, f"Progress: {progress}%")
             self.progress_win.refresh()
 
     def print_screen(self):
@@ -325,7 +324,7 @@ class PandoraBox:
                 time.sleep(1)
                 try:
                     os.statvfs(self.mount_point)
-                except Exception as e :
+                except Exception as ex :
                     loop +=1
                     continue
                 break
@@ -370,9 +369,9 @@ class PandoraBox:
         if self.has_quarantine:
             qfolder = os.path.join(self.quarantine_folder,datetime.now().strftime("%y%m%d-%H%M"))
         if not self.is_fake_scan:
-            pandora = pypandora.PyPandora(root_url=pandora_root_url)
+            pandora = pypandora.PyPandora(root_url=self.pandora_root_url)
         try:
-            for root, dirs, files in os.walk(self.mount_point):
+            for root, _, files in os.walk(self.mount_point):
                 for file in files:
                     status = None
                     full_path = os.path.join(root,file)
@@ -413,8 +412,8 @@ class PandoraBox:
                             if not os.path.isdir(qfolder) :
                                 os.mkdir(qfolder)
                             shutil.copyfile(full_path, os.path.join(qfolder,file))
-        except Exception as e :
-            self.log(f"Unexpected error: {e}")
+        except Exception as ex :
+            self.log(f"Unexpected error: {ex}")
             self.log("Scan failed !")
             if not self.has_curses:
                 self.display_image("ERROR")
@@ -465,8 +464,8 @@ class PandoraBox:
                             self.print_serial("")
                             self.update_bar(0)
                         return "WAIT"
-        except Exception as e:
-            self.log(f"Unexpected error: {str(e)}")
+        except Exception as ex:
+            self.log(f"Unexpected error: {str(ex)}")
             logging.info("An exception was thrown!", exc_info=True)
         finally:
             self.log("Done.")
@@ -485,8 +484,8 @@ class PandoraBox:
             return "WAIT"
         try:
             os.statvfs(self.mount_point)
-        except Exception as e :
-            self.log(f"error={e}")
+        except Exception as ex :
+            self.log(f"error={ex}")
             logging.info("An exception was thrown!", exc_info=True)
             if not self.has_curses:
                 self.display_image("WAIT")
@@ -499,8 +498,8 @@ class PandoraBox:
         """Scan devce with pypandora"""
         try:
             statvfs=os.statvfs(self.mount_point)
-        except Exception as e :
-            self.log(f"error={e}")
+        except Exception as ex :
+            self.log(f"error={ex}")
             logging.info("An exception was thrown!", exc_info=True)
             if not self.has_curses:
                 self.display_image("WAIT")
@@ -517,7 +516,7 @@ class PandoraBox:
         """Remove infected files"""
         # Clean files
         if len(self.infected_files) > 0:
-            self.log(f"infeted_files={len(infected_files)}")
+            self.log(f"infeted_files={len(self.infected_files)}")
             if not self.has_curses:
                 self.display_image("BAD")
                 self.wait_mouse_click()
@@ -529,11 +528,11 @@ class PandoraBox:
                 try :
                     os.remove(file)
                     self.log(f"{file} removed")
-                except Exception as e :
-                    self.log(f"Unexpected error: {e}")
+                except Exception as ex :
+                    self.log(f"Unexpected error: {ex}")
                     logging.info("An exception was thrown!", exc_info=True)
             os.system("sync")
-            log("Clean done.")
+            self.log("Clean done.")
             if not self.has_curses:
                 self.display_image("OK")
         else:
@@ -544,7 +543,8 @@ class PandoraBox:
 
     # --------------------------------------
 
-    def moveToScriptFolder(self):
+    def move_to_script_folder(self):
+        """Move to pandora-box folder"""
         abspath = os.path.abspath(__file__)
         dname = os.path.dirname(abspath)
         os.chdir(dname)
@@ -556,7 +556,7 @@ class PandoraBox:
         self.config()
         self.init_curses()
         self.init_log()
-        self.moveToScriptFolder()
+        self.move_to_script_folder()
         # Read logo
         with open('pandora-box.txt', 'r') as file1:
             self.logo = file1.readlines()
@@ -600,7 +600,8 @@ class PandoraBox:
             self.end_curses()
 
 
-def main(unused):
+def main(_):
+    """Main entry point"""
     pandora_box = PandoraBox()
     pandora_box.main()
 
