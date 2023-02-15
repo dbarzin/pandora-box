@@ -21,7 +21,7 @@ jobs:
 
       - name: code quality checkout
         run: |
+          pip install pyudev psutil pypandora
           pip install pylint
           pylint ./pandora-box.py
-
 
