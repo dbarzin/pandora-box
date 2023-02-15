@@ -178,7 +178,7 @@ class PandoraBox:
                 self.status_win.addstr(3, 1, "Used :            ",curses.color_pair(2))
             else:
                 self.status_win.addstr(3, 1, "Used : %s " % label,curses.color_pair(2))
-                logging.info("used=%s" % label)
+                logging.info(f'used="{label}')
             self.status_win.refresh()
 
     def print_fstype(self, label):
@@ -279,12 +279,12 @@ class PandoraBox:
         )
 
     logs = []
-    def log(self, str):
+    def log(self, msg):
         """log something"""
-        logging.info(str)
+        logging.info(msg)
         if self.has_curses:
             # display log on screen
-            self.logs.append(str)
+            self.logs.append(msg)
             if len(self.logs)>(curses.LINES-22):
                 self.logs.pop(0)
             self.log_win.clear()
