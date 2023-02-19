@@ -93,6 +93,9 @@ chown $SUDO_USER .env
 su - $SUDO_USER -c "cd ~/pandora; poetry install"
 su - $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
 
+# Copy default config file 
+cp ~/pandora/config/logging.json.sample ~/pandora/config/logging.json
+
 # install yara-python
 su - $SUDO_USER -c "pip install yara-python"
 
@@ -115,6 +118,14 @@ dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
 # Configure workers
+# su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
+# disable all workers
+su - $SUDO_USER -c 'cd pandora; mkdir pandora/workers/disabled; mv pandora/workers/* disabled'
+
+# disable all workers
+su - $SUDO_USER -c 'cd pandora; cp pandora/workers/disable/base.* pandora/worker/clamav.* pandora/workers'
+
+# enabe selected workders
 su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
 
 # Update Pandora

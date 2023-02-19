@@ -394,7 +394,7 @@ class PandoraBox:
                         if file_size > (1024*1024*1024):
                             status = "TOO BIG"
                         else:
-                            self._log(f'scan="{full_path}]"')
+                            self._log(f'scan=[{full_path}]')
                             res = pandora.submit_from_disk(full_path)
                             time.sleep(0.1)
                             loop = 0
@@ -422,8 +422,8 @@ class PandoraBox:
                                 os.mkdir(qfolder)
                             shutil.copyfile(full_path, os.path.join(qfolder,file))
         except Exception as ex :
-            self._log(f"Unexpected error: {ex}")
-            self._log("Scan failed !")
+            self._log(f"Unexpected error: {str(ex)}")
+            logging.info("An exception was thrown!", exc_info=True)
             return "ERROR"
         self._update_bar(100)
         self._log(

@@ -37,3 +37,30 @@ The [installation and configuration procedure](INSTALL.md) is documented.
 
 Pandora-box is an open source software distributed under [GPL](https://www.gnu.org/licenses/licenses.html).
 
+# Troubleshooting
+
+Update Pandora
+
+    poetry run update --yes
+	
+	
+Check Pandora listening on port 6100
+
+    sudo lsof -i -P -n | grep LISTEN
+
+Result should contains 
+
+    ...
+    gunicorn: 1034         pandora    5u  IPv4  27043      0t0  TCP *:6100 (LISTEN)
+    ...
+
+Test submit a file to Panra with command line
+
+    poetry run pandora --url http://127.0.0.1:6100 -f 
+	
+Look a logs
+
+    tail -500f /var/log/pandora_message.log
+    tail -500f /var/log/pandora_error.log
+
+
