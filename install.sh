@@ -121,7 +121,7 @@ wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/CO
 # su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
 
 # Disable all workers
-su - $SUDO_USER -c 'cd pandora; mkdir pandora/workers/disabled; mv pandora/workers/* pandora/workers/disabled'
+su - $SUDO_USER -c 'cd pandora && mkdir pandora/workers/disabled && mv pandora/workers/*.sample pandora/workers/*.py pandora/workers/disabled'
 
 # select some workers
 su - $SUDO_USER -c 'cd pandora; cp pandora/workers/disabled/base.* pandora/workers'
@@ -154,7 +154,7 @@ chown $SUDO_USER /var/quarantine
 
 # FIM, pmount and pmish (for killall)
 apt --fix-broken install -y 
-apt install -y fim pmount pmisc
+apt install -y fim pmount pmisc vim
 
 # Suppress all messages from the kernel (and its drivers) except panic messages from appearing on the console.
 echo "kernel.printk = 3 4 1 3" | tee -a /etc/sysctl.conf
