@@ -297,8 +297,8 @@ class PandoraBox:
     def mount_device(self):
         """Mount USB device"""
         self._log('Try to mount partition')
-        self.mount_point = None
         if self.has_usb_auto_mount:
+            self.mount_point = None
             loop = 0
             while (self.mount_point is None) and (loop < 15):
                 # need to sleep before devide is mounted
@@ -310,6 +310,7 @@ class PandoraBox:
             if self.mount_device is None:
                 self._log('No partition mounted')
         else:
+            self.mount_point = "/media/box"
             if not os.path.exists("/media/box"):
                 self._log("folder /media/box does not exists")
                 return None
@@ -324,7 +325,6 @@ class PandoraBox:
                     loop +=1
                     continue
                 break
-            self.mount_point = "/media/box"
 
     def umount_device(self):
         """Unmount USB device"""
