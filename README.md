@@ -54,7 +54,7 @@ Result should contains
     gunicorn: 1034         pandora    5u  IPv4  27043      0t0  TCP *:6100 (LISTEN)
     ...
 
-Test submit a file to Panra with command line
+Test submit a file to Pandora with the command line
 
     poetry run pandora --url http://127.0.0.1:6100 -f <<file_name>>
 	
