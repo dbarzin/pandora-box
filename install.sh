@@ -140,13 +140,13 @@ cd /home/$SUDO_USER/pandora-box
 su - $SUDO_USER -c "pip install pypandora psutil pyudev"
 
 # create /media/box folder
-if [ -d "/media" ];
-then
-    echo "Create /media/box folder."
-    mkdir /media/box
-else
-    echo "No /media/box folder needed."
-fi
+if [ -d "/media/box" ];
+    then
+        echo "Create /media/box folder."
+        mkdir -p /media/box
+    else
+        echo "No /media/box folder needed."
+fi    
 
 # Quarantine folder
 mkdir -p /var/quarantine
