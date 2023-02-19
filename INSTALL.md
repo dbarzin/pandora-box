@@ -54,12 +54,22 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
     ; Set quarantine folder
     QUARANTINE_FOLDER = /var/quarantine
 
-# Troubleshooting
+# Update
 
+Update the operating system
+
+   sudo apt update && sudo apt upgrade
+   
 Update Pandora
 
-    poetry run update --yes
-	
+    cd pandora && poetry run update --yes
+
+Update Pandra-box
+
+    cd pandora-box && git pull
+
+# Troubleshooting
+
 	
 Check Pandora listening on port 6100
 
