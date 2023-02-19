@@ -54,3 +54,34 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
     ; Set quarantine folder
     QUARANTINE_FOLDER = /var/quarantine
 
+# Troubleshooting
+
+Update Pandora
+
+    poetry run update --yes
+	
+	
+Check Pandora listening on port 6100
+
+    sudo lsof -i -P -n | grep LISTEN
+
+Result should contains 
+
+    ...
+    gunicorn: 1034         pandora    5u  IPv4  27043      0t0  TCP *:6100 (LISTEN)
+    ...
+
+Test submit a file to Pandora with the command line
+
+    poetry run pandora --url http://127.0.0.1:6100 -f <<file_name>>
+	
+Look a the Pandora logs files
+
+    tail -500f /var/log/pandora_message.log
+    tail -500f /var/log/pandora_error.log
+
+Look a the Pandora-box logs files
+
+    tail -500f /var/log/pandora-box.log
+    
+    
