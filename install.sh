@@ -94,7 +94,7 @@ su - $SUDO_USER -c "cd ~/pandora; poetry install"
 su - $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
 
 # Copy default config file 
-cp ~/pandora/config/logging.json.sample ~/pandora/config/logging.json
+su - $SUDO_USER -c "cp ~/pandora/config/logging.json.sample ~/pandora/config/logging.json"
 
 # install yara-python
 su - $SUDO_USER -c "pip install yara-python"
@@ -142,10 +142,10 @@ su - $SUDO_USER -c "pip install pypandora psutil pyudev"
 # create /media/box folder
 if [ -d "/media" ];
 then
-	echo "Create /media/box folder."
+    echo "Create /media/box folder."
     mkdir /media/box
 else
-	echo "No /media/box folder needed."
+    echo "No /media/box folder needed."
 fi
 
 # Quarantine folder
