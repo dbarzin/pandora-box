@@ -58,7 +58,7 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
 
 Update the operating system
 
-   sudo apt update && sudo apt upgrade
+    sudo apt update && sudo apt upgrade
    
 Update Pandora
 
