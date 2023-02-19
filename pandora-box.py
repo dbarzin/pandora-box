@@ -59,7 +59,7 @@ class PandoraBox:
     logo = None
 
     # -----------------------------------------------------------
-    # Curses
+    # Interval box variables
     # -----------------------------------------------------------
     device = None
     mount_point = None
@@ -553,10 +553,12 @@ class PandoraBox:
 
     def startup(self):
         """Start Pandora-box"""
+        # Moto to the script folder
+        self.move_to_script_folder()
+        # Initilize stuff
         self.config()
         self.init_curses()
         self.init_log()
-        self.move_to_script_folder()
         # Read logo
         with open('pandora-box.txt', 'r') as file1:
             self.logo = file1.readlines()
