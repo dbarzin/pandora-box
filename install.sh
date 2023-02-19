@@ -121,7 +121,7 @@ wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/CO
 # su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
 
 # Disable all workers
-su - $SUDO_USER -c 'cd pandora; mkdir pandora/workers/disabled; mv pandora/workers/* disabled'
+su - $SUDO_USER -c 'cd pandora; mkdir pandora/workers/disabled; mv pandora/workers/* pandora/workers/disabled'
 
 # select some workers
 su - $SUDO_USER -c 'cd pandora; cp pandora/workers/disabled/base.* pandora/workers'
