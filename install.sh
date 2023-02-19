@@ -187,7 +187,7 @@ echo "ExecStart=" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 echo "ExecStart=-/sbin/agetty --autologin pandora --noclear %I $TERM" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
 # Start pandora from bashrc
-echo "~/pandora-box/pandora-box.py" >> ~/.bashrc
+su - $SUDO_USER -c echo \"~/pandora-box/pandora-box.py\" >> ~/.bashrc
 
 # Copy ini file
 cp pandora-box.ini.curses pandora-dox.ini
