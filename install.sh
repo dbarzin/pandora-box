@@ -84,6 +84,7 @@ apt install -y libreoffice-base-nogui libreoffice-calc-nogui libreoffice-draw-no
 apt install -y exiftool  # for extracting exif information
 apt install -y unrar  # for extracting rar files
 apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
+apt install -y rsyslog # log logging
 
 # set .env
 cd /home/$SUDO_USER/pandora
@@ -169,6 +170,9 @@ usermod -a -G input $SUDO_USER
 
 # allow read mouse input
 usermod -a -G tty $SUDO_USER
+
+# allow write to /var/log
+usermod -a -G syslog $SUDO_USER
 
 # Start Pandora at boot
 cp pandora.service /etc/systemd/system/pandora.service
