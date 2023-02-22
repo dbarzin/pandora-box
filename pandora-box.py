@@ -433,7 +433,7 @@ class PandoraBox:
         self._log("Scan done in %ds, %d files scanned, %d files infected" % 
             ((time.time() - scan_start_time),file_count,len(self.infected_files)))
         logging.info(
-            f'duration="{int(time.time() - scan_start_time)}s", '\
+            f'duration="{int(time.time() - scan_start_time)}", '\
             f'files_scanned="{file_count}", '\
             f'files_infected="{len(self.infected_files)}"')
         return "CLEAN"
@@ -456,14 +456,13 @@ class PandoraBox:
         except Exception as ex:
             self._log(f"Unexpected error: {str(ex)}")
             logging.info(f'error="{str(ex)}"', exc_info=True)
-        finally:
-            self._log("Done.")
         return "STOP"
 
     def _device_inserted(self, dev):
+        self._log("Device inserted")
+        logging.info("device-inserted")
         self.device = dev
         self._log_device_info(self.device)
-        logging.info("device_inserted")
         if not self.has_curses:
             self.display_image("WORK")
         else:
@@ -476,6 +475,8 @@ class PandoraBox:
         return "INSERTED"
 
     def _device_removed(self):
+        self._log("Device removed")
+        logging.info("device-removed")
         self.device = None
         if not self.has_curses:
             self.display_image("WAIT")
