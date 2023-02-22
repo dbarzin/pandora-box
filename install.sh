@@ -174,6 +174,16 @@ usermod -a -G tty $SUDO_USER
 # allow write to /var/log
 usermod -a -G syslog $SUDO_USER
 
+# logrotate
+sudo apt install logrotate
+echo "/var/log/pandora-box.log {" > /etc/logrotate.d/pandora-box
+echo "   rotate 12" >> /etc/logrotate.d/pandora-box
+echo "   monthly" >> /etc/logrotate.d/pandora-box
+echo "   compress" >> /etc/logrotate.d/pandora-box
+ecjo "   missingok" >> /etc/logrotate.d/pandora-box
+echo "   notifempty" >> /etc/logrotate.d/pandora-box
+echo "}" >> /etc/logrotate.d/pandora-box
+
 # Start Pandora at boot
 cp pandora.service /etc/systemd/system/pandora.service
 sed -i "s/_USER_/$SUDO_USER/g" /etc/systemd/system/pandora.service
