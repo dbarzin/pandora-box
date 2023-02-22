@@ -168,21 +168,18 @@ class PandoraBox:
         if self.has_curses:
             self.status_win.addstr(2, 1, f"Size : {label:32} ", curses.color_pair(2))
             self.status_win.refresh()
-        logging.info('fs_size="%s"', label)
 
     def _print_used(self, label):
         """Print FS Used Size"""
         if self.has_curses:
             self.status_win.addstr(3, 1, f"Used : {label:32} ",curses.color_pair(2))
             self.status_win.refresh()
-        logging.info('fs_usage="%s"',label)
 
     def _print_fstype(self, label):
         """Print device FS type"""
         if self.has_curses:
             self.status_win.addstr(1, 50, f"Part / Type : {label:32}", curses.color_pair(2))
             self.status_win.refresh()
-        logging.info('fs_type="%s"',label)
 
     def _print_model(self, label):
         """Print device model"""
@@ -249,6 +246,7 @@ class PandoraBox:
             self._init_bar()
             self._update_bar(0)
         self._log('Ready.')
+        logging.info("pandora-box-start")
 
     def _end_curses(self):
         """Closes curses"""
@@ -269,7 +267,7 @@ class PandoraBox:
             self.log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
             self.log_win.border(0)
         logging.basicConfig(
-            filename='pandora-box.log',
+            filename='/var/log/pandora-box.log',
             level=logging.INFO,
             format='%(asctime)s - %(message)s',
             datefmt='%m/%d/%y %H:%M'
@@ -278,7 +276,6 @@ class PandoraBox:
     logs = []
     def _log(self, msg):
         """log something"""
-        logging.info(msg)
         if self.has_curses:
             # display log on screen
             self.logs.append(msg)
@@ -296,7 +293,7 @@ class PandoraBox:
 
     def mount_device(self):
         """Mount USB device"""
-        self._log('Try to mount partition')
+        self._log('Mount device')
         if self.has_usb_auto_mount:
             self.mount_point = None
             loop = 0
@@ -394,7 +391,8 @@ class PandoraBox:
                         if file_size > (1024*1024*1024):
                             status = "TOO BIG"
                         else:
-                            self._log(f'scan=[{full_path}]')
+                            self._log(f'-> [{full_path}]')
+                            logging.info(f'scan=[{full_path}]')
                             res = pandora.submit_from_disk(full_path)
                             time.sleep(0.1)
                             loop = 0
@@ -406,9 +404,15 @@ class PandoraBox:
                                 time.sleep(0.5)
                                 loop += 1
                     file_scan_end_time = time.time()
+
                     self._log(
-                        f'file="{file}" , '\
-                        f'size="{self._human_readable_size(file_size)}", '\
+                        f'Scan {file} '\
+                        f'[{self._human_readable_size(file_size)}] '\
+                        '-> '\
+                        f'{status} ({int(file_scan_end_time - file_scan_start_time)}s)')
+                    logging.info(
+                        f'file="{file}", '\
+                        f'size="{file_size}", '\
                         f'status="{status}"", '\
                         f'duration="{int(file_scan_end_time - file_scan_start_time)}"')
                     scanned += os.path.getsize(full_path)
@@ -423,10 +427,12 @@ class PandoraBox:
                             shutil.copyfile(full_path, os.path.join(qfolder,file))
         except Exception as ex :
             self._log(f"Unexpected error: {str(ex)}")
-            logging.info("An exception was thrown!", exc_info=True)
+            logging.info(f'error="{str(ex)}"', exc_info=True)
             return "ERROR"
         self._update_bar(100)
-        self._log(
+        self._log("Scan done in %ds, %d files scanned, %d files infected" % 
+            ((time.time() - scan_start_time),file_count,len(self.infected_files)))
+        logging.info(
             f'duration="{int(time.time() - scan_start_time)}s", '\
             f'files_scanned="{file_count}", '\
             f'files_infected="{len(self.infected_files)}"')
@@ -449,7 +455,7 @@ class PandoraBox:
                         return self._device_removed()
         except Exception as ex:
             self._log(f"Unexpected error: {str(ex)}")
-            logging.info("An exception was thrown!", exc_info=True)
+            logging.info(f'error="{str(ex)}"', exc_info=True)
         finally:
             self._log("Done.")
         return "STOP"
@@ -457,6 +463,7 @@ class PandoraBox:
     def _device_inserted(self, dev):
         self.device = dev
         self._log_device_info(self.device)
+        logging.info("device_inserted")
         if not self.has_curses:
             self.display_image("WORK")
         else:
@@ -495,8 +502,8 @@ class PandoraBox:
         try:
             os.statvfs(self.mount_point)
         except Exception as ex :
-            self._log(f"error={ex}")
-            logging.info("An exception was thrown!", exc_info=True)
+            self._log(f"Unexpected error: {str(ex)}")
+            logging.info(f'error="{str(ex)}"', exc_info=True)
             if not self.has_curses:
                 self.display_image("WAIT")
             return "WAIT"
@@ -532,7 +539,8 @@ class PandoraBox:
     def clean(self):
         """Remove infected files"""
         if len(self.infected_files) > 0:
-            self._log(f"infeted_files={len(self.infected_files)}")
+            self._log(f"{len(self.infected_files)} infected_files detecetd !")
+            logging.info(f"infeted_files={len(self.infected_files)}")
             if not self.has_curses:
                 self.display_image("BAD")
                 self.wait_mouse_click()
@@ -544,9 +552,10 @@ class PandoraBox:
                 try :
                     os.remove(file)
                     self._log(f"{file} removed")
+                    logging.info(f'removed="{file}"')
                 except Exception as ex :
-                    self._log(f"Unexpected error: {ex}")
-                    logging.info("An exception was thrown!", exc_info=True)
+                    self._log(f"Unexpected error: {str(ex)}")
+                    logging.info(f'error="{str(ex)}"', exc_info=True)
             os.system("sync")
             if not self.has_curses:
                 self.display_image("OK")
@@ -614,11 +623,10 @@ class PandoraBox:
             while state!="STOP":
                 state = self.loop(state)
         except Exception as ex :
-            self._log(f"error={ex}")
-            logging.info("An exception was thrown!", exc_info=True)
+            self._log(f"Unexpected error: {str(ex)}")
+            logging.info(f'error="{str(ex)}"', exc_info=True)
         finally:
             self._end_curses()
-
 
 def main(_):
     """Main entry point"""

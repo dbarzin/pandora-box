@@ -1,6 +1,6 @@
 [DEFAULT]
 ; Curses mode (full text)
-CURSES = False
+CURSES = True
 
 ; Set USB_AUTO_MOUNT to true is if the OS automaticaly mount USB keys
 USB_AUTO_MOUNT = False
