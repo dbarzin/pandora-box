@@ -24,10 +24,9 @@ After reboot, login with the user created during the install and type :
     cd pandora-box
     sudo ./install.sh
 
-Configuration
--------------
+## Configuration
 
-Copy your configuration file to _pandora-box.ini_
+Copy the sample configuration file to _pandora-box.ini_
 
     cp pandora-box.ini.ubuntu pandora-box.ini
 
@@ -54,6 +53,29 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
     ; Set quarantine folder
     QUARANTINE_FOLDER = /var/quarantine
 
+## Logging
+
+The client is the machine that sends its logs to a remote or centralized log host server. Open the rsyslog config file located at /etc/rsyslog.conf:
+ 
+    sudo vi /etc/rsyslog.conf
+
+Add the following line if you are using UDP, where 192.168.12.123 is the IP address of the remote server, you will be writing your logs to:
+
+    $ModLoad imfile
+    $InputFileName /var/log/pandora-box.log
+    $InputFileTag pandora-box:
+    $InputFileStateFile stat-pandora-box-info
+    $InputFileFacility local7
+    $InputFileSeverity info  
+    $InputRunFileMonitor
+    local3.info @@hostname:514
+
+Save your changes and restart the rsyslog service on the client with the command:
+ 
+    sudo systemctl restart rsyslog
+
+Ref: https://www.rsyslog.com/doc/v5-stable/configuration/modules/imfile.html
+
 # Update
 
 Update the operating system
@@ -69,7 +91,6 @@ Update Pandra-box
     cd pandora-box && git pull
 
 # Troubleshooting
-
 	
 Check Pandora listening on port 6100
 
