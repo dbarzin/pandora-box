@@ -180,7 +180,7 @@ echo "/var/log/pandora-box.log {" > /etc/logrotate.d/pandora-box
 echo "   rotate 12" >> /etc/logrotate.d/pandora-box
 echo "   monthly" >> /etc/logrotate.d/pandora-box
 echo "   compress" >> /etc/logrotate.d/pandora-box
-ecjo "   missingok" >> /etc/logrotate.d/pandora-box
+echo "   missingok" >> /etc/logrotate.d/pandora-box
 echo "   notifempty" >> /etc/logrotate.d/pandora-box
 echo "}" >> /etc/logrotate.d/pandora-box
 
