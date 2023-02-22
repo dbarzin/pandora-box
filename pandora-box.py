@@ -388,11 +388,10 @@ class PandoraBox:
                         time.sleep(0.1)
                         status = "SKIPPED"
                     else:
+                        # do not scan files bigger than 1G
                         if file_size > (1024*1024*1024):
                             status = "TOO BIG"
                         else:
-                            self._log(f'-> [{full_path}]')
-                            logging.info(f'scan=[{full_path}]')
                             res = pandora.submit_from_disk(full_path)
                             time.sleep(0.1)
                             loop = 0
