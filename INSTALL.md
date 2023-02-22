@@ -55,7 +55,7 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
 
 ## Logging
 
-The client is the machine that sends its logs to a remote or centralized log host server. Open the rsyslog config file located at /etc/rsyslog.conf:
+Open the rsyslog config file located at /etc/rsyslog.conf:
  
     sudo vi /etc/rsyslog.conf
 
@@ -68,9 +68,9 @@ Add the following line if you are using UDP, where 192.168.12.123 is the IP addr
     $InputFileFacility local7
     $InputFileSeverity info  
     $InputRunFileMonitor
-    local3.info @@hostname:514
+    local7.info @@192.168.12.123:514
 
-Save your changes and restart the rsyslog service on the client with the command:
+Save your changes and restart the rsyslog service with the command:
  
     sudo systemctl restart rsyslog
 
