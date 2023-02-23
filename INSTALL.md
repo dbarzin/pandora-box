@@ -102,10 +102,15 @@ Result should contains
     gunicorn: 1034         pandora    5u  IPv4  27043      0t0  TCP *:6100 (LISTEN)
     ...
 
-Submit a test file to Pandora with the command line
+Submit a file to Pandora with the command line
 
     poetry run pandora --url http://127.0.0.1:6100 -f <<file_name>>
-	
+
+Submit anti malware testfile to Pandora 
+
+    wget https://secure.eicar.org/eicar.com.txt
+    poetry run pandora --url http://127.0.0.1:6100 -f eicar.com.txt
+
 Look a the Pandora logs files
 
     tail -500f /var/log/pandora_message.log
