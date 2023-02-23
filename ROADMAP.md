@@ -8,7 +8,7 @@ User interface
 
 Technical
 
-- [ ] ~~Deployment on Raspberry Pi~~
+- [ ] ~~Deployment on Raspberry Pi~~ (too slow)
 - [x] logrotate on pandora-box.log
 - [x] place logs in /var/logs
 - [x] update procedure
