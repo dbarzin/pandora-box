@@ -548,17 +548,22 @@ class PandoraBox:
                 self._log('PRESS KEY TO CLEAN')
                 self.screen.getch()
             # Remove infected files
+            files_removed = 0
             for file in self.infected_files:
                 try :
                     os.remove(file)
                     self._log(f"{file} removed")
                     logging.info(f'removed="{file}"')
+                    files_removed += 1
                 except Exception as ex :
                     self._log(f"Unexpected error: {str(ex)}")
                     logging.info(f'error="{str(ex)}"', exc_info=True)
             os.system("sync")
             if not self.has_curses:
                 self.display_image("OK")
+            else
+                self._log('Device cleaned !')
+            logging.info(f'cleaned="{files_removed}/{len(self.infected_files)}"')
         else:
             if not self.has_curses:
                 self.display_image("OK")
