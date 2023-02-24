@@ -91,7 +91,7 @@ Update Pandra-box
     cd pandora-box && git pull
 
 # Troubleshooting
-	
+ 
 Check Pandora listening on port 6100
 
     sudo lsof -i -P -n | grep LISTEN
@@ -101,6 +101,10 @@ Result should contains
     ...
     gunicorn: 1034         pandora    5u  IPv4  27043      0t0  TCP *:6100 (LISTEN)
     ...
+
+poetry: command not found
+
+    export PATH="$HOME/.local/bin:{$PATH}"
 
 Submit a file to Pandora with the command line
 
