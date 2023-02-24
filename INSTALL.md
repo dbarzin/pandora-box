@@ -104,12 +104,18 @@ Result should contains
 
 Submit a file to Pandora with the command line
 
+    cd pandora
     poetry run pandora --url http://127.0.0.1:6100 -f <<file_name>>
+    ...
+    poetry run pandora --url http://127.0.0.1:6100 --task_id ... --seed ...
 
 Submit anti malware testfile to Pandora 
 
+    cd pandora
     wget https://secure.eicar.org/eicar.com.txt
     poetry run pandora --url http://127.0.0.1:6100 -f eicar.com.txt
+    ...
+    poetry run pandora --url http://127.0.0.1:6100 --task_id ... --seed ...
 
 Look a the Pandora logs files
 
