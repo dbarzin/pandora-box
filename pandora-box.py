@@ -561,7 +561,7 @@ class PandoraBox:
             os.system("sync")
             if not self.has_curses:
                 self.display_image("OK")
-            else
+            else:
                 self._log('Device cleaned !')
             logging.info(f'cleaned="{files_removed}/{len(self.infected_files)}"')
         else:
