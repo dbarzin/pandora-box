@@ -201,6 +201,7 @@ echo "ExecStart=-/sbin/agetty --autologin pandora --noclear %I $TERM" >> /etc/sy
 # echo "ExecStart=-su - pandora -c ./pandora-box/pandora-box.py" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
 # Start pandora from bashrc
+su - $SUDO_USER -c 'echo "export PATH=\"\$HOME/.local/bin:{\$PATH}\""' >> ~/.bashrc
 su - $SUDO_USER -c 'echo "pandora-box/pandora-box.py" >> ~/.bashrc'
 
 # Copy ini file
