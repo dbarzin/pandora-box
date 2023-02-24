@@ -121,16 +121,8 @@ wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/CO
 # Configure workers
 # su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
 
-# Disable all workers
-su - $SUDO_USER -c 'cd pandora && mkdir pandora/workers/disabled && mv pandora/workers/*.sample pandora/workers/*.py pandora/workers/disabled'
-
-# select some workers
-su - $SUDO_USER -c 'cd pandora; cp pandora/workers/disabled/base.* pandora/workers'
-su - $SUDO_USER -c 'cd pandora; cp pandora/workers/disabled/clamav.* pandora/workers'
-su - $SUDO_USER -c 'cd pandora; cp pandora/workers/disabled/extractor.* pandora/workers'
-
 # Update Pandora
-su - $SUDO_USER -c 'cd pandora; poetry run update --yes'
+su - $SUDO_USER -c 'cd pandora; ../.local/bin/poetry run update --yes'
 
 #---------------------
 # Pandora-box
