@@ -17,7 +17,6 @@ jobs:
         uses: py-actions/flake8@v2
         with:
           ignore: "BLK100"
-          exclude: "tests/*"
           max-line-length: "128"
           path: "."
           plugins: "flake8-bugbear==22.1.11 flake8-black"
