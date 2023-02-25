@@ -194,7 +194,7 @@ class PandoraBox:
     def _init_bar(self):
         """Initialise progress bar"""
         if self.has_curses:
-            self.progress_win = curses.newwin(3, curses.COLS-12, 17, 5)
+            self.progress_win = curses.newwin(3, curses.COLS - 12, 17, 5)
             self.progress_win.border(0)
             self.progress_win.refresh()
 
@@ -207,8 +207,8 @@ class PandoraBox:
                 time.sleep(0)
                 self.progress_win.addstr(0, 1, "Progress:")
             else:
-                pos = ((curses.COLS-14) * progress) // 100
-                self.progress_win.addstr(1, 1, "#"*pos)
+                pos = ((curses.COLS - 14) * progress) // 100
+                self.progress_win.addstr(1, 1, "#" * pos)
                 self.progress_win.addstr(0, 1, f"Progress: {progress}%")
             self.progress_win.refresh()
 
@@ -220,7 +220,7 @@ class PandoraBox:
             curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
             self.title_win = curses.newwin(12, curses.COLS, 0, 0)
             # title_win.border(0)
-            title_col = (curses.COLS - len(self.logo[0]))//2
+            title_col = (curses.COLS - len(self.logo[0])) // 2
             self.title_win.addstr(1, title_col, self.logo[0], curses.color_pair(1))
             self.title_win.addstr(2, title_col, self.logo[1], curses.color_pair(1))
             self.title_win.addstr(3, title_col, self.logo[2], curses.color_pair(1))
@@ -262,7 +262,7 @@ class PandoraBox:
     def _init_log(self):
         """Inititalize logging function"""
         if self.has_curses:
-            self.log_win = curses.newwin(curses.LINES-20, curses.COLS, 20, 0)
+            self.log_win = curses.newwin(curses.LINES - 20, curses.COLS, 20, 0)
             self.log_win.border(0)
         logging.basicConfig(
             filename='/var/log/pandora-box.log',
@@ -359,7 +359,7 @@ class PandoraBox:
             dev.get("ID_MODEL_ID"),
             dev.get("ID_SERIAL_SHORT"),
             dev.get("ID_SERIAL")
-            )
+        )
 
     # -----------------------------------------------------------
     # pandora
@@ -404,7 +404,7 @@ class PandoraBox:
                         status = "SKIPPED"
                     else:
                         # do not scan files bigger than 1G
-                        if file_size > (1024*1024*1024):
+                        if file_size > (1024 * 1024 * 1024):
                             status = "TOO BIG"
                         else:
                             res = pandora.submit_from_disk(full_path)
