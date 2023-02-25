@@ -1,27 +1,23 @@
-name: Continuous Integration
+name: flake8 Lint
 
-on:
-  push:
-    branches: 
-      - main
-  pull_request:
-    branches: [main]
+on: [push, pull_request]
 
 jobs:
-
-  qa:
-    name: Quality check
-    runs-on: ubuntu-latest 
+  flake8-lint:
+    runs-on: ubuntu-latest
+    name: Lint
     steps:
-      - name: Checkout
+      - name: Check out source repository
         uses: actions/checkout@v3
-
-      - name: Set up Python
+      - name: Set up Python environment
         uses: actions/setup-python@v4
-
-      - name: code quality checkout
-        run: |
-          pip install pyudev psutil pypandora
-          pip install pylint
-          pylint ./pandora-box.py
-
+        with:
+          python-version: "3.11"
+      - name: flake8 Lint
+        uses: py-actions/flake8@v2
+        with:
+          exclude: "tests/*"
+          max-line-length: "128"
+          path: "."
+          plugins: "flake8-bugbear==22.1.11 flake8-black"
+          
