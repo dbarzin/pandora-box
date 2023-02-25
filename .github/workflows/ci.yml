@@ -16,6 +16,7 @@ jobs:
       - name: flake8 Lint
         uses: py-actions/flake8@v2
         with:
+          ignore: "BLK100"
           exclude: "tests/*"
           max-line-length: "128"
           path: "."

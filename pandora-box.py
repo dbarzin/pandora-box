@@ -90,9 +90,9 @@ class PandoraBox:
         """ Convert size to human readble string """
         for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
             if size < 1024.0:
-                break
+                return f"{size:.{decimal_places}f}{unit}"
             size /= 1024.0
-        return f"{size:.{decimal_places}f}{unit}"
+        return None
 
     # -----------------------------------------------------------
     # Image Screen
