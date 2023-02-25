@@ -51,8 +51,10 @@ for device in iter(monitor.poll, None):
                         if partition.device == device.device_node:
                             print("Mounted at {}".format(partition.mountpoint))
                             statvfs = os.statvfs(partition.mountpoint)
-                            print("size %4.1fGB" % (statvfs.f_frsize * statvfs.f_blocks // 1024 // 1024 / 1024))
-                            print("used %4.1fGB" % (statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree) // 1024 // 1024 / 1024))
+                            print("size %4.1fGB" % (statvfs.f_frsize * statvfs.f_blocks 
+                                  // 1024 // 1024 / 1024))
+                            print("used %4.1fGB" % (statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree) 
+                                  // 1024 // 1024 / 1024))
                             found = True
                     loop += 1
             else:
