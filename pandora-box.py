@@ -278,7 +278,7 @@ class PandoraBox:
         if self.has_curses:
             # display log on screen
             self.logs.append(msg)
-            if len(self.logs)>(curses.LINES-22):
+            if len(self.logs) > (curses.LINES - 22):
                 self.logs.pop(0)
             self._log_update()
 
