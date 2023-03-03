@@ -453,10 +453,10 @@ class PandoraBox:
                                 time.sleep(0.01)
 
                                 # update status
-                                self._log_msg(
-                                    f'Scan {file} '
-                                    f'[{self._human_readable_size(file_size)}] '
-                                    "." * (int(time.time() - file_scan_start_time) // 4))
+                                # self._log_msg(
+                                #    f'Scan {file} '
+                                #    f'[{self._human_readable_size(file_size)}] '
+                                #    "." * (int(time.time() - file_scan_start_time)))
 
                                 loop += 1
                     file_scan_end_time = time.time()
