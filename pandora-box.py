@@ -577,19 +577,33 @@ class PandoraBox:
         """Remove infected files"""
         if len(self.infected_files) > 0:
             # display message
-            self._log(f"{len(self.infected_files)} infected_files detecetd :")
+            self._log(f"{len(self.infected_files)} infected files detecetd:")
             logging.info(f"infeted_files={len(self.infected_files)}")
-
-            # print list of files
-            for file in self.infected_files:
-                self._log(file)
 
             if not self.has_curses:
                 self.display_image("BAD")
                 self.wait_mouse_click()
             else:
+                # print list of files
+                cnt = 0
+                for file in self.infected_files:
+                    self._log(file)
+                    cnt = cnt + 1
+                    if (cnt >= 10):
+                        self._log('...')
+                        break
+                # wait for clean
                 self._log('PRESS KEY TO CLEAN')
                 self.screen.getch()
+
+            # check key is still here
+            try:
+                os.statvfs(self.mount_point)
+            except Exception :
+                self._log("Device not cleaned !")
+                logging.info('device_not_cleaned')
+                return "WAIT"
+
             # Remove infected files
             files_removed = 0
             for file in self.infected_files:
