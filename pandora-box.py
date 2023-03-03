@@ -416,7 +416,7 @@ class PandoraBox:
 
                     file_scan_start_time = time.time()
                     if self.is_fake_scan:
-                        time.sleep(0.1)
+                        time.sleep(0.01)
                         status = "SKIPPED"
                     else:
                         # do not scan files bigger than 1G
@@ -424,21 +424,23 @@ class PandoraBox:
                             status = "TOO BIG"
                         else:
                             res = pandora.submit_from_disk(full_path)
-                            time.sleep(0.1)
+                            time.sleep(0.01)
                             loop = 0
-                            while loop < 960:
+                            while loop < (1024 * 256):
                                 res = pandora.task_status(res["taskId"])
                                 status = res["status"]
 
                                 if status != "WAITING":
                                     break
-                                time.sleep(0.5)
+
+                                # wait a little
+                                time.sleep(0.01)
 
                                 # update status
                                 self._log_msg(
                                     f'Scan {file} '
                                     f'[{self._human_readable_size(file_size)}] '
-                                    "." * (loop // 4))
+                                    "." * (int(time.time() - file_scan_start_time) // 4))
 
                                 loop += 1
                     file_scan_end_time = time.time()
