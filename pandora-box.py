@@ -599,7 +599,7 @@ class PandoraBox:
             # check key is still here
             try:
                 os.statvfs(self.mount_point)
-            except Exception :
+            except Exception:
                 self._log("Device not cleaned !")
                 logging.info('device_not_cleaned')
                 return "WAIT"
