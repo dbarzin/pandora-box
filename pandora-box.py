@@ -155,39 +155,49 @@ class PandoraBox:
 
     def _print_fslabel(self, label):
         """Print FS Label"""
-        if label is None:
-            label = ""
         if self.has_curses:
+            if label is None:
+                label = ""
             self.status_win.addstr(1, 1, f"Partition : {label:32}", curses.color_pair(2))
             self.status_win.refresh()
 
     def _print_size(self, label):
         """Print FS Size"""
         if self.has_curses:
+            if label is None:
+                label = ""
             self.status_win.addstr(2, 1, f"Size : {label:32} ", curses.color_pair(2))
             self.status_win.refresh()
 
     def _print_used(self, label):
         """Print FS Used Size"""
         if self.has_curses:
+            if label is None:
+                label = ""
             self.status_win.addstr(3, 1, f"Used : {label:32} ", curses.color_pair(2))
             self.status_win.refresh()
 
     def _print_fstype(self, label):
         """Print device FS type"""
         if self.has_curses:
+            if label is None:
+                label = ""
             self.status_win.addstr(1, 50, f"Part / Type : {label:32}", curses.color_pair(2))
             self.status_win.refresh()
 
     def _print_model(self, label):
         """Print device model"""
         if self.has_curses:
+            if label is None:
+                label = ""
             self.status_win.addstr(2, 50, f"Model : {label:32}", curses.color_pair(2))
             self.status_win.refresh()
 
     def _print_serial(self, label):
         """Print device serail number"""
         if self.has_curses:
+            if label is None:
+                label = ""
             self.status_win.addstr(3, 50, f"Serial : {label:32}", curses.color_pair(2))
             self.status_win.refresh()
 
