@@ -274,17 +274,28 @@ class PandoraBox:
     logs = []
 
     def _log(self, msg):
-        """log something"""
+        """log a message with a new line"""
         if self.has_curses:
             # display log on screen
             self.logs.append(msg)
-            if len(self.logs) > (curses.LINES - 22):
+            if len(self.logs)>(curses.LINES-22):
                 self.logs.pop(0)
-            self.log_win.clear()
-            self.log_win.border(0)
-            for i in range(min(curses.LINES - 22, len(self.logs))):
-                self.log_win.addstr(i + 1, 1, self.logs[i][:curses.COLS - 2], curses.color_pair(3))
-            self.log_win.refresh()
+            self._log_update()
+
+    def _log_msg(self, msg):
+        """update last message -> no new line"""
+        if self.has_curses:
+            # display log on screen
+            self.logs[-1] = msg
+            self._log_update()
+
+    def _log_update(self):
+        """Update the log screen"""
+        self.log_win.clear()
+        self.log_win.border(0)
+        for i in range(min(curses.LINES - 22, len(self.logs))):
+            self.log_win.addstr(i + 1, 1, self.logs[i][:curses.COLS - 2], curses.color_pair(3))
+        self.log_win.refresh()
 
     # -----------------------------------------------------------
     # Device
@@ -397,7 +408,12 @@ class PandoraBox:
                     status = None
                     full_path = os.path.join(root, file)
                     file_size = os.path.getsize(full_path)
-                    # log("Check %s [%s]" % (file, human_readable_size(file_size)))
+
+                    # log the scan has started
+                    self._log(
+                        f'Scan {file} '
+                        f'[{self._human_readable_size(file_size)}]')
+
                     file_scan_start_time = time.time()
                     if self.is_fake_scan:
                         time.sleep(0.1)
@@ -413,13 +429,22 @@ class PandoraBox:
                             while loop < 960:
                                 res = pandora.task_status(res["taskId"])
                                 status = res["status"]
+
                                 if status != "WAITING":
                                     break
                                 time.sleep(0.5)
+
+                                # update status
+                                self._log_msg(
+                                    f'Scan {file} '
+                                    f'[{self._human_readable_size(file_size)}] '
+                                    "." * (loop // 4))
+
                                 loop += 1
                     file_scan_end_time = time.time()
 
-                    self._log(
+                    # log the result
+                    self._log_msg(
                         f'Scan {file} '
                         f'[{self._human_readable_size(file_size)}] '
                         '-> '
@@ -429,8 +454,11 @@ class PandoraBox:
                         f'size="{file_size}", '
                         f'status="{status}"", '
                         f'duration="{int(file_scan_end_time - file_scan_start_time)}"')
+
                     scanned += os.path.getsize(full_path)
                     file_count += 1
+
+                    # update status bar
                     self._update_bar(scanned * 100 // used)
 
                     if status == "ALERT":
@@ -536,8 +564,14 @@ class PandoraBox:
     def clean(self):
         """Remove infected files"""
         if len(self.infected_files) > 0:
-            self._log(f"{len(self.infected_files)} infected_files detecetd !")
+            # display message
+            self._log(f"{len(self.infected_files)} infected_files detecetd :")
             logging.info(f"infeted_files={len(self.infected_files)}")
+
+            # print list of files
+            for file in self.infected_files:
+                self._log(file)
+
             if not self.has_curses:
                 self.display_image("BAD")
                 self.wait_mouse_click()

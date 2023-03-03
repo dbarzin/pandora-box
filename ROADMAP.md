@@ -8,6 +8,7 @@ User interface
 
 Technical
 
+- [ ] Multi threading
 - [ ] ~~Deployment on Raspberry Pi~~ (too slow)
 - [x] logrotate on pandora-box.log
 - [x] place logs in /var/logs
