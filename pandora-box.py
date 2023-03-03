@@ -208,19 +208,21 @@ class PandoraBox:
             self.progress_win.border(0)
             self.progress_win.refresh()
 
-    def _update_bar(self, progress):
+    def _update_bar(self, progress, flush=False):
         """Update progress bar"""
-        if self.has_curses:
-            if progress == 0:
-                self.progress_win.clear()
-                self.progress_win.border(0)
-                time.sleep(0)
-                self.progress_win.addstr(0, 1, "Progress:")
-            else:
-                pos = ((curses.COLS - 14) * progress) // 100
-                self.progress_win.addstr(1, 1, "#" * pos)
-                self.progress_win.addstr(0, 1, f"Progress: {progress}%")
-            self.progress_win.refresh()
+        if (flush or ((time.time() - self.last_update_time) >= 1)):
+            self.last_update_time = time.time()
+            if self.has_curses:
+                if progress == 0:
+                    self.progress_win.clear()
+                    self.progress_win.border(0)
+                    time.sleep(0)
+                    self.progress_win.addstr(0, 1, "Progress:")
+                else:
+                    pos = ((curses.COLS - 14) * progress) // 100
+                    self.progress_win.addstr(1, 1, "#" * pos)
+                    self.progress_win.addstr(0, 1, f"Progress: {progress}%")
+                self.progress_win.refresh()
 
     def _print_screen(self):
         """Print main screen"""
@@ -252,8 +254,8 @@ class PandoraBox:
             self._print_model("")
             self._print_serial("")
             self._init_bar()
-            self._update_bar(0)
-        self._log('Ready.')
+            self._update_bar(0, flush=True)
+        self._log('Ready.', flush=True)
         logging.info("pandora-box-start")
 
     def _end_curses(self):
@@ -282,15 +284,16 @@ class PandoraBox:
         )
 
     logs = []
+    last_update_time = 0
 
-    def _log(self, msg):
+    def _log(self, msg, flush=False):
         """log a message with a new line"""
         if self.has_curses:
             # display log on screen
             self.logs.append(msg)
             if len(self.logs) > (curses.LINES - 22):
                 self.logs.pop(0)
-            self._log_update()
+            self._log_update(flush)
 
     def _log_msg(self, msg):
         """update last message -> no new line"""
@@ -299,13 +302,16 @@ class PandoraBox:
             self.logs[-1] = msg
             self._log_update()
 
-    def _log_update(self):
+    def _log_update(self, flush=False):
         """Update the log screen"""
-        self.log_win.clear()
-        self.log_win.border(0)
-        for i in range(min(curses.LINES - 22, len(self.logs))):
-            self.log_win.addstr(i + 1, 1, self.logs[i][:curses.COLS - 2], curses.color_pair(3))
-        self.log_win.refresh()
+        # do not refresh the screen too often
+        if (flush or ((time.time() - self.last_update_time) >= 1)):
+            self.last_update_time = time.time()
+            self.log_win.clear()
+            self.log_win.border(0)
+            for i in range(min(curses.LINES - 22, len(self.logs))):
+                self.log_win.addstr(i + 1, 1, self.logs[i][:curses.COLS - 2], curses.color_pair(3))
+            self.log_win.refresh()
 
     # -----------------------------------------------------------
     # Device
@@ -313,7 +319,7 @@ class PandoraBox:
 
     def mount_device(self):
         """Mount USB device"""
-        self._log('Mount device')
+        self._log('Mount device', flush=True)
         if self.has_usb_auto_mount:
             self.mount_point = None
             loop = 0
@@ -325,11 +331,11 @@ class PandoraBox:
                         self.mount_point = partition.mountpoint
                 loop += 1
             if self.mount_device is None:
-                self._log('No partition mounted')
+                self._log('No partition mounted', flush=True)
         else:
             self.mount_point = "/media/box"
             if not os.path.exists("/media/box"):
-                self._log("folder /media/box does not exists")
+                self._log("folder /media/box does not exists", flush=True)
                 return None
             os.system(f"pmount {self.device.device_node} /media/box >/dev/null 2>/dev/null")
             loop = 0
@@ -338,7 +344,7 @@ class PandoraBox:
                 try:
                     os.statvfs(self.mount_point)
                 except Exception as ex:
-                    self._log(f"Unexpected error: {ex}")
+                    self._log(f"Unexpected error: {ex}", flush=True)
                     loop += 1
                     continue
                 break
@@ -346,7 +352,7 @@ class PandoraBox:
     def umount_device(self):
         """Unmount USB device"""
         if self.has_usb_auto_mount:
-            self._log("Sync partitions")
+            self._log("Sync partitions", flush=True)
             os.system("sync")
         else:
             os.system("pumount /media/box 2>/dev/null >/dev/null")
@@ -393,7 +399,7 @@ class PandoraBox:
         try:
             statvfs = os.statvfs(self.mount_point)
         except Exception as ex:
-            self._log(f"error={ex}")
+            self._log(f"error={ex}", flush=True)
             logging.info("An exception was thrown!", exc_info=True)
             if not self.has_curses:
                 self.display_image("ERROR")
@@ -480,12 +486,13 @@ class PandoraBox:
                                 os.mkdir(qfolder)
                             shutil.copyfile(full_path, os.path.join(qfolder, file))
         except Exception as ex:
-            self._log(f"Unexpected error: {str(ex)}")
+            self._log(f"Unexpected error: {str(ex)}", flush=True)
             logging.info(f'error="{str(ex)}"', exc_info=True)
             return "ERROR"
-        self._update_bar(100)
+        self._update_bar(100, flush=True)
         self._log("Scan done in %ds, %d files scanned, %d files infected" %
-                  ((time.time() - scan_start_time), file_count, len(self.infected_files)))
+                  ((time.time() - scan_start_time), file_count, len(self.infected_files)),
+                  flush=True)
         logging.info(
             f'duration="{int(time.time() - scan_start_time)}", '
             f'files_scanned="{file_count}", '
@@ -508,12 +515,12 @@ class PandoraBox:
                     if dev.action == "remove":
                         return self._device_removed()
         except Exception as ex:
-            self._log(f"Unexpected error: {str(ex)}")
-            logging.info(f'error="{str(ex)}"', exc_info=True)
+            self._log(f"Unexpected error: {str(ex)}", flush=True)
+            logging.info(f'error="{str(ex)}"')
         return "STOP"
 
     def _device_inserted(self, dev):
-        self._log("Device inserted")
+        self._log("Device inserted", flush=True)
         logging.info("device-inserted")
         self.device = dev
         self._log_device_info(self.device)
@@ -528,7 +535,7 @@ class PandoraBox:
         return "INSERTED"
 
     def _device_removed(self):
-        self._log("Device removed")
+        self._log("Device removed", flush=True)
         logging.info("device-removed")
         self.device = None
         if not self.has_curses:
@@ -540,14 +547,14 @@ class PandoraBox:
             self._print_fstype("")
             self._print_model("")
             self._print_serial("")
-            self._update_bar(0)
+            self._update_bar(0, flush=True)
         return "WAIT"
     # --------------------------------------
 
     def mount(self):
         """ Mount device """
         self.mount_device()
-        self._log(f'Partition mounted at {self.mount_point}')
+        self._log(f'Partition mounted at {self.mount_point}', flush=True)
         if self.mount_point is None:
             # no partition
             if not self.has_curses:
@@ -577,7 +584,7 @@ class PandoraBox:
         """Remove infected files"""
         if len(self.infected_files) > 0:
             # display message
-            self._log(f"{len(self.infected_files)} infected files detecetd:")
+            self._log(f"{len(self.infected_files)} infected files detecetd:", flush=True)
             logging.info(f"infeted_files={len(self.infected_files)}")
 
             if not self.has_curses:
@@ -600,7 +607,7 @@ class PandoraBox:
             try:
                 os.statvfs(self.mount_point)
             except Exception:
-                self._log("Device not cleaned !")
+                self._log("Device not cleaned !", flush=True)
                 logging.info('device_not_cleaned')
                 return "WAIT"
 
@@ -619,7 +626,7 @@ class PandoraBox:
             if not self.has_curses:
                 self.display_image("OK")
             else:
-                self._log('Device cleaned !')
+                self._log('Device cleaned !', flush=True)
             logging.info(f'cleaned="{files_removed}/{len(self.infected_files)}"')
         else:
             if not self.has_curses:
@@ -685,7 +692,7 @@ class PandoraBox:
             while state != "STOP":
                 state = self.loop(state)
         except Exception as ex:
-            self._log(f"Unexpected error: {str(ex)}")
+            self._log(f"Unexpected error: {str(ex)}", flush=True)
             logging.info(f'error="{str(ex)}"', exc_info=True)
         finally:
             self._end_curses()
