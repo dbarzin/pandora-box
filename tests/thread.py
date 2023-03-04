@@ -15,20 +15,19 @@ class myThread (threading.Thread):
 
     def run(self):
         print(f"Thread-{self.id} Starting ")
-        process_data(self.id, self.q)
+        self.process_data()
         print(f"Thread-{self.id} Done.")
 
-
-def process_data(id, q):
-    while not exitFlag:
-        queueLock.acquire()
-        if not workQueue.empty():
-            data = q.get()
-            queueLock.release()
-            print(f"Thread-{id} processing {data}")
-        else:
-            queueLock.release()
-        time.sleep(1)
+    def process_data(self):
+        while not exitFlag:
+            queueLock.acquire()
+            if not workQueue.empty():
+                data = self.q.get()
+                queueLock.release()
+                print(f"Thread-{self.id} processing {data}")
+            else:
+                queueLock.release()
+            time.sleep(1)
 
 
 maxThread = 2
