@@ -121,10 +121,12 @@ class scanThread (threading.Thread):
                     loop = 0
                     while loop < (1024 * 256):
                         res = pandora.task_status(res["taskId"])
-                        status = res["status"]
 
-                        if status != "WAITING":
-                            break
+                        # Handle responde from Pandora
+                        if (res['success']==True)
+                            status=res["status"])
+                            if status != "WAITING":
+                                break
 
                         # wait a little
                         time.sleep(0.1)
