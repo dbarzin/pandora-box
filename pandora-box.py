@@ -116,12 +116,19 @@ class scanThread (threading.Thread):
                 if file_size > (1024 * 1024 * 1024):
                     status = "TOO BIG"
                 else:
+                    queueLock.acquire()
                     res = pandora.submit_from_disk(file)
-                    logging.info(f'pandora_red="{res}"')
+                    logging.info(f'pandora_res="{res}"')
+                    queueLock.release()
+
                     time.sleep(0.1)
                     loop = 0
+
                     while loop < (1024 * 256):
+                        queueLock.acquire()
                         res = pandora.task_status(res["taskId"])
+                        logging.info(f'pandora_res="{res}"')
+                        queueLock.release()
 
                         # Handle responde from Pandora
                         if (res['success'] and (loop < 100)):
