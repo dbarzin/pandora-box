@@ -679,7 +679,7 @@ def mount():
     try:
         os.statvfs(mount_point)
     except Exception as ex:
-        log(f"Unexpected error: {str(ex)}")
+        log(f"Unexpected error: {str(ex)}", flush=True)
         logging.info(f'error="{str(ex)}"', exc_info=True)
         if not has_curses:
             display_image("WAIT")
@@ -706,7 +706,7 @@ def clean():
     global infected_files
     if len(infected_files) > 0:
         # display message
-        log(f"{len(infected_files)} infected files detecetd:", flush=True)
+        log(f"{len(infected_files)} infected files detecetd:")
         logging.info(f"infeted_files={len(infected_files)}")
 
         if not has_curses:
@@ -722,7 +722,7 @@ def clean():
                     log('...')
                     break
             # wait for clean
-            log('PRESS KEY TO CLEAN')
+            log('PRESS KEY TO CLEAN', flush=True)
             screen.getch()
 
         # check key is still here
@@ -742,7 +742,7 @@ def clean():
                 logging.info(f'removed="{file}"')
                 files_removed += 1
             except Exception as ex:
-                log(f"Unexpected error: {str(ex)}")
+                log(f"Unexpected error: {str(ex)}", flush=True)
                 logging.info(f'error="{str(ex)}"', exc_info=True)
         os.system("sync")
         if not has_curses:
