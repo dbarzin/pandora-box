@@ -713,12 +713,13 @@ def clean():
                     break
             # wait for clean
             log('PRESS KEY TO CLEAN', flush=True)
-            wait_mouse_click()
+            screen.getch()
 
-        # check key is still here
+        # TODO: check key is still here
 
         # Remove infected files
         files_removed = 0
+        has_error = False
         for file in infected_files:
             try:
                 os.remove(file)
@@ -728,11 +729,14 @@ def clean():
             except Exception as ex:
                 log(f"could not remove: {str(ex)}", flush=True)
                 logging.info(f'not_removed="{file}, error="{str(ex)}"', exc_info=True)
-        os.system("sync")
+                has_error = True
         if not has_curses:
             display_image("OK")
         else:
-            log('Device cleaned !', flush=True)
+            if not has_error:
+                log('Device cleaned !', flush=True)
+            else:
+                log('Device not cleaned !', flush=True)
         logging.info(f'cleaned="{files_removed}/{len(infected_files)}"')
     else:
         if not has_curses:
