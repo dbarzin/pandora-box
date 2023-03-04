@@ -124,6 +124,17 @@ wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/CO
 # Update Pandora
 su - $SUDO_USER -c 'cd pandora; ../.local/bin/poetry run update --yes'
 
+# Remove unused workers
+rm /pandora/pandora/workers/blocklists.*
+rm /pandora/pandora/workers/hybridanalysis.*
+rm /pandora/pandora/workers/joesandbox.*
+rm /pandora/pandora/workers/lookyloo.*
+rm /pandora/pandora/workers/malwarebazaar.*
+rm /pandora/pandora/workers/mwdb.*
+rm /pandora/pandora/workers/ole.*
+rm /pandora/pandora/workers/preview.*
+rm /pandora/pandora/workers/virustotal.*
+
 #---------------------
 # Pandora-box
 #---------------------
