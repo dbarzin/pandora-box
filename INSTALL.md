@@ -53,6 +53,9 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
     ; Set quarantine folder
     QUARANTINE_FOLDER = /var/quarantine
 
+    ; Number of threads
+    THREADS = 24
+
 ## Logging
 
 Open the rsyslog config file located at /etc/rsyslog.conf:
@@ -129,5 +132,3 @@ Look a the Pandora logs files
 Look a the Pandora-box logs files
 
     tail -500f /var/log/pandora-box.log
-    
-    

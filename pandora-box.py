@@ -716,14 +716,12 @@ def clean():
                     break
             # wait for clean
             log('PRESS KEY TO CLEAN', flush=True)
-            screen.getch()
+            wait_mouse_click()
 
         # check key is still here
         try:
-            os.statvfs(mount_point)
+            log(f'{str(device.get("ID_FS_LABEL"))}', flush=True)
         except Exception:
-            log("Device not cleaned !", flush=True)
-            logging.info('device_not_cleaned')
             return "WAIT"
 
         # Remove infected files
