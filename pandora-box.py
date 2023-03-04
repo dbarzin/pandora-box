@@ -77,24 +77,23 @@ infected_files = None
 
 class scanThread (threading.Thread):
     """Scanning thread"""
-    def __init__(self, id):
+    def __init__(self):
         threading.Thread.__init__(self)
-        self.id = id
+        self.pandora = pypandora.PyPandora(root_url=pandora_root_url)
 
     def run(self):
-        # print(f"Thread-{self.id} Starting ")
         while not exitFlag:
             queueLock.acquire()
             if not workQueue.empty():
                 file = workQueue.get()
                 queueLock.release()
-                self.scan(self.id, file)
+                self.scan(file)
             else:
                 queueLock.release()
             time.sleep(0.1)
         # print(f"Thread-{self.id} Done.")
 
-    def scan(self, id, file):
+    def scan(self, file):
         global infected_files, scanned, file_count, used
         try:
             # get file information
@@ -116,17 +115,13 @@ class scanThread (threading.Thread):
                 if file_size > (1024 * 1024 * 1024):
                     status = "TOO BIG"
                 else:
-                    queueLock.acquire()
                     res = pandora.submit_from_disk(file)
-                    queueLock.release()
 
                     time.sleep(0.1)
                     loop = 0
 
                     while loop < (1024 * 256):
-                        queueLock.acquire()
                         res = pandora.task_status(res["taskId"])
-                        queueLock.release()
 
                         # Handle responde from Pandora
                         status = res["status"]
@@ -145,7 +140,7 @@ class scanThread (threading.Thread):
                 f'Scan {file_name} '
                 f'[{human_readable_size(file_size)}] '
                 '-> '
-                f'{status} ({int(file_scan_end_time - file_scan_start_time)}s)')
+                f'{status} ({(file_scan_end_time - file_scan_start_time):.1f}s)')
             logging.info(
                 f'file="{file_name}", '
                 f'size="{file_size}", '
@@ -559,8 +554,6 @@ def scan():
 
     if has_quarantine:
         qfolder = os.path.join(quarantine_folder, datetime.datetime.now().strftime("%y%m%d-%H%M"))
-    if not is_fake_scan:
-        pandora = pypandora.PyPandora(root_url=pandora_root_url)
 
     # Instantice work quere
     workQueue = queue.Queue(512)
@@ -569,8 +562,8 @@ def scan():
     exitFlag = False
 
     # Instanciate threads
-    for i in range(maxThreads):
-        thread = scanThread(i)
+    for _ in range(maxThreads):
+        thread = scanThread()
         thread.start()
         threads.append(thread)
 
@@ -595,7 +588,7 @@ def scan():
         t.join()
 
     update_bar(100, flush=True)
-    log("Scan done in %ds, %d files scanned, %d files infected" %
+    log("Scan done in %.1fs, %d files scanned, %d files infected" %
         ((time.time() - scan_start_time), file_count, len(infected_files)),
         flush=True)
     logging.info(
