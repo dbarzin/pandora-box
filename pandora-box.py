@@ -262,10 +262,11 @@ def init_curses():
     if has_curses:
         screen = curses.initscr()
         screen.keypad(1)
+        curses.curs_set(0)
         curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
         curses.flushinp()
         curses.noecho()
-        curses.curs_set(0)
+        screen.clear()
     else:
         display_image("WAIT")
 
