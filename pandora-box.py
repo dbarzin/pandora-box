@@ -719,10 +719,6 @@ def clean():
             wait_mouse_click()
 
         # check key is still here
-        try:
-            log(f'{str(device.get("ID_FS_LABEL"))}', flush=True)
-        except Exception:
-            return "WAIT"
 
         # Remove infected files
         files_removed = 0
@@ -733,8 +729,8 @@ def clean():
                 logging.info(f'removed="{file}"')
                 files_removed += 1
             except Exception as ex:
-                log(f"Unexpected error: {str(ex)}", flush=True)
-                logging.info(f'error="{str(ex)}"', exc_info=True)
+                log(f"could not remove: {str(ex)}", flush=True)
+                logging.info(f'not_removed="{file}, error="{str(ex)}"', exc_info=True)
         os.system("sync")
         if not has_curses:
             display_image("OK")
