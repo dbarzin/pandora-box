@@ -694,9 +694,6 @@ def error():
 
 def clean():
     """Remove infected files"""
-    global has_curses
-    global screen
-    global infected_files
     if len(infected_files) > 0:
         # display message
         log(f"{len(infected_files)} infected files detecetd:")
