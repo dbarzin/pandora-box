@@ -141,7 +141,7 @@ class scanThread (threading.Thread):
             file_scan_end_time = time.time()
 
             # log the result
-            log_msg(
+            log(
                 f'Scan {file_name} '
                 f'[{human_readable_size(file_size)}] '
                 '-> '
