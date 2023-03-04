@@ -102,11 +102,11 @@ class scanThread (threading.Thread):
             file_size = os.path.getsize(file)
 
             # log the scan has started
-            log(
-                f'Scan {file_name} '
-                f'[{human_readable_size(file_size)}] '
-                f'Thread-{id} '
-                )
+            # log(
+            #    f'Scan {file_name} '
+            #    f'[{human_readable_size(file_size)}] '
+            #    f'Thread-{id} ')
+
             file_scan_start_time = time.time()
             if is_fake_scan:
                 status = "SKIPPED"
@@ -118,7 +118,6 @@ class scanThread (threading.Thread):
                 else:
                     queueLock.acquire()
                     res = pandora.submit_from_disk(file)
-                    logging.info(f'pandora_res="{res}"')
                     queueLock.release()
 
                     time.sleep(0.1)
@@ -127,16 +126,15 @@ class scanThread (threading.Thread):
                     while loop < (1024 * 256):
                         queueLock.acquire()
                         res = pandora.task_status(res["taskId"])
-                        logging.info(f'pandora_res="{res}"')
                         queueLock.release()
 
                         # Handle responde from Pandora
-                        if (res['success'] and (loop < 100)):
-                            status = res["status"]
-                            if (status != "WAITING"):
-                                break
+                        status = res["status"]
+                        if (status != "WAITING"):
+                            break
 
                         # wait a little
+                        pass
                         time.sleep(0.1)
 
                         loop += 1
