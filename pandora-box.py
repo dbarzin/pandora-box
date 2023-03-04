@@ -115,13 +115,13 @@ class scanThread (threading.Thread):
                 if file_size > (1024 * 1024 * 1024):
                     status = "TOO BIG"
                 else:
-                    res = pandora.submit_from_disk(file)
+                    res = self.pandora.submit_from_disk(file)
 
                     time.sleep(0.1)
                     loop = 0
 
                     while loop < (1024 * 256):
-                        res = pandora.task_status(res["taskId"])
+                        res = self.pandora.task_status(res["taskId"])
 
                         # Handle responde from Pandora
                         status = res["status"]
