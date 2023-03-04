@@ -117,6 +117,7 @@ class scanThread (threading.Thread):
                     status = "TOO BIG"
                 else:
                     res = pandora.submit_from_disk(file)
+                    logging.info(f'pandora_red="{res}"')
                     time.sleep(0.1)
                     loop = 0
                     while loop < (1024 * 256):
