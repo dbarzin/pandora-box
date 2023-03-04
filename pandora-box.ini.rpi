@@ -19,3 +19,5 @@ QUARANTINE = True
 ; Set quarantine folder
 QUARANTINE_FOLDER = /var/quarantine
 
+; Maximum number of threads
+THREADS = 1

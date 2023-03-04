@@ -37,7 +37,6 @@ import pypandora
 # -----------------------------------------------------------
 # Threading variables
 # -----------------------------------------------------------
-maxThread = 24
 threads = []
 exitFlag = False
 queueLock = threading.Lock()
@@ -52,6 +51,7 @@ pandora_root_url = None
 has_quarantine = None
 quarantine_folder = None
 has_curses = None
+maxThreads = None
 
 # -----------------------------------------------------------
 # Curses
@@ -173,7 +173,8 @@ class scanThread (threading.Thread):
 # ----------------------------------------------------------
 
 def config():
-    global is_fake_scan, has_usb_auto_mount, pandora_root_url, has_quarantine, quarantine_folder, has_curses
+    global is_fake_scan, has_usb_auto_mount, pandora_root_url
+    global has_quarantine, quarantine_folder, has_curses, maxThreads
     """ read configuration file """
     # intantiate a ConfirParser
     config_parser = configparser.ConfigParser()
@@ -188,7 +189,8 @@ def config():
     quarantine_folder = config_parser['DEFAULT']['QUARANTINE_FOLDER']
     # Curses
     has_curses = config_parser['DEFAULT']['CURSES'].lower() == "true"
-    print(f'has_curses={has_curses}')
+    # MaxThreads
+    maxThreads = int(config_parser['DEFAULT']['THREADS'])
 
 
 # ----------------------------------------------------------
@@ -559,7 +561,7 @@ def scan():
     exitFlag = False
 
     # Instanciate threads
-    for i in range(maxThread):
+    for i in range(maxThreads):
         thread = scanThread(i)
         thread.start()
         threads.append(thread)
