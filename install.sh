@@ -84,7 +84,7 @@ apt install -y libreoffice-base-nogui libreoffice-calc-nogui libreoffice-draw-no
 apt install -y exiftool  # for extracting exif information
 apt install -y unrar  # for extracting rar files
 apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
-apt install -y rsyslog # log logging
+apt install -y rsyslog cron # log logging
 
 # set .env
 cd /home/$SUDO_USER/pandora
@@ -139,7 +139,7 @@ rm /pandora/pandora/workers/virustotal.*
 { crontab -l -u $SUDO_USER; echo '0 * * * * find /var/quarantine/* -type f -mtime +180 -delete '; } | crontab -u $SUDO_USER -
 { crontab -l -u $SUDO_USER; echo '5 * * * * find /var/quarantine/* -type d -empty -mtime +180 -delete '; } | crontab -u $SUDO_USER -
 
-# Remove old task files every hour
+# Remove old Pandora task files every hour
 { crontab -l -u $SUDO_USER; echo '30 * * * * find ~/pandora/tasks/* -type f -mtime +1 -delete '; } | crontab -u $SUDO_USER -
 { crontab -l -u $SUDO_USER; echo '35 * * * * find ~/pandora/tasks/* -type d -empty -mtime +1 -delete'; } | crontab -u $SUDO_USER -
 
