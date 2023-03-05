@@ -144,7 +144,7 @@ rm /pandora/pandora/workers/virustotal.*
 { crontab -l -u $SUDO_USER; echo '35 * * * * find ~/pandora/tasks/* -type d -empty -mtime +1 -delete'; } | crontab -u $SUDO_USER -
 
 # Poweroff at 20:00 (green energy)
-{ crontab -l -u $SUDO_USER; echo '0 20 * * * * poweroff';} | crontab -u $SUDO_USER -
+{ crontab -l -u $SUDO_USER; echo '0 20 * * * /usr/sbin/poweroff';} | crontab -u $SUDO_USER -
 
 #---------------------
 # Pandora-box
