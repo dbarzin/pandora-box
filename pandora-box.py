@@ -269,7 +269,7 @@ def init_curses():
         curses.curs_set(0)
     else:
         # hide blinking cursor
-        sys.stdout.write("\033[?251")
+        sys.stdout.write("\033[?1;0;0c")
         sys.stdout.flush()
         # display wait
         display_image("WAIT")
@@ -721,7 +721,6 @@ def clean():
             screen.getch()
 
         # TODO: check key is still here
-
 
         # Remove infected files
         files_removed = 0

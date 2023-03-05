@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import os
+import sys
 
 
 def waitMouseClick():
@@ -13,6 +14,10 @@ def waitMouseClick():
             break
     mouse.close()
 
+
+# Hide blinking cursor
+sys.stdout.write("\033[?1;0;0c")
+sys.stdout.flush()
 
 while True:
     os.system("killall fim")
