@@ -27,9 +27,10 @@ import os
 import pyudev
 import psutil
 import queue
-import threading
-import time
 import shutil
+import sys
+import time
+import threading
 
 import pypandora
 
@@ -267,6 +268,10 @@ def init_curses():
         curses.noecho()
         curses.curs_set(0)
     else:
+        # hide blinking cursor
+        sys.stdout.write("\033[?251")
+        sys.stdout.flush()
+        # display wait
         display_image("WAIT")
 
 
@@ -764,7 +769,7 @@ def startup():
     move_to_script_folder()
     # read config
     config()
-    # Initialize curesrs
+    # Initialize curses
     init_curses()
     # Initilize log
     initlog()
