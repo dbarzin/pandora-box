@@ -77,6 +77,9 @@ chown -R $SUDO_USER kvrocks
 #---------------------
 su - $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
 
+# fix broken packages
+apt-get install --fix-broken -y
+
 # install packages
 apt install -y python3-dev  # for compiling things
 apt install -y libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
@@ -85,6 +88,9 @@ apt install -y exiftool  # for extracting exif information
 apt install -y unrar  # for extracting rar files
 apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
 apt install -y rsyslog cron # log logging
+
+# autoremove old stuff
+apt autoremove -y
 
 # set .env
 cd /home/$SUDO_USER/pandora
