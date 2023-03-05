@@ -198,6 +198,22 @@ echo "   missingok" >> /etc/logrotate.d/pandora-box
 echo "   notifempty" >> /etc/logrotate.d/pandora-box
 echo "}" >> /etc/logrotate.d/pandora-box
 
+echo "/var/log/pandora_message.log {" > /etc/logrotate.d/pandora_message
+echo "   rotate 12" >> /etc/logrotate.d/pandora_message
+echo "   monthly" >> /etc/logrotate.d/pandora_message
+echo "   compress" >> /etc/logrotate.d/pandora_message
+echo "   missingok" >> /etc/logrotate.d/pandora_message
+echo "   notifempty" >> /etc/logrotate.d/pandora_message
+echo "}" >> /etc/logrotate.d/pandora_message
+
+echo "/var/log/pandora_error.log {" > /etc/logrotate.d/pandora_error
+echo "   rotate 12" >> /etc/logrotate.d/pandora_error
+echo "   monthly" >> /etc/logrotate.d/pandora_error
+echo "   compress" >> /etc/logrotate.d/pandora_error
+echo "   missingok" >> /etc/logrotate.d/pandora_error
+echo "   notifempty" >> /etc/logrotate.d/pandora_error
+echo "}" >> /etc/logrotate.d/pandora_error
+
 # Start Pandora at boot
 cp pandora.service /etc/systemd/system/pandora.service
 sed -i "s/_USER_/$SUDO_USER/g" /etc/systemd/system/pandora.service
