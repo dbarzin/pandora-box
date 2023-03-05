@@ -125,15 +125,15 @@ wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/CO
 su - $SUDO_USER -c 'cd pandora; ../.local/bin/poetry run update --yes'
 
 # Remove unused workers
-rm ~/pandora/pandora/workers/blocklists.*
-rm ~/pandora/pandora/workers/hybridanalysis.*
-rm ~/pandora/pandora/workers/joesandbox.*
-rm ~/pandora/pandora/workers/lookyloo.*
-rm ~/pandora/pandora/workers/malwarebazaar.*
-rm ~/pandora/pandora/workers/mwdb.*
-rm ~/pandora/pandora/workers/ole.*
-rm ~/pandora/pandora/workers/preview.*
-rm ~/pandora/pandora/workers/virustotal.*
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/blocklists.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/hybridanalysis.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/joesandbox.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/lookyloo.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/malwarebazaar.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/mwdb.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/ole.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/preview.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/virustotal.*"
 
 # Remove files from quarantine after 180 days
 { crontab -l -u $SUDO_USER; echo '0 * * * * find /var/quarantine/* -type f -mtime +180 -delete '; } | crontab -u $SUDO_USER -
