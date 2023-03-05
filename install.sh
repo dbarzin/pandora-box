@@ -135,6 +135,14 @@ rm /pandora/pandora/workers/ole.*
 rm /pandora/pandora/workers/preview.*
 rm /pandora/pandora/workers/virustotal.*
 
+# Remove files from quarantine after 180 days
+{ crontab -l -u $SUDO_USER; echo '0 * * * * find /var/quarantine/* -type f -mtime +180 -delete '; } | crontab -u $SUDO_USER -
+{ crontab -l -u $SUDO_USER; echo '5 * * * * find /var/quarantine/* -type d -empty -mtime +180 -delete '; } | crontab -u $SUDO_USER -
+
+# Remove old task files every hour
+{ crontab -l -u $SUDO_USER; echo '30 * * * * find ~/pandora/tasks/* -type f -mtime +1 -delete '; } | crontab -u $SUDO_USER -
+{ crontab -l -u $SUDO_USER; echo '35 * * * * find ~/pandora/tasks/* -type d -empty -mtime +1 -delete'; } | crontab -u $SUDO_USER -
+
 #---------------------
 # Pandora-box
 #---------------------
