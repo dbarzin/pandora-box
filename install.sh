@@ -227,7 +227,7 @@ systemctl daemon-reload
 systemctl enable pandora
 
 # Do not print messages on console
-echo "mesg n" >> /home/$SUDO_USER/.profile
+echo "mesg n" >> /home/$SUDO_USER/.bashrc
 
 # Start Pandora-box on getty1 at boot
 mkdir -p /etc/systemd/system/getty@tty1.service.d
@@ -237,12 +237,11 @@ echo "ExecStart=-/sbin/agetty --autologin pandora --noclear %I $TERM" >> /etc/sy
 # echo "ExecStart=-su - pandora -c ./pandora-box/pandora-box.py" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
 # Start pandora from bashrc
-su - $SUDO_USER -c 'echo "export PATH=\"\$HOME/.local/bin:{\$PATH}\""' >> ~/.bashrc
-su - $SUDO_USER -c 'echo "pandora-box/pandora-box.py" >> ~/.bashrc'
+echo "export PATH=\"\$HOME/.local/bin:{\$PATH}\"" >> /home/$SUDO_USER/.bashrc
+echo "pandora-box/pandora-box.py" >> /home/$SUDO_USER/.bashrc
 
 # Copy ini file
 cp pandora-box.ini.curses pandora-box.ini
 
 # Reboot
 echo "You may reboot the server."
-
