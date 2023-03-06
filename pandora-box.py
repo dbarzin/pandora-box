@@ -28,12 +28,12 @@ import pyudev
 import psutil
 import queue
 import shutil
+import socket
 import sys
 import time
 import threading
 
 import pypandora
-
 
 # -----------------------------------------------------------
 # Threading variables
@@ -53,6 +53,7 @@ has_quarantine = None
 quarantine_folder = None
 has_curses = None
 maxThreads = None
+hostname = socket.gethostname()
 
 # -----------------------------------------------------------
 # Curses
@@ -143,6 +144,7 @@ class scanThread (threading.Thread):
                 '-> '
                 f'{status} ({(file_scan_end_time - file_scan_start_time):.1f}s)')
             logging.info(
+                f'hostname="{hostname}", '
                 f'file="{file_name}", '
                 f'size="{file_size}", '
                 f'status="{status}"", '
@@ -171,7 +173,9 @@ class scanThread (threading.Thread):
 
         except Exception as ex:
             log(f"Unexpected error: {str(ex)}", flush=True)
-            logging.info(f'error="{str(ex)}"', exc_info=True)
+            logging.info(
+                f'hostname="{hostname}", '
+                f'error="{str(ex)}"', exc_info=True)
 
 
 # ----------------------------------------------------------
@@ -377,7 +381,9 @@ def print_screen():
         init_bar()
         update_bar(0, flush=True)
     log('Ready.', flush=True)
-    logging.info("pandora-box-start")
+    logging.info(
+        f'hostname="{hostname}", '
+        "pandora-box-start")
 
 
 def end_curses():
@@ -495,33 +501,21 @@ def umount_device():
 def log_device_info(dev):
     """Log device information"""
     logging.info(
-        'device_name="%s", '
-        'path_id="%s", '
-        'bus system="%s", '
-        'USB_driver="%s", '
-        'device_type="%s", '
-        'device_usage="%s", '
-        'partition type="%s", '
-        'fs_type="%s", '
-        'partition_label="%s", '
-        'device_model="%s", '
-        'model_id="%s", '
-        'serial_short="%s", '
-        'serial="%s"',
-        dev.get("DEVNAME"),
-        dev.get("ID_PATH"),
-        dev.get("ID_BUS"),
-        dev.get("ID_USB_DRIVER"),
-        dev.get("DEVTYPE"),
-        dev.get("ID_FS_USAGE"),
-        dev.get("ID_PART_TABLE_TYPE"),
-        dev.get("ID_FS_TYPE"),
-        dev.get("ID_FS_LABEL"),
-        dev.get("ID_MODEL"),
-        dev.get("ID_MODEL_ID"),
-        dev.get("ID_SERIAL_SHORT"),
-        dev.get("ID_SERIAL")
-    )
+        f'hostname="{hostname}", '
+        f'device_name="{dev.get("DEVNAME")}, '
+        f'path_id="{dev.get("ID_PATH")}", '
+        f'bus system="{dev.get("ID_BUS")}", '
+        f'USB_driver="{dev.get("ID_USB_DRIVER")}", '
+        f'device_type="{dev.get("DEVTYPE")}", '
+        f'device_usage="{dev.get("ID_FS_USAGE")}", '
+        f'partition type="{dev.get("ID_PART_TABLE_TYPE")}", '
+        f'fs_type="{dev.get("ID_FS_TYPE")}", '
+        f'partition_label="{dev.get("ID_FS_LABEL")}", '
+        f'device_model="{dev.get("ID_MODEL")}", '
+        f'model_id="{dev.get("ID_MODEL_ID")}", '
+        f'serial_short="dev.get("ID_SERIAL_SHORT")", '
+        f'serial="dev.get("ID_SERIAL")"'
+        )
 
 
 # -----------------------------------------------------------
@@ -539,7 +533,10 @@ def scan():
         statvfs = os.statvfs(mount_point)
     except Exception as ex:
         log(f"error={ex}", flush=True)
-        logging.info("An exception was thrown!", exc_info=True)
+        logging.info(
+            f'hostname="{hostname}", '
+            f'error="{str(ex)}"',
+            exc_info=True)
         if not has_curses:
             display_image("ERROR")
         return "ERROR"
@@ -597,6 +594,7 @@ def scan():
         ((time.time() - scan_start_time), file_count, len(infected_files)),
         flush=True)
     logging.info(
+        f'hostname="{hostname}", '
         f'duration="{int(time.time() - scan_start_time)}", '
         f'files_scanned="{file_count}", '
         f'files_infected="{len(infected_files)}"')
@@ -620,7 +618,9 @@ def wait():
                     return device_removed()
     except Exception as ex:
         log(f"Unexpected error: {str(ex)}", flush=True)
-        logging.info(f'error="{str(ex)}"', exc_info=True)
+        logging.info(
+            f'hostname="{hostname}", '
+            f'error="{str(ex)}"', exc_info=True)
     return "STOP"
 
 
@@ -628,7 +628,9 @@ def device_inserted(dev):
     global has_curses
     global device
     log("Device inserted", flush=True)
-    logging.info("device-inserted")
+    logging.info(
+        f'hostname="{hostname}", '
+        "device-inserted")
     device = dev
     log_device_info(device)
     if not has_curses:
@@ -646,7 +648,9 @@ def device_removed():
     global has_curses
     global device
     log("Device removed", flush=True)
-    logging.info("device-removed")
+    logging.info(
+        f'hostname="{hostname}", '
+        "device-removed")
     device = None
     if not has_curses:
         display_image("WAIT")
@@ -678,7 +682,9 @@ def mount():
         os.statvfs(mount_point)
     except Exception as ex:
         log(f"Unexpected error: {str(ex)}", flush=True)
-        logging.info(f'error="{str(ex)}"', exc_info=True)
+        logging.info(
+            f'hostname="{hostname}", '
+            f'error="{str(ex)}"', exc_info=True)
         if not has_curses:
             display_image("WAIT")
         return "WAIT"
@@ -702,7 +708,9 @@ def clean():
     if len(infected_files) > 0:
         # display message
         log(f"{len(infected_files)} infected files detecetd:")
-        logging.info(f"infeted_files={len(infected_files)}")
+        logging.info(
+            f'hostname="{hostname}", '
+            f"infeted_files={len(infected_files)}")
 
         if not has_curses:
             display_image("BAD")
@@ -729,11 +737,16 @@ def clean():
             try:
                 os.remove(file)
                 log(f"{file} removed")
-                logging.info(f'removed="{file}"')
+                logging.info(
+                    f'hostname="{hostname}", '
+                    f'removed="{file}"')
                 files_removed += 1
             except Exception as ex:
                 log(f"could not remove: {str(ex)}", flush=True)
-                logging.info(f'not_removed="{file}, error="{str(ex)}"', exc_info=True)
+                logging.info(
+                    f'hostname="{hostname}", '
+                    f'not_removed="{file}, '
+                    f'error="{str(ex)}"', exc_info=True)
                 has_error = True
         if not has_curses:
             display_image("OK")
@@ -742,7 +755,9 @@ def clean():
                 log('Device cleaned !', flush=True)
             else:
                 log('Device not cleaned !', flush=True)
-        logging.info(f'cleaned="{files_removed}/{len(infected_files)}"')
+        logging.info(
+            f'hostname="{hostname}", '
+            f'cleaned="{files_removed}/{len(infected_files)}"')
     else:
         if not has_curses:
             display_image("OK")
@@ -805,6 +820,27 @@ def loop(state):
 
 # --------------------------------------
 
+def get_lock(process_name):
+    """ Get a lock to check that Pandora-box is not already running """
+
+    # Without holding a reference to our socket somewhere it gets garbage
+    # collected when the function exits
+    get_lock._lock_socket = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+
+    try:
+        # The null byte (\0) means the socket is created
+        # in the abstract namespace instead of being created
+        # on the file system itself.
+        # Works only in Linux
+        get_lock._lock_socket.bind('\0' + process_name)
+
+    except socket.error:
+        print('Pandora-box is already running !', file=sys.stderr)
+        sys.exit()
+
+
+# --------------------------------------
+
 def main(args):
     """Main entry point"""
     try:
@@ -814,12 +850,13 @@ def main(args):
     except Exception as ex:
         print({str(ex)})
         log(f"Unexpected error: {str(ex)}", flush=True)
-        logging.info(f'error="{str(ex)}"', exc_info=True)
+        logging.info(
+            f'hostname="{hostname}", '
+            f'error="{str(ex)}"', exc_info=True)
     finally:
         end_curses()
 
 
 if __name__ == "__main__":
-    print("start")
+    get_lock('pandora-box')
     curses.wrapper(main)
-    print("done")
