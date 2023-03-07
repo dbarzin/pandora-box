@@ -751,6 +751,10 @@ def clean():
 
         umount_device()
 
+        logging.info(
+            f'hostname="{hostname}", '
+            f'cleaned="{files_removed}/{len(infected_files)}"')
+
         if not has_error:
             if has_curses:
                 log('Device cleaned !', flush=True)
@@ -760,11 +764,7 @@ def clean():
             if has_curses:
                 log('Device not cleaned !', flush=True)
             else:
-                display_image("ERROR")
-                wait_mouse_click()
-        logging.info(
-            f'hostname="{hostname}", '
-            f'cleaned="{files_removed}/{len(infected_files)}"')
+                display_image("WAIT")
     else:
         if not has_curses:
             display_image("OK")
