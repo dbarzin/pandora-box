@@ -728,7 +728,7 @@ def clean():
             log('PRESS KEY TO CLEAN', flush=True)
             screen.getch()
 
-        # TODO: check key is still here
+        # TODO: check device is still present
 
         # Remove infected files
         files_removed = 0
@@ -748,20 +748,26 @@ def clean():
                     f'not_removed="{file}, '
                     f'error="{str(ex)}"', exc_info=True)
                 has_error = True
-        if not has_curses:
-            display_image("OK")
-        else:
-            if not has_error:
+
+        umount_device()
+
+        if not has_error:
+            if has_curses:
                 log('Device cleaned !', flush=True)
             else:
+                display_image("OK")
+        else:
+            if has_curses:
                 log('Device not cleaned !', flush=True)
+            else:
+                display_image("ERROR")
+                wait_mouse_click()
         logging.info(
             f'hostname="{hostname}", '
             f'cleaned="{files_removed}/{len(infected_files)}"')
     else:
         if not has_curses:
             display_image("OK")
-    umount_device()
     return "WAIT"
 
 
