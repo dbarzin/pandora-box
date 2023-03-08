@@ -1,16 +1,17 @@
 Pandora-box
 ============
 
-Pandora-Box is a USB scaning station based on [Pandora](https://github.com/pandora-analysis).
-It runs on Ubuntu 22.04 server LTS
+Pandora-Box is a USB scaning station based on [Pandora](https://github.com/pandora-analysis), 
+a malware analysis tool. It runs on Ubuntu 22.04 server LTS
 
-It is based on recycled ThinkCenter and an integrated HDMI touch screen.
+Pandora-box uses these malware analysis tools :
 
-[<img src="images/box1.jpg" width="400">](images/box1.jpg)
-[<img src="images/box2.jpg" width="400">](images/box2.jpg)
-[<img src="images/box3.jpg" width="400">](images/box3.jpg)
-[<img src="images/box4.jpg" width="400">](images/box4.jpg)
+- [ClamAV](http://www.clamav.net/)
+- [Commodo Antivirus](https://antivirus.comodo.com/)
+- [Hashllokup](https://circl.lu/services/hashlookup/)
+- [Yara Rules](https://github.com/Neo23x0/signature-base) 
 
+Other tools may be used by configuring Pandora [antivirus-workers](https://github.com/pandora-analysis/pandora#antivirus-workers)
 
 ## Interface
 
@@ -36,5 +37,4 @@ The [installation and configuration procedure](INSTALL.md) is documented.
 ## License
 
 Pandora-box is an open source software distributed under [GPL](https://www.gnu.org/licenses/licenses.html).
-
 
