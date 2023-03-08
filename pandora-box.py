@@ -39,9 +39,9 @@ import pypandora
 # Threading variables
 # -----------------------------------------------------------
 threads = []
-exitFlag = False
-queueLock = threading.Lock()
-workQueue = None
+exit_flag = False
+queue_lock = threading.Lock()
+work_queue = None
 
 # -----------------------------------------------------------
 # Config variables
@@ -84,16 +84,15 @@ class scanThread (threading.Thread):
         self.pandora = pypandora.PyPandora(root_url=pandora_root_url)
 
     def run(self):
-        while not exitFlag:
-            queueLock.acquire()
-            if not workQueue.empty():
-                file = workQueue.get()
-                queueLock.release()
+        while not exit_flag:
+            queue_lock.acquire()
+            if not work_queue.empty():
+                file = work_queue.get()
+                queue_lock.release()
                 self.scan(file)
             else:
-                queueLock.release()
+                queue_lock.release()
             time.sleep(0.1)
-        # print(f"Thread-{self.id} Done.")
 
     def scan(self, file):
         global infected_files, scanned, file_count, used
@@ -127,7 +126,7 @@ class scanThread (threading.Thread):
 
                         # Handle responde from Pandora
                         status = res["status"]
-                        if (status != "WAITING"):
+                        if status != "WAITING":
                             break
 
                         # wait a little
@@ -151,7 +150,7 @@ class scanThread (threading.Thread):
                 f'duration="{int(file_scan_end_time - file_scan_start_time)}"')
 
             # Get lock
-            queueLock.acquire()
+            queue_lock.acquire()
 
             scanned += file_size
             file_count += 1
@@ -161,7 +160,7 @@ class scanThread (threading.Thread):
                 infected_files.append(file)
 
             # Release lock
-            queueLock.release()
+            queue_lock.release()
 
             # update status bar
             update_bar(scanned * 100 // used)
@@ -387,8 +386,6 @@ def print_screen():
 
 
 def end_curses():
-    global has_curses
-    global curses
     """Closes curses"""
     if has_curses:
         curses.endwin()
@@ -525,8 +522,8 @@ def log_device_info(dev):
 def scan():
     """Scan devce with pypandora"""
     global pandora, qfolder
-    global workQueue, exitFlag, threads, queueLock
-    global mount_point, infected_files, scanned, file_count, used
+    global work_queue, exit_flag, threads, scanned
+    global mount_point, infected_files, file_count, used
 
     # get device size
     try:
@@ -558,10 +555,10 @@ def scan():
         qfolder = os.path.join(quarantine_folder, datetime.datetime.now().strftime("%y%m%d-%H%M"))
 
     # Instantice work quere
-    workQueue = queue.Queue(512)
+    work_queue = queue.Queue(512)
 
     # set exit condition to false
-    exitFlag = False
+    exit_flag = False
 
     # Instanciate threads
     for _ in range(maxThreads):
@@ -572,18 +569,18 @@ def scan():
     # Fill the work queue
     for root, _, files in os.walk(mount_point):
         for file in files:
-            while workQueue.full():
+            while work_queue.full():
                 pass
-            queueLock.acquire()
-            workQueue.put(os.path.join(root, file))
-            queueLock.release()
+            queue_lock.acquire()
+            work_queue.put(os.path.join(root, file))
+            queue_lock.release()
 
     # Wait for queue to empty
-    while not workQueue.empty():
+    while not work_queue.empty():
         pass
 
     # Notify threads it's time to exit
-    exitFlag = True
+    exit_flag = True
 
     # Wait for all threads to complete
     for t in threads:
@@ -625,7 +622,6 @@ def wait():
 
 
 def device_inserted(dev):
-    global has_curses
     global device
     log("Device inserted", flush=True)
     logging.info(
@@ -645,7 +641,6 @@ def device_inserted(dev):
 
 
 def device_removed():
-    global has_curses
     global device
     log("Device removed", flush=True)
     logging.info(
@@ -670,7 +665,6 @@ def device_removed():
 def mount():
     """ Mount device """
     global mount_point
-    global has_curses
     mount_device()
     log(f'Partition mounted at {mount_point}', flush=True)
     if mount_point is None:
@@ -695,7 +689,6 @@ def mount():
 
 def error():
     """ Display error message """
-    global has_curses
     if not has_curses:
         display_image("ERROR")
     return "WAIT"
@@ -721,7 +714,7 @@ def clean():
             for file in infected_files:
                 log(file)
                 cnt = cnt + 1
-                if (cnt >= 10):
+                if cnt >= 10:
                     log('...')
                     break
             # wait for clean
@@ -848,7 +841,7 @@ def get_lock(process_name):
 
 # --------------------------------------
 
-def main(args):
+def main(_):
     """Main entry point"""
     try:
         state = "START"
