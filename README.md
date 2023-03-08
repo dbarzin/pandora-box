@@ -2,7 +2,7 @@ Pandora-box
 ============
 
 Pandora-Box is a USB scaning station based on [Pandora](https://github.com/pandora-analysis), 
-a malware analysis tool. It runs on Ubuntu 22.04 server LTS
+a malware analysis tool. 
 
 Pandora-box uses these malware analysis tools :
 
@@ -12,6 +12,8 @@ Pandora-box uses these malware analysis tools :
 - [Yara Rules](https://github.com/Neo23x0/signature-base), the YARA signature and IOC database for  [LOKI](https://github.com/Neo23x0/Loki) and [THOR Lite](https://www.nextron-systems.com/thor-lite/) scanners.
 
 Other tools may be used by configuring Pandora [antivirus-workers](https://github.com/pandora-analysis/pandora#antivirus-workers)
+
+It runs on [Ubuntu 22.04 server LTS](https://releases.ubuntu.com/jammy/).
 
 ## Interface
 
