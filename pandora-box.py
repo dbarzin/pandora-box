@@ -53,7 +53,7 @@ has_quarantine = None
 quarantine_folder = None
 has_curses = None
 maxThreads = None
-hostname = socket.gethostname()
+boxname = socket.gethostname()
 
 # -----------------------------------------------------------
 # Curses
@@ -144,7 +144,7 @@ class scanThread (threading.Thread):
                 '-> '
                 f'{status} ({(file_scan_end_time - file_scan_start_time):.1f}s)')
             logging.info(
-                f'boxname="{hostname}", '
+                f'boxname="{boxname}", '
                 f'file="{file_name}", '
                 f'size="{file_size}", '
                 f'status="{status}"", '
@@ -174,7 +174,7 @@ class scanThread (threading.Thread):
         except Exception as ex:
             log(f"Unexpected error: {str(ex)}", flush=True)
             logging.info(
-                f'boxname="{hostname}", '
+                f'boxname="{boxname}", '
                 f'error="{str(ex)}"', exc_info=True)
 
 
@@ -382,7 +382,7 @@ def print_screen():
         update_bar(0, flush=True)
     log('Ready.', flush=True)
     logging.info(
-        f'boxname="{hostname}", '
+        f'boxname="{boxname}", '
         "pandora-box-start")
 
 
@@ -501,7 +501,7 @@ def umount_device():
 def log_device_info(dev):
     """Log device information"""
     logging.info(
-        f'boxname="{hostname}", '
+        f'boxname="{boxname}", '
         f'device_name="{dev.get("DEVNAME")}, '
         f'path_id="{dev.get("ID_PATH")}", '
         f'bus system="{dev.get("ID_BUS")}", '
@@ -534,7 +534,7 @@ def scan():
     except Exception as ex:
         log(f"error={ex}", flush=True)
         logging.info(
-            f'boxname="{hostname}", '
+            f'boxname="{boxname}", '
             f'error="{str(ex)}"',
             exc_info=True)
         if not has_curses:
@@ -594,7 +594,7 @@ def scan():
         ((time.time() - scan_start_time), file_count, len(infected_files)),
         flush=True)
     logging.info(
-        f'boxname="{hostname}", '
+        f'boxname="{boxname}", '
         f'duration="{int(time.time() - scan_start_time)}", '
         f'files_scanned="{file_count}", '
         f'files_infected="{len(infected_files)}"')
@@ -619,7 +619,7 @@ def wait():
     except Exception as ex:
         log(f"Unexpected error: {str(ex)}", flush=True)
         logging.info(
-            f'boxname="{hostname}", '
+            f'boxname="{boxname}", '
             f'error="{str(ex)}"', exc_info=True)
     return "STOP"
 
@@ -629,7 +629,7 @@ def device_inserted(dev):
     global device
     log("Device inserted", flush=True)
     logging.info(
-        f'boxname="{hostname}", '
+        f'boxname="{boxname}", '
         "device-inserted")
     device = dev
     log_device_info(device)
@@ -649,7 +649,7 @@ def device_removed():
     global device
     log("Device removed", flush=True)
     logging.info(
-        f'boxname="{hostname}", '
+        f'boxname="{boxname}", '
         "device-removed")
     device = None
     if not has_curses:
@@ -683,7 +683,7 @@ def mount():
     except Exception as ex:
         log(f"Unexpected error: {str(ex)}", flush=True)
         logging.info(
-            f'boxname="{hostname}", '
+            f'boxname="{boxname}", '
             f'error="{str(ex)}"', exc_info=True)
         if not has_curses:
             display_image("WAIT")
@@ -709,7 +709,7 @@ def clean():
         # display message
         log(f"{len(infected_files)} infected files detecetd:")
         logging.info(
-            f'boxname="{hostname}", '
+            f'boxname="{boxname}", '
             f"infeted_files={len(infected_files)}")
 
         if not has_curses:
@@ -738,13 +738,13 @@ def clean():
                 os.remove(file)
                 log(f"{file} removed")
                 logging.info(
-                    f'boxname="{hostname}", '
+                    f'boxname="{boxname}", '
                     f'removed="{file}"')
                 files_removed += 1
             except Exception as ex:
                 log(f"could not remove: {str(ex)}", flush=True)
                 logging.info(
-                    f'boxname="{hostname}", '
+                    f'boxname="{boxname}", '
                     f'not_removed="{file}, '
                     f'error="{str(ex)}"', exc_info=True)
                 has_error = True
@@ -752,7 +752,7 @@ def clean():
         umount_device()
 
         logging.info(
-            f'boxname="{hostname}", '
+            f'boxname="{boxname}", '
             f'cleaned="{files_removed}/{len(infected_files)}"')
 
         if not has_error:
@@ -857,7 +857,7 @@ def main(args):
         print({str(ex)})
         log(f"Unexpected error: {str(ex)}", flush=True)
         logging.info(
-            f'boxname="{hostname}", '
+            f'boxname="{boxname}", '
             f'error="{str(ex)}"', exc_info=True)
     finally:
         end_curses()

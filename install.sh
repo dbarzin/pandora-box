@@ -141,7 +141,7 @@ su - $SUDO_USER -c "rm ~/pandora/pandora/workers/ole.*"
 su - $SUDO_USER -c "rm ~/pandora/pandora/workers/preview.*"
 su - $SUDO_USER -c "rm ~/pandora/pandora/workers/virustotal.*"
 su - $SUDO_USER -c "rm ~/pandora/pandora/workers/xml*"
-su - $SUDO_USER -c "rm ~/pandora/pandora/workers/hashlookup*"
+# su - $SUDO_USER -c "rm ~/pandora/pandora/workers/hashlookup*"
 
 # Remove files from quarantine after 180 days
 { crontab -l -u $SUDO_USER; echo '0 * * * * find /var/quarantine/* -type f -mtime +180 -delete '; } | crontab -u $SUDO_USER -

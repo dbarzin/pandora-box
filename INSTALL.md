@@ -24,6 +24,18 @@ After reboot, login with the user created during the install and type :
     cd pandora-box
     sudo ./install.sh
 
+## Firewall
+
+Pandorabox needs web access to these websites :
+
+- Ubuntu repositories
+- GitHub.com
+- Pypi.org
+- clamav.net
+- antivirus.comodo.com
+- hashlookup.circl.lu
+
+
 ## Configuration
 
 Copy the sample configuration file to _pandora-box.ini_
