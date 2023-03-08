@@ -15,7 +15,7 @@ The software uses advanced scanning techniques to identify and remove malware fr
 comprehensive scan of the disk, analyzing each file for any signs of malicious activity. If it detects any malware, 
 Pandora-box will quarantine the infected files and remove them from the disk.
 
-## Introduction
+## Featues
 
 Pandora-Box is a USB scaning station based on [Pandora](https://github.com/pandora-analysis), 
 a malware analysis tool. 
