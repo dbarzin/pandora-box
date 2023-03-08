@@ -26,13 +26,13 @@ After reboot, login with the user created during the install and type :
 
 ## Firewall
 
-Pandorabox needs web access to these websites :
+Pandora-box needs web access to these websites :
 
 - Ubuntu repositories
 - GitHub.com
 - Pypi.org
 - clamav.net
-- antivirus.comodo.com
+- download.comodo.com
 - hashlookup.circl.lu
 
 

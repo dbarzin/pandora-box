@@ -7,7 +7,7 @@ a malware analysis tool.
 Pandora-box uses these malware analysis tools :
 
 - [ClamAV](http://www.clamav.net/) an open-source antivirus engine for detecting trojans, viruses, malware & other malicious threats.
-- [Commodo Antivirus](https://antivirus.comodo.com/) the free version of Comodo Antivirus.
+- [Comodo Antivirus](https://antivirus.comodo.com/) the free version of Comodo Antivirus.
 - [Hashlokup](https://circl.lu/services/hashlookup/) a public API to lookup hash values against known database of files. 
 - [Yara Rules](https://github.com/Neo23x0/signature-base), the YARA signature and IOC database used by [LOKI](https://github.com/Neo23x0/Loki) and [THOR Lite](https://www.nextron-systems.com/thor-lite/) scanners.
 
