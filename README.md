@@ -5,7 +5,7 @@ Pandora-box
 
 As the use of USB disks are still prevalent, so has the risk of malware infection through these devices. 
 Malware can easily spread from one computer to another through USB disks, making it a critical threat to 
-information security. This is where our USB scanning software comes in.
+information security. This is where our USB scanning device comes in.
 
 Pandora-box is designed to detect and remove malware from USB disks. The software is based on [Pandora](https://github.com/pandora-analysis) 
 from [CIRCL](https://www.circl.lu) and is distributed under [GPL](https://www.gnu.org/licenses/licenses.html), 
@@ -25,7 +25,7 @@ Pandora-box uses :
 - [ClamAV](http://www.clamav.net/) : an open-source antivirus engine for detecting trojans, viruses, malware & other malicious threats.
 - [Comodo Antivirus](https://antivirus.comodo.com/) : the free version of Comodo Antivirus.
 - [Hashlokup](https://circl.lu/services/hashlookup/) : a public API to lookup hash values against known database of files. 
-- [Yara Rules](https://github.com/Neo23x0/signature-base): the YARA signature and IOC database used by [LOKI](https://github.com/Neo23x0/Loki) and [THOR Lite](https://www.nextron-systems.com/thor-lite/) scanners.
+- [Yara Rules](https://github.com/Neo23x0/signature-base) : the YARA signature and IOC database used by [LOKI](https://github.com/Neo23x0/Loki) and [THOR Lite](https://www.nextron-systems.com/thor-lite/) scanners.
 
 Other tools may be used by configuring Pandora [antivirus-workers](https://github.com/pandora-analysis/pandora#antivirus-workers).
 
@@ -33,7 +33,7 @@ It runs on [Ubuntu 22.04 server LTS](https://releases.ubuntu.com/jammy/).
 
 ## Interface
 
-It has a graphic user interface :
+It has a graphical user interface :
 
 [<img src="images/key1.png" width="400">](images/key1.png)
 [<img src="images/wait1.png" width="400">](images/wait1.png)
