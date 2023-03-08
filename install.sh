@@ -240,7 +240,7 @@ echo "ExecStart=-/sbin/agetty --autologin pandora --noclear %I $TERM" >> /etc/sy
 
 # Start pandora from bashrc
 echo "export PATH=\"\$HOME/.local/bin:{\$PATH}\"" >> /home/$SUDO_USER/.bashrc
-echo "pandora-box/pandora-box.py" >> /home/$SUDO_USER/.bashrc
+echo "exec pandora-box/pandora-box.py" >> /home/$SUDO_USER/.bashrc
 
 # Copy ini file
 cp pandora-box.ini.curses pandora-box.ini

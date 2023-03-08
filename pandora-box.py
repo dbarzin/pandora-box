@@ -842,6 +842,7 @@ def get_lock(process_name):
 
     except socket.error:
         print('Pandora-box is already running !', file=sys.stderr)
+        os.execvp('/usr/bin/bash',['/usr/bin/bash'])
         sys.exit()
 
 
