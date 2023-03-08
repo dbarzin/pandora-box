@@ -6,10 +6,10 @@ a malware analysis tool. It runs on Ubuntu 22.04 server LTS
 
 Pandora-box uses these malware analysis tools :
 
-- [ClamAV](http://www.clamav.net/)
-- [Commodo Antivirus](https://antivirus.comodo.com/)
-- [Hashllokup](https://circl.lu/services/hashlookup/)
-- [Yara Rules](https://github.com/Neo23x0/signature-base) 
+- [ClamAV](http://www.clamav.net/) an open-source antivirus engine for detecting trojans, viruses, malware & other malicious threats.
+- [Commodo Antivirus](https://antivirus.comodo.com/) the free version of Comodo Antivirus.
+- [Hashllokup](https://circl.lu/services/hashlookup/) a public API to lookup hash values against known database of files. 
+- [Yara Rules](https://github.com/Neo23x0/signature-base), the YARA signature and IOC database for  [LOKI](https://github.com/Neo23x0/Loki) and [THOR Lite](https://www.nextron-systems.com/thor-lite/) scanners.
 
 Other tools may be used by configuring Pandora [antivirus-workers](https://github.com/pandora-analysis/pandora#antivirus-workers)
 
