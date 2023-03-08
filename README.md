@@ -1,6 +1,22 @@
 Pandora-box
 ============
 
+## Introduction
+
+As the use of USB disks are still prevalent, so has the risk of malware infection through these devices. 
+Malware can easily spread from one computer to another through USB disks, making it a critical threat to 
+information security. This is where our USB scanning software comes in.
+
+Pandora-box is designed to detect and remove malware from USB disks. The software is based on [Pandora](https://github.com/pandora-analysis) 
+software from [IRCL](https://www.circl.lu) and is distributed under [GPL](https://www.gnu.org/licenses/licenses.html), 
+making it accessible to developers and security professionals around the world.
+
+The software uses advanced scanning techniques to identify and remove malware from USB disks. It performs a 
+comprehensive scan of the disk, analyzing each file for any signs of malicious activity. If it detects any malware, 
+Pandora-box will quarantine the infected files and remove them from the disk.
+
+## Introduction
+
 Pandora-Box is a USB scaning station based on [Pandora](https://github.com/pandora-analysis), 
 a malware analysis tool. 
 
