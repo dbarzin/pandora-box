@@ -8,8 +8,8 @@ Malware can easily spread from one computer to another through USB disks, making
 information security. This is where our USB scanning software comes in.
 
 Pandora-box is designed to detect and remove malware from USB disks. The software is based on [Pandora](https://github.com/pandora-analysis) 
-software from [IRCL](https://www.circl.lu) and is distributed under [GPL](https://www.gnu.org/licenses/licenses.html), 
-making it accessible to developers and security professionals around the world.
+from [CIRCL](https://www.circl.lu) and is distributed under [GPL](https://www.gnu.org/licenses/licenses.html), 
+making it freely accessible to security professionals.
 
 The software uses advanced scanning techniques to identify and remove malware from USB disks. It performs a 
 comprehensive scan of the disk, analyzing each file for any signs of malicious activity. If it detects any malware, 
