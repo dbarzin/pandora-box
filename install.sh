@@ -139,7 +139,7 @@ su - $SUDO_USER -c "rm ~/pandora/pandora/workers/malwarebazaar.*"
 su - $SUDO_USER -c "rm ~/pandora/pandora/workers/mwdb.*"
 su - $SUDO_USER -c "rm ~/pandora/pandora/workers/ole.*"
 su - $SUDO_USER -c "rm ~/pandora/pandora/workers/preview.*"
-# su - $SUDO_USER -c "rm ~/pandora/pandora/workers/virustotal.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/virustotal.*"
 su - $SUDO_USER -c "rm ~/pandora/pandora/workers/xml*"
 
 # Remove files from quarantine after 180 days
