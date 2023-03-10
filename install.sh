@@ -88,6 +88,7 @@ apt install -y exiftool  # for extracting exif information
 apt install -y unrar  # for extracting rar files
 apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
 apt install -y rsyslog cron # log logging
+apt install -y rsyslog cron # log logging
 
 # autoremove old stuff
 apt autoremove -y
@@ -165,17 +166,17 @@ su - $SUDO_USER -c "pip install pypandora psutil pyudev"
 if [ -d "/media/box" ];
     then
         echo "Create /media/box folder."
-        mkdir -p /media/box
+        mkdir /media/box
     else
         echo "No /media/box folder needed."
-fi    
+fi
 
 # Quarantine folder
 mkdir -p /var/quarantine
 chown $SUDO_USER /var/quarantine
 
 # FIM, pmount, psmisc (for killall) and vim
-apt --fix-broken install -y 
+apt --fix-broken install -y
 apt install -y fim pmount psmisc vim
 
 # Suppress all messages from the kernel (and its drivers) except panic messages from appearing on the console.
@@ -245,4 +246,4 @@ echo "exec pandora-box/pandora-box.py" >> /home/$SUDO_USER/.bashrc
 cp pandora-box.ini.curses pandora-box.ini
 
 # Reboot
-echo "You may configure pandora workers and reboot the server."
+echo "You may reboot the server."
