@@ -243,7 +243,7 @@ echo "export PATH=\"\$HOME/.local/bin:{\$PATH}\"" >> /home/$SUDO_USER/.bashrc
 echo "exec pandora-box/pandora-box.py" >> /home/$SUDO_USER/.bashrc
 
 # Copy ini file
-cp pandora-box.ini.curses pandora-box.ini
+su - $SUDO_USER -c "cp ~/pandora-box/pandora-box.ini.curses ~/pandora-box/pandora-box.ini"
 
 # Reboot
 echo "You may reboot the server."
