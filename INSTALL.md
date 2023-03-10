@@ -70,9 +70,9 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
 
 ## Logging
 
-Open the rsyslog config file located at /etc/rsyslog.conf:
- 
-    sudo vi /etc/rsyslog.conf
+Copy the rsyslog config file :
+
+    sudo cp rsyslog.conf/pandora-box.conf to /etc/rsyslog.d
 
 Add the following line if you are using UDP, where 192.168.12.123 is the IP address of the remote server, you will be writing your logs to:
 
