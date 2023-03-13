@@ -602,6 +602,8 @@ def scan():
 
 def wait():
     """Wait for insert of remove of USB device"""
+    # handle error - first unmount the device
+    umount_device()
     # Loop
     context = pyudev.Context()
     monitor = pyudev.Monitor.from_netlink(context)
@@ -719,7 +721,7 @@ def clean():
                     break
             # wait for clean
             log('PRESS KEY TO CLEAN', flush=True)
-            screen.getch()
+            wait_mouse_click()
 
         # TODO: check device is still present
 
