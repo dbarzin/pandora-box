@@ -736,6 +736,7 @@ def waitMouseOrEnter():
         while not (mouseEvent.is_set() or enterEvent.is_set()):
             mouseOrEnterCondition.wait()
 
+
 # --------------------------------------
 
 def clean():

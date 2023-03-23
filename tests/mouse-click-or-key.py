@@ -55,7 +55,6 @@ def waitMouseOrEnter():
             mouseOrEnterCondition.wait()
 
 
-
 print("Wait mouse click or enter")
 waitMouseOrEnter()
 print("Done.")
