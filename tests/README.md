@@ -11,3 +11,5 @@ This folder contains pandora-box basic function tests :
 - mouse-click.py : detect mouse click
 - screen.py : print pandora-box logo using curses
 - progress-bar.py : progres bar using curses
+- mouse-click-or-key.py : detect a mouse click or enter on keyboard
+
