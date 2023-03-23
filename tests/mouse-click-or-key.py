@@ -3,12 +3,11 @@
 import os
 import sys
 import time
+import threading
 
-from threading import Thread, Event, Condition
-
-mouseEvent = Event()
-enterEvent = Event()
-mouseOrEnterCondition = Condition()
+mouseEvent = threading.Event()
+enterEvent = threading.Event()
+mouseOrEnterCondition = threading.Condition()
 
 
 def mouseClickThread():
@@ -23,7 +22,7 @@ def mouseClickThread():
                 down = True
             if (((buf[0] & 0x1) == 0) and down):
                 break
-        time.sleep(0.5)
+        time.sleep(0.1)
     mouse.close()
 
     mouseEvent.set()
@@ -38,7 +37,7 @@ def enterKeyThread():
         input = sys.stdin.readline()
         if (len(input) > 0):
             break
-        time.sleep(0.5)
+        time.sleep(0.1)
 
     enterEvent.set()
     with mouseOrEnterCondition:
@@ -46,17 +45,17 @@ def enterKeyThread():
 
 
 def waitMouseOrEnter():
-    print("Wait mouse click or enter")
     with mouseOrEnterCondition:
-        Thread(target=mouseClickThread, args=()).start()
-        Thread(target=enterKeyThread, args=()).start()
+        threading.Thread(target=mouseClickThread, args=()).start()
+        threading.Thread(target=enterKeyThread, args=()).start()
 
         mouseEvent.clear()
         enterEvent.clear()
         while not (mouseEvent.is_set() or enterEvent.is_set()):
             mouseOrEnterCondition.wait()
 
-    print("Done.")
 
 
+print("Wait mouse click or enter")
 waitMouseOrEnter()
+print("Done.")
