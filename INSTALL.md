@@ -29,8 +29,9 @@ After reboot, login with the user created during the install and type :
 Pandora-box needs web access to these websites :
 
 - Ubuntu repositories
-- GitHub.com
-- Pypi.org
+- github.com
+- pypi.org
+- install.python-poetry.org
 - clamav.net
 - download.comodo.com
 - hashlookup.circl.lu
