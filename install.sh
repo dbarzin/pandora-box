@@ -38,8 +38,8 @@ apt install -y libssl-dev
 #---------------------
 # Peotry
 #---------------------
-su $SUDO_USER -c "curl -sSL https://install.python-poetry.org | python3 -"
-su $SUDO_USER -c "poetry --version"
+su - $SUDO_USER -c "curl -sSL https://install.python-poetry.org | python3 -"
+su - $SUDO_USER -c "poetry --version"
 
 #---------------------
 # REDIS
@@ -75,7 +75,7 @@ chown -R $SUDO_USER kvrocks
 #---------------------
 # Pandora
 #---------------------
-su $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
+su - $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
 
 # fix broken packages
 apt-get install --fix-broken -y
@@ -98,14 +98,14 @@ cd /home/$SUDO_USER/pandora
 echo PANDORA_HOME="`pwd`" >> .env
 chown $SUDO_USER .env
 
-su $SUDO_USER -c "cd ~/pandora; poetry install"
-su $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
+su - $SUDO_USER -c "cd ~/pandora; poetry install"
+su - $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
 
 # Copy default config file 
-su $SUDO_USER -c "cp ~/pandora/config/logging.json.sample ~/pandora/config/logging.json"
+su - $SUDO_USER -c "cp ~/pandora/config/logging.json.sample ~/pandora/config/logging.json"
 
 # install yara-python
-su $SUDO_USER -c "pip install yara-python"
+su - $SUDO_USER -c "pip install yara-python"
 
 # ClamAV
 apt-get install -y clamav-daemon
@@ -126,22 +126,22 @@ dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
 # Configure workers
-# su $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
+# su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
 
 # Update Pandora
-su $SUDO_USER -c 'cd pandora; ../.local/bin/poetry run update --yes'
+su - $SUDO_USER -c 'cd pandora; ../.local/bin/poetry run update --yes'
 
 # Remove unused workers
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/blocklists.*"
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/hybridanalysis.*"
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/joesandbox.*"
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/lookyloo.*"
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/malwarebazaar.*"
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/mwdb.*"
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/ole.*"
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/preview.*"
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/virustotal.*"
-su $SUDO_USER -c "rm ~/pandora/pandora/workers/xml*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/blocklists.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/hybridanalysis.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/joesandbox.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/lookyloo.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/malwarebazaar.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/mwdb.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/ole.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/preview.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/virustotal.*"
+su - $SUDO_USER -c "rm ~/pandora/pandora/workers/xml*"
 
 # Remove files from quarantine after 180 days
 { crontab -l -u $SUDO_USER; echo '0 * * * * find /var/quarantine/* -type f -mtime +180 -delete '; } | crontab -u $SUDO_USER -
@@ -160,7 +160,7 @@ su $SUDO_USER -c "rm ~/pandora/pandora/workers/xml*"
 cd /home/$SUDO_USER/pandora-box
 
 # Python libraries
-su $SUDO_USER -c "pip install pypandora psutil pyudev"
+su - $SUDO_USER -c "pip install pypandora psutil pyudev"
 
 # create /media/box folder
 if [ -d "/media/box" ];
@@ -236,14 +236,14 @@ mkdir -p /etc/systemd/system/getty@tty1.service.d
 echo "[Service]" > /etc/systemd/system/getty@tty1.service.d/override.conf
 echo "ExecStart=" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 echo "ExecStart=-/sbin/agetty --autologin pandora --noclear %I $TERM" >> /etc/systemd/system/getty@tty1.service.d/override.conf
-# echo "ExecStart=-su pandora -c ./pandora-box/pandora-box.py" >> /etc/systemd/system/getty@tty1.service.d/override.conf
+# echo "ExecStart=-su - pandora -c ./pandora-box/pandora-box.py" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
 # Start pandora from bashrc
 echo "export PATH=\"\$HOME/.local/bin:{\$PATH}\"" >> /home/$SUDO_USER/.bashrc
 echo "exec pandora-box/pandora-box.py" >> /home/$SUDO_USER/.bashrc
 
 # Copy ini file
-su $SUDO_USER -c "cp ~/pandora-box/pandora-box.ini.curses ~/pandora-box/pandora-box.ini"
+su - $SUDO_USER -c "cp ~/pandora-box/pandora-box.ini.curses ~/pandora-box/pandora-box.ini"
 
 # Reboot
 echo "You may reboot the server."
