@@ -33,9 +33,9 @@ Pandora-box needs web access to these websites :
 - pypi.org
 - install.python-poetry.org
 - clamav.net
+- database.clamav.net
 - download.comodo.com
 - hashlookup.circl.lu
-
 
 ## Configuration
 
