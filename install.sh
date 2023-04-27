@@ -85,7 +85,10 @@ chown -R $SUDO_USER kvrocks
 #---------------------
 # Pandora
 #---------------------
-su - $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
+if [! -d "kvrocks" ];
+    then
+        su - $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
+fi
 
 # fix broken packages
 apt-get install --fix-broken -y
