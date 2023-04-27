@@ -46,9 +46,14 @@ su - $SUDO_USER -c "poetry --version"
 #---------------------
 apt install -y build-essential tcl
 
-git clone https://github.com/redis/redis.git
-cd redis
-git checkout 6.2
+if [ -d "redis" ];
+    then
+        git clone https://github.com/redis/redis.git
+        cd redis
+        git checkout 6.2
+    else
+        cd redis
+fi
 make
 # Optionally, you can run the tests:
 # make test
@@ -62,9 +67,14 @@ chown -R $SUDO_USER redis
 apt-get update
 apt install -y gcc g++ make libsnappy-dev autoconf automake libtool googletest libgtest-dev
 
-git clone --recursive https://github.com/apache/incubator-kvrocks.git kvrocks
-cd kvrocks
-git checkout 2.0
+if [ -d "kvrocks" ];
+    then
+        git clone --recursive https://github.com/apache/incubator-kvrocks.git kvrocks
+        cd kvrocks
+        git checkout 2.0
+    else
+        cd kvrocks
+fi
 make -j4
 # Optionally, you can run the tests:
 # make test
