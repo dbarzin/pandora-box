@@ -48,11 +48,11 @@ apt install -y build-essential tcl
 
 if [ -d "redis" ];
     then
+        cd redis
+    else
         git clone https://github.com/redis/redis.git
         cd redis
         git checkout 6.2
-    else
-        cd redis
 fi
 make
 # Optionally, you can run the tests:
@@ -69,11 +69,11 @@ apt install -y gcc g++ make libsnappy-dev autoconf automake libtool googletest l
 
 if [ -d "kvrocks" ];
     then
+        cd kvrocks
+    else
         git clone --recursive https://github.com/apache/incubator-kvrocks.git kvrocks
         cd kvrocks
         git checkout 2.0
-    else
-        cd kvrocks
 fi
 make -j4
 # Optionally, you can run the tests:
