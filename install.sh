@@ -165,7 +165,7 @@ su - $SUDO_USER -c "rm ~/pandora/pandora/workers/xml*"
 { crontab -l -u $SUDO_USER; echo '35 * * * * find ~/pandora/tasks/* -type d -empty -mtime +1 -delete'; } | crontab -u $SUDO_USER -
 
 # Poweroff at 20:00 (green energy)
-{ crontab -l; echo '0 20 * * * /sbin/poweroff';} | crontab -
+echo '0 20 * * * /sbin/poweroff' >> /etc/crontab
 
 #---------------------
 # Pandora-box
