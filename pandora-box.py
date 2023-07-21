@@ -623,7 +623,7 @@ def device_inserted(dev):
     else:
         # display device type
         print_fslabel(device.get("ID_FS_LABEL"))
-        print_fstype(device.get("ID_PART_TABLE_TYPE") + " " + device.get("ID_FS_TYPE"))
+        print_fstype(device.get("ID_FS_TYPE"))
         print_model(device.get("ID_MODEL"))
         print_serial(device.get("ID_SERIAL_SHORT"))
     return "INSERTED"
