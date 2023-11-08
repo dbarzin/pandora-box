@@ -85,9 +85,10 @@ chown -R $SUDO_USER kvrocks
 #---------------------
 # Pandora
 #---------------------
-if [! -d "kvrocks" ];
+if [ ! -d "pandora" ];
     then
-        su - $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
+        git clone https://github.com/pandora-analysis/pandora.git
+        chown -R $SUDO_USER pandora 
 fi
 
 # fix broken packages
@@ -107,9 +108,8 @@ apt install -y rsyslog cron # log logging
 apt autoremove -y
 
 # set .env
-cd /home/$SUDO_USER/pandora
+cd pandora
 echo PANDORA_HOME="`pwd`" >> .env
-chown $SUDO_USER .env
 
 su - $SUDO_USER -c "cd ~/pandora; poetry install"
 su - $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
