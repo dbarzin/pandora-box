@@ -121,7 +121,7 @@ su - $SUDO_USER -c "cp ~/pandora/config/logging.json.sample ~/pandora/config/log
 su - $SUDO_USER -c "pip install yara-python"
 
 # ClamAV
-apt-get install -y dhparm clamav-daemon
+apt-get install -y hdparm clamav-daemon
 # In order for the module to work, you need the signatures. 
 # Running the command "freshclam" will do it but if the script is already running
 # (it is started by the systemd service clamav-freshclam)
