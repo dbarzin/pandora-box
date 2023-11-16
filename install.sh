@@ -176,7 +176,7 @@ cd /home/$SUDO_USER/pandora-box
 su - $SUDO_USER -c "pip install pypandora psutil pyudev"
 
 # create /media/box folder
-if [ -d "/media/box" ];
+if [ ! -d "/media/box" ];
     then
         echo "Create /media/box folder."
         mkdir /media/box
