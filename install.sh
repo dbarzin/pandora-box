@@ -64,8 +64,8 @@ chown -R $SUDO_USER redis
 #---------------------
 # Kvrocks
 #---------------------
-apt-get update
-apt install -y gcc g++ make libsnappy-dev autoconf automake libtool googletest libgtest-dev
+sudo apt-get update
+sudo apt install -y git gcc g++ make cmake autoconf automake libtool python3 libssl-dev
 
 if [ -d "kvrocks" ];
     then
@@ -73,11 +73,9 @@ if [ -d "kvrocks" ];
     else
         git clone --recursive https://github.com/apache/incubator-kvrocks.git kvrocks
         cd kvrocks
-        git checkout 2.0
+        git checkout 2.6
 fi
-make -j4
-# Optionally, you can run the tests:
-# make test
+./x.py build
 cd ..
 
 chown -R $SUDO_USER kvrocks
@@ -85,31 +83,33 @@ chown -R $SUDO_USER kvrocks
 #---------------------
 # Pandora
 #---------------------
-if [! -d "kvrocks" ];
+if [ ! -d "pandora" ];
     then
-        su - $SUDO_USER -c "git clone https://github.com/pandora-analysis/pandora.git"
+        git clone https://github.com/pandora-analysis/pandora.git
+        chown -R $SUDO_USER pandora
 fi
 
 # fix broken packages
 apt-get install --fix-broken -y
 
 # install packages
-apt install -y python3-dev  # for compiling things
-apt install -y libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
-apt install -y libreoffice-base-nogui libreoffice-calc-nogui libreoffice-draw-nogui libreoffice-impress-nogui libreoffice-math-nogui libreoffice-writer-nogui  # For Office -> PDF
-apt install -y exiftool  # for extracting exif information
-apt install -y unrar  # for extracting rar files
-apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
-apt install -y rsyslog cron # log logging
+sudo apt install -y python3-dev  # for compiling things
+sudo apt install -y libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
+sudo apt install -y libreoffice-nogui # For Office -> PDF
+sudo apt install -y exiftool  # for extracting exif information
+sudo apt install -y unrar  # for extracting rar files
+sudo apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
+sudo apt install -y libssl-dev  # seems required for yara-python
+sudo apt install -y libcairo2-dev  # Required by reportlab
+
 apt install -y rsyslog cron # log logging
 
 # autoremove old stuff
 apt autoremove -y
 
 # set .env
-cd /home/$SUDO_USER/pandora
+cd pandora
 echo PANDORA_HOME="`pwd`" >> .env
-chown $SUDO_USER .env
 
 su - $SUDO_USER -c "cd ~/pandora; poetry install"
 su - $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
@@ -121,7 +121,7 @@ su - $SUDO_USER -c "cp ~/pandora/config/logging.json.sample ~/pandora/config/log
 su - $SUDO_USER -c "pip install yara-python"
 
 # ClamAV
-apt-get install -y clamav-daemon
+apt-get install -y hdparm clamav-daemon
 # In order for the module to work, you need the signatures.
 # Running the command "freshclam" will do it but if the script is already running
 # (it is started by the systemd service clamav-freshclam)
@@ -178,7 +178,7 @@ cd /home/$SUDO_USER/pandora-box
 su - $SUDO_USER -c "pip install pypandora psutil pyudev"
 
 # create /media/box folder
-if [ -d "/media/box" ];
+if [ ! -d "/media/box" ];
     then
         echo "Create /media/box folder."
         mkdir /media/box
