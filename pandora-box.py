@@ -686,11 +686,9 @@ def error():
 # Wait for mouse click or enter
 # -----------------------------------------------------------
 
-
 mouseEvent = threading.Event()
 enterEvent = threading.Event()
 mouseOrEnterCondition = threading.Condition()
-
 
 def mouseClickThread():
     mouse = open("/dev/input/mice", "rb")

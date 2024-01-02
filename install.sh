@@ -1,18 +1,18 @@
 #!/usr/bin/bash
-# 
-# This file is part of the Pandora-box distribution 
+#
+# This file is part of the Pandora-box distribution
 # Copyright (c) 2022 Didier Barzin.
-# 
-# This program is free software: you can redistribute it and/or modify  
-# it under the terms of the GNU General Public License as published by  
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, version 3.
 #
-# This program is distributed in the hope that it will be useful, but 
-# WITHOUT ANY WARRANTY; without even the implied warranty of 
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 # General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License 
+# You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
@@ -29,10 +29,10 @@ cd /home/$SUDO_USER
 apt remove -y needrestart
 
 #---------------------
-# Python 
+# Python
 #---------------------
 apt update && apt upgrade -y
-apt install -y python-is-python3 python3-pip 
+apt install -y python-is-python3 python3-pip
 apt install -y libssl-dev
 
 #---------------------
@@ -114,7 +114,7 @@ chown $SUDO_USER .env
 su - $SUDO_USER -c "cd ~/pandora; poetry install"
 su - $SUDO_USER -c "cd ~/pandora; cp config/generic.json.sample config/generic.json"
 
-# Copy default config file 
+# Copy default config file
 su - $SUDO_USER -c "cp ~/pandora/config/logging.json.sample ~/pandora/config/logging.json"
 
 # install yara-python
@@ -122,10 +122,10 @@ su - $SUDO_USER -c "pip install yara-python"
 
 # ClamAV
 apt-get install -y clamav-daemon
-# In order for the module to work, you need the signatures. 
+# In order for the module to work, you need the signatures.
 # Running the command "freshclam" will do it but if the script is already running
 # (it is started by the systemd service clamav-freshclam)
-# You might want to run the commands below: 
+# You might want to run the commands below:
 systemctl stop clamav-freshclam.service  # Stop the service
 freshclam  # Run the signatures update
 systemctl start clamav-freshclam.service # Start the service so we keep getting the updates
@@ -138,8 +138,10 @@ dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
-# Configure workers
-# su - $SUDO_USER -c 'cd pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done'
+# Remove unused workers
+su rm pandora/workers/msodde*
+su rm pandora/workers/odf*
+su rm pandora/workers/qrcode*
 
 # Update Pandora
 su - $SUDO_USER -c 'cd pandora; ../.local/bin/poetry run update --yes'
