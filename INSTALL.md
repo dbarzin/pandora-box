@@ -11,7 +11,7 @@ Installation
 
 Install [Ubuntu 22.04 server LTS](https://ubuntu.com/download/server)
 
-select (x) Ubuntu Server (minimized)
+during the installation, select (x) Ubuntu Server (minimized)
 
 Choose to "install OpenSSH server"
 
