@@ -139,7 +139,7 @@ dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
 # Update Pandora
-su - $SUDO_USER -c 'cd ~/.local/bin/poetry run update --yes'
+su - $SUDO_USER -c '~/.local/bin/poetry run update --yes'
 
 # Remove unused workers
 su - $SUDO_USER -c "rm ~/pandora/pandora/workers/blocklists.*"
