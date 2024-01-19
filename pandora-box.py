@@ -682,6 +682,7 @@ def error():
         display_image("ERROR")
     return "WAIT"
 
+
 # -----------------------------------------------------------
 # Wait for mouse click or enter
 # -----------------------------------------------------------
@@ -689,6 +690,7 @@ def error():
 mouseEvent = threading.Event()
 enterEvent = threading.Event()
 mouseOrEnterCondition = threading.Condition()
+
 
 def mouseClickThread():
     mouse = open("/dev/input/mice", "rb")
