@@ -124,7 +124,7 @@ Change the IP Address :
 
     local7.info @@<<SYSLOG_SERVER_IP>>:514
 
-## Automatic terminal shutdown
+## Automatic shutdown
 
 Edit crontab file
 
