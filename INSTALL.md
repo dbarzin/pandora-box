@@ -47,19 +47,19 @@ You can configure Pandora-box in the _pandora-box.ini_ file :
 
     [DEFAULT]
     ; Curses mode (full text)
-    CURSES = False 
+    CURSES = False
 
     ; Set USB_AUTO_MOUNT to true is if the OS automaticaly mount USB keys
-    USB_AUTO_MOUNT = False 
+    USB_AUTO_MOUNT = False
 
     ; Set PANDORA_ROOT_URL to the URL of the Pandora server
     ; the default value is "http://127.0.0.1:6100"
     PANDORA_ROOT_URL = http://127.0.0.1:6100
 
     ; Set FAKE_SCAN to true to fake the scan process (used during developement only)
-    FAKE_SCAN = False 
+    FAKE_SCAN = False
 
-    ; Set to true to copy infected files to the quarantine folder 
+    ; Set to true to copy infected files to the quarantine folder
     ; in the USB scanning station
     QUARANTINE = True
 
@@ -87,17 +87,59 @@ Add the following line if you are using UDP, where 192.168.12.123 is the IP addr
     local7.info @@192.168.12.123:514
 
 Save your changes and restart the rsyslog service with the command:
- 
+
     sudo systemctl restart rsyslog
 
 Ref: https://www.rsyslog.com/doc/v5-stable/configuration/modules/imfile.html
+
+
+## Timezone
+
+Set the correct Timezone
+
+    sudo timedatectl set-timezone Europe/Paris
+
+
+## NTP
+
+To configure NTP, edit this file :
+
+    sudo vi /etc/systemd/timesyncd.conf
+
+Add this line
+
+    NTP=<<NTP_SERVER_IP>>
+
+## Send log to rsyslog
+
+Copy the rsyslogd configuration file
+
+    sudo cp ./pandora-box/rsyslog.d/pandora-box.conf /etc/rsyslog.d/
+
+Edit the rsyslogd file
+
+    sudo vi /etc/rsyslog.d/pandora-box.conf
+
+Change the IP Address :
+
+    local7.info @@<<SYSLOG_SERVER_IP>>:514
+
+## Automatic terminal shutdown
+
+Edit crontab file
+
+    sudo crontab -e
+
+Add an automatic shutdown command at 8:00 p.m.
+
+    0 20 * * * shutdown -h
 
 # Update
 
 Update the operating system
 
     sudo apt update && sudo apt upgrade
-   
+
 Update Pandora
 
     cd pandora && poetry run update --yes
@@ -107,12 +149,12 @@ Update Pandra-box
     cd pandora-box && git pull
 
 # Troubleshooting
- 
+
 Check Pandora listening on port 6100
 
     sudo lsof -i -P -n | grep LISTEN
 
-Result should contains 
+Result should contains
 
     ...
     gunicorn: 1034         pandora    5u  IPv4  27043      0t0  TCP *:6100 (LISTEN)
@@ -129,7 +171,7 @@ Submit a file to Pandora with the command line
     ...
     poetry run pandora --url http://127.0.0.1:6100 --task_id ... --seed ...
 
-Submit anti malware testfile to Pandora 
+Submit anti malware testfile to Pandora
 
     cd pandora
     wget https://secure.eicar.org/eicar.com.txt
