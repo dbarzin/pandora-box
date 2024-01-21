@@ -210,7 +210,7 @@ usermod -a -G tty $SUDO_USER
 usermod -a -G syslog $SUDO_USER
 
 # logrotate
-sudo apt install logrotate
+apt install logrotate
 echo "/var/log/pandora-box.log {" > /etc/logrotate.d/pandora-box
 echo "   rotate 12" >> /etc/logrotate.d/pandora-box
 echo "   monthly" >> /etc/logrotate.d/pandora-box
