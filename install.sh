@@ -64,8 +64,8 @@ chown -R $SUDO_USER redis
 #---------------------
 # Kvrocks
 #---------------------
-sudo apt-get update
-sudo apt install -y git gcc g++ make cmake autoconf automake libtool python3 libssl-dev
+apt-get update
+apt install -y git gcc g++ make cmake autoconf automake libtool python3 libssl-dev
 
 if [ -d "kvrocks" ];
     then
@@ -93,14 +93,14 @@ fi
 apt-get install --fix-broken -y
 
 # install packages
-sudo apt install -y python3-dev  # for compiling things
-sudo apt install -y libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
-sudo apt install -y libreoffice-nogui # For Office -> PDF
-sudo apt install -y exiftool  # for extracting exif information
-sudo apt install -y unrar  # for extracting rar files
-sudo apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
-sudo apt install -y libssl-dev  # seems required for yara-python
-sudo apt install -y libcairo2-dev  # Required by reportlab
+apt install -y python3-dev  # for compiling things
+apt install -y libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
+apt install -y libreoffice-nogui # For Office -> PDF
+apt install -y exiftool  # for extracting exif information
+apt install -y unrar  # for extracting rar files
+apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils pstotext tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
+apt install -y libssl-dev  # seems required for yara-python
+apt install -y libcairo2-dev  # Required by reportlab
 
 apt install -y rsyslog cron # log logging
 
