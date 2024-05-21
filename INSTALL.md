@@ -15,6 +15,8 @@ during the installation, select (x) Ubuntu Server (minimized)
 
 Choose to "install OpenSSH server"
 
+Create an intial user call *pandora*
+
 That's all, no other packages needed
 
 After reboot, login with the user created during the install and type :
