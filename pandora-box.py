@@ -76,7 +76,6 @@ infected_files = None
 
 # -----------------------------------------------------------
 
-
 class scanThread(threading.Thread):
     """Scanning thread"""
 
@@ -866,12 +865,11 @@ def get_lock(process_name):
         os.execvp("/usr/bin/bash", ["/usr/bin/bash", "--norc"])
         sys.exit()
 
-
 # --------------------------------------
-
 
 def main(_):
     """Main entry point"""
+    print("main")
     try:
         state = "START"
         while state != "STOP":
@@ -885,5 +883,7 @@ def main(_):
 
 
 if __name__ == "__main__":
+    print("Start")
     get_lock("pandora-box")
     curses.wrapper(main)
+    print("Done.")
