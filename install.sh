@@ -42,24 +42,24 @@ su - $SUDO_USER -c "curl -sSL https://install.python-poetry.org | python3 -"
 su - $SUDO_USER -c "poetry --version"
 
 #---------------------
-# REDIS
+# Valkey
 #---------------------
-apt install -y build-essential tcl
+apt install -y build-essential tcl pkg-config
 
-if [ -d "redis" ];
+if [ -d "valkey" ];
     then
-        cd redis
+        cd valkey
     else
-        git clone https://github.com/redis/redis.git
-        cd redis
-        git checkout 6.2
+        git clone https://github.com/valkey-io/valkey.git
+        cd valkey
+        git checkout 8.0
+        make -j 4
 fi
-make
 # Optionally, you can run the tests:
 # make test
 cd ..
 
-chown -R $SUDO_USER redis
+chown -R $SUDO_USER valkey
 
 #---------------------
 # Kvrocks
