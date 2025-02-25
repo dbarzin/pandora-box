@@ -29,7 +29,7 @@ Pandora-box uses :
 
 Other tools may be used by configuring Pandora [antivirus-workers](https://github.com/pandora-analysis/pandora#antivirus-workers).
 
-It runs on [Ubuntu 22.04 server LTS](https://releases.ubuntu.com/jammy/).
+It runs on [Ubuntu 24.04 server LTS](https://releases.ubuntu.com/jammy/).
 
 ## Interface
 
