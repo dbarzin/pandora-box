@@ -160,6 +160,8 @@ Result should contains
     gunicorn: 1034         pandora    5u  IPv4  27043      0t0  TCP *:6100 (LISTEN)
     ...
 
+Access the Pandora Web interface in HTTP port 6100 and submit some test files.
+
 poetry: command not found
 
     export PATH="$HOME/.local/bin:{$PATH}"
