@@ -92,8 +92,7 @@ apt install -y libpango-1.0-0 libharfbuzz0b libpangoft2-1.0-0  # For HTML -> PDF
 apt install -y libreoffice-nogui # For Office -> PDF
 apt install -y exiftool  # for extracting exif information
 apt install -y unrar  # for extracting rar files
-# no textract
-# apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
+apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
 apt install -y libssl-dev  # seems required for yara-python
 apt install -y libcairo2-dev  # Required by reportlab
 
