@@ -138,8 +138,10 @@ wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/CO
 # Configure Pandora workers
 cd ~/pandora
 for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done
+# remove some workers
+rm pandora/workers/preview.yml
 
-# Update Pandora
+# Update Pandor
 su - $SUDO_USER -c "cd ~/pandora; poetry run update --yes"
 
 # Remove files from quarantine after 180 days
