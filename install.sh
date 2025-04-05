@@ -134,7 +134,8 @@ dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
-# Configure workers
+# Configure Pandora workers
+cd ~/pandora
 for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done
 
 # Update Pandora
