@@ -136,8 +136,17 @@ dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
 # Configure Pandora workers
-cd /home/$SUDO_USER/pandora
-for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done
+# su - $SUDO_USER -c "cd ~/pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp comodo.yml.sample comodo.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp base.yml.sample base.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp blocklists.yml.sample blocklists.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp hashlookup.yml.sample hashlookup.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp pdf.yml.sample pdf.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp xmldeobfuscator.yml.sample xmldeobfuscator.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yara_signature_base.yml.sample yara_signature_base.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yara_signature_base.yml.sample yara_signature_base.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yarahq_full.yml.sample yarahq_full.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yarahub.yml.sample yarahq_full.yml"
 
 # remove some workers
 # rm pandora/workers/preview.yml

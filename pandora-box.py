@@ -116,17 +116,26 @@ class scanThread(threading.Thread):
                     status = "TOO BIG"
                 else:
                     res = self.pandora.submit_from_disk(file)
+                    if not 'taskId' in res :
+                        logging.error(f'task_status={res}')
+                        status = "ERROR"
+                        return
 
                     time.sleep(0.1)
                     loop = 0
 
                     while loop < (1024 * 256):
                         res = self.pandora.task_status(res["taskId"])
+                        logging.info(f'task_status={res}')
 
-                        # Handle responde from Pandora
-                        status = res["status"]
-                        if status != "WAITING":
-                            break
+                        # Handle response from Pandora
+                        if 'status' in res :
+                            status = res['status']
+                            if status != "WAITING":
+                                break
+                        else :
+                            status = "ERROR"
+                            return
 
                         # wait a little
                         pass
