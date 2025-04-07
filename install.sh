@@ -117,7 +117,7 @@ su - $SUDO_USER -c "cp ~/pandora/config/logging.json.sample ~/pandora/config/log
 apt install -y python3-yara
 
 # ClamAV
-cd 
+cd /home/$SUDO_USER
 apt-get install -y hdparm clamav-daemon
 # In order for the module to work, you need the signatures.
 # Running the command "freshclam" will do it but if the script is already running
@@ -136,8 +136,9 @@ dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
 # Configure Pandora workers
-cd ~/pandora
+cd /home/$SUDO_USER/pandora
 for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done
+
 # remove some workers
 # rm pandora/workers/preview.yml
 
