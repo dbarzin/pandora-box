@@ -115,17 +115,17 @@ class scanThread(threading.Thread):
                 if file_size > (1024 * 1024 * 1024):
                     status = "TOO BIG"
                 else:
-                    res = self.pandora.submit_from_disk(file)
-                    if not 'taskId' in res :
-                        logging.error(f'task_status={res}')
+                    worker = self.pandora.submit_from_disk(file, seed_expire=6000)
+                    if (not 'taskId' in worker) or (not 'seed' in worker) :
+                        logging.error(f'task_status={worker}')
                         status = "ERROR"
                         return
 
-                    time.sleep(0.1)
+                    time.sleep(1)
                     loop = 0
 
                     while loop < (1024 * 256):
-                        res = self.pandora.task_status(res["taskId"])
+                        res = self.pandora.task_status(worker['taskId'], worker['seed'])
                         logging.info(f'task_status={res}')
 
                         # Handle response from Pandora
@@ -139,7 +139,7 @@ class scanThread(threading.Thread):
 
                         # wait a little
                         pass
-                        time.sleep(0.1)
+                        time.sleep(1)
 
                         loop += 1
             end_time = time.time()

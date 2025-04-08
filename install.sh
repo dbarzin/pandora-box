@@ -137,16 +137,21 @@ wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/CO
 
 # Configure Pandora workers
 # su - $SUDO_USER -c "cd ~/pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done"
-su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp comodo.yml.sample comodo.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp base.yml.sample base.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp blocklists.yml.sample blocklists.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp comodo.yml.sample comodo.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp clamav.yml.sample clamav.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp extractor.yml.sample extractor.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp hashlookup.yml.sample hashlookup.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp pdf.yml.sample pdf.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp xmldeobfuscator.yml.sample xmldeobfuscator.yml"
-su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yara_signature_base.yml.sample yara_signature_base.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yara.yml.sample yara.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yara_signature_base.yml.sample yara_signature_base.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yarahq_full.yml.sample yarahq_full.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yarahub.yml.sample yarahq_full.yml"
+
+# Increase the number of replica
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; sed -i 's/replicas: 1/replicas: 5/' base.yml"
 
 # remove some workers
 # rm pandora/workers/preview.yml

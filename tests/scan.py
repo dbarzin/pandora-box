@@ -10,7 +10,8 @@ for arg in sys.argv[1:]:
     print(arg, end="", flush=True)
     print(":", end="", flush=True)
 
-    res = pp.submit_from_disk(arg)
+    res = pp.submit_from_disk(arg, seed_expire=3600)
+    print(res)
 
     while True:
         print(".", end="", flush=True)
