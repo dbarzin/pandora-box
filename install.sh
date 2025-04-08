@@ -256,6 +256,9 @@ su - $SUDO_USER -c "cp ~/pandora-box/pandora-box.ini.curses ~/pandora-box/pandor
 # Do not print messages on console
 echo "mesg n" >> /home/$SUDO_USER/.bashrc
 
+# Add path to Poetry
+echo "export PATH=\"$HOME/.local/bin:{$PATH}\"" >> /home/$SUDO_USER/.bashrc
+
 # Exec pandora at login
 echo "exec pandora-box/pandora-box.py" >> /home/$SUDO_USER/.bashrc
 
