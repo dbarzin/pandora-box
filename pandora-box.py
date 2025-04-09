@@ -879,7 +879,7 @@ def get_lock(process_name):
 def get_enabled_workers():
     config_dir = Path("~/pandora/pandora/workers")
     yml_files = list(config_dir.glob("*.yml"))
-    return [file.stem for file in yml_files]
+    return [str(file.stem) for file in yml_files]
 
 def wait_for_workers():
     pandora = pypandora.PyPandora(root_url=pandora_root_url)
