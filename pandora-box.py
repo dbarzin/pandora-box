@@ -844,9 +844,6 @@ def startup():
     # Print logo screen
     print_screen()
 
-    # Wait for workers
-    wait_for_workers()
-
     return "WAIT"
 
 
