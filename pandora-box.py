@@ -34,6 +34,7 @@ import time
 import threading
 
 import pypandora
+from pathlib import Path
 
 # -----------------------------------------------------------
 # Threading variables
