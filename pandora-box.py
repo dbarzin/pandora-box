@@ -882,9 +882,10 @@ def get_enabled_workers():
     return [file.stem for file in yml_files]
 
 def wait_for_workers():
+    pandora = pypandora.PyPandora(root_url=pandora_root_url)
     target_count = len(get_enabled_workers()) - 1
     while True:
-        workers = self.pandora.get_enabled_workers()
+        workers = pandora.get_enabled_workers()
         log(f"Workers ready : {len(workers)}/ {target_count}")
         if len(workers) >= target_count:
             break
