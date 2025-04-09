@@ -845,7 +845,7 @@ def startup():
     print_screen()
 
     # Wait for workers
-    # wait_for_workers()
+    wait_for_workers()
 
     return "WAIT"
 
@@ -901,7 +901,7 @@ def main(_):
     print("main")
     try:
         # Wait for workers to start
-        wait_for_workers()
+        # wait_for_workers()
         # Enter the mail loop
         state = "START"
         while state != "STOP":
