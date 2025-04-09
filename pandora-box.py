@@ -809,6 +809,23 @@ def move_to_script_folder():
 
 # --------------------------------------
 
+def get_enabled_workers():
+    config_dir = Path("~/pandora/pandora/workers")
+    yml_files = list(config_dir.glob("*.yml"))
+    return [str(file.stem) for file in yml_files if file.stem is not None]
+
+def wait_for_workers():
+    pandora = pypandora.PyPandora(root_url=pandora_root_url)
+    target_count = len(get_enabled_workers()) - 1
+    while True:
+        workers = pandora.get_enabled_workers()
+        log(f"Workers ready : {len(workers)}/ {target_count}")
+        if len(workers) >= target_count:
+            break
+        time.sleep(2)
+
+# --------------------------------------
+
 
 def startup():
     """Start Pandora-box"""
@@ -826,6 +843,9 @@ def startup():
         logo = file1.readlines()
     # Print logo screen
     print_screen()
+
+    # Wait for workers
+    wait_for_workers()
 
     return "WAIT"
 
@@ -873,23 +893,6 @@ def get_lock(process_name):
         print("Pandora-box is already running !", file=sys.stderr)
         os.execvp("/usr/bin/bash", ["/usr/bin/bash", "--norc"])
         sys.exit()
-
-# --------------------------------------
-
-def get_enabled_workers():
-    config_dir = Path("~/pandora/pandora/workers")
-    yml_files = list(config_dir.glob("*.yml"))
-    return [str(file.stem) for file in yml_files if file.stem is not None]
-
-def wait_for_workers():
-    pandora = pypandora.PyPandora(root_url=pandora_root_url)
-    target_count = len(get_enabled_workers()) - 1
-    while True:
-        workers = pandora.get_enabled_workers()
-        log(f"Workers ready : {len(workers)}/ {target_count}")
-        if len(workers) >= target_count:
-            break
-        time.sleep(2)
 
 # --------------------------------------
 
