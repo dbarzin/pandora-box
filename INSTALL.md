@@ -189,3 +189,10 @@ Look a the Pandora logs files
 Look a the Pandora-box logs files
 
     tail -500f /var/log/pandora-box.log
+
+Clean pending jobs
+
+   cd ~/pandora
+   poetry run stop
+   rm pandora/cache/dump.rdb
+   poetry run start

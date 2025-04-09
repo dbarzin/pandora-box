@@ -117,30 +117,32 @@ su - $SUDO_USER -c "cp ~/pandora/config/logging.json.sample ~/pandora/config/log
 apt install -y python3-yara
 
 # ClamAV
-cd /home/$SUDO_USER
-apt-get install -y hdparm clamav-daemon
+
+# cd /home/$SUDO_USER
+# apt-get install -y hdparm clamav-daemon
+
 # In order for the module to work, you need the signatures.
 # Running the command "freshclam" will do it but if the script is already running
 # (it is started by the systemd service clamav-freshclam)
 # You might want to run the commands below:
-systemctl stop clamav-freshclam.service  # Stop the service
-freshclam  # Run the signatures update
-systemctl start clamav-freshclam.service # Start the service so we keep getting the updates
 
-service clamav-daemon start
+# systemctl stop clamav-freshclam.service  # Stop the service
+# freshclam  # Run the signatures update
+# systemctl start clamav-freshclam.service # Start the service so we keep getting the updates
+
+# service clamav-daemon start
 
 # Comodo
 wget https://download.comodo.com/cis/download/installs/linux/cav-linux_x64.deb
 dpkg --ignore-depends=libssl0.9.8 -i cav-linux_x64.deb
-
 wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/COMODO/scanners/bases.cav
 
 # Configure Pandora workers
 # su - $SUDO_USER -c "cd ~/pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp base.yml.sample base.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp blocklists.yml.sample blocklists.yml"
-su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp comodo.yml.sample comodo.yml"
-su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp clamav.yml.sample clamav.yml"
+# su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp comodo.yml.sample comodo.yml"
+# su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp clamav.yml.sample clamav.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp extractor.yml.sample extractor.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp hashlookup.yml.sample hashlookup.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp pdf.yml.sample pdf.yml"
@@ -260,7 +262,7 @@ su - $SUDO_USER -c "cp ~/pandora-box/pandora-box.ini.curses ~/pandora-box/pandor
 echo "mesg n" >> /home/$SUDO_USER/.bashrc
 
 # Add path to Poetry
-echo "export PATH=\"$HOME/.local/bin:{$PATH}\"" >> /home/$SUDO_USER/.bashrc
+echo "export PATH=\"/home/$SUDO_USER/.local/bin:$PATH\"" >> /home/$SUDO_USER/.bashrc
 
 # Exec pandora at login
 echo "exec pandora-box/pandora-box.py" >> /home/$SUDO_USER/.bashrc
