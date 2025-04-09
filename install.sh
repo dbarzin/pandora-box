@@ -153,6 +153,9 @@ su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp yarahub.yml.sample yarahq_f
 # Increase the number of replica
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; sed -i 's/replicas: 1/replicas: 5/' base.yml"
 
+# Disable UNO Server -> "disable_unoserver": true,
+su - $SUDO_USER -c "cd ~/pandora/config; sed -i 's/\"disable_unoserver\"\: false/\"disable_unoserver\"\: true/' generic.json"
+
 # remove some workers
 # rm pandora/workers/preview.yml
 

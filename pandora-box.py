@@ -875,10 +875,29 @@ def get_lock(process_name):
 
 # --------------------------------------
 
+def get_enabled_workers():
+    config_dir = Path("~/pandora/pandora/workers")
+    yml_files = list(config_dir.glob("*.yml"))
+    return [file.stem for file in yml_files]
+
+def wait_for_workers():
+    target_count = get_enabled_workers() - 1
+    while True:
+        workers = self.pandora.get_enabled_workers()
+        log(f"Workers ready : {len(workers)}/ {target_count}")
+        if len(workers) >= target_count:
+            break
+        time.sleep(2)
+
+# --------------------------------------
+
 def main(_):
     """Main entry point"""
     print("main")
     try:
+        # Wait for workers to start
+
+        # Enter the mail loop
         state = "START"
         while state != "STOP":
             state = loop(state)
