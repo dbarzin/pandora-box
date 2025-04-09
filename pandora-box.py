@@ -882,7 +882,7 @@ def get_enabled_workers():
     return [file.stem for file in yml_files]
 
 def wait_for_workers():
-    target_count = get_enabled_workers() - 1
+    target_count = len(get_enabled_workers()) - 1
     while True:
         workers = self.pandora.get_enabled_workers()
         log(f"Workers ready : {len(workers)}/ {target_count}")
