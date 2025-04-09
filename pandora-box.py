@@ -845,7 +845,7 @@ def startup():
     print_screen()
 
     # Wait for workers
-    wait_for_workers()
+    # wait_for_workers()
 
     return "WAIT"
 
