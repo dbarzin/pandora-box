@@ -518,7 +518,7 @@ def scan():
     """Scan devce with pypandora"""
     global pandora, qfolder
     global work_queue, exit_flag, threads, scanned
-    global mount_point, infected_files, file_count, used
+    global mount_point, infected_files, file_count, f_used
 
     # get device size
     try:
