@@ -536,7 +536,7 @@ def scan():
     logging.info(f'size="{f_size}"')
 
     f_used = statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)
-    print_used(human_readable_size(f_used)))
+    print_used(human_readable_size(f_used))
     logging.info(f'used="{f_used}"')
 
     # scan device
