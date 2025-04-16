@@ -93,28 +93,31 @@ class scanThread(threading.Thread):
                 self.scan(file)
             else:
                 queue_lock.release()
-            time.sleep(0.1)
+            time.sleep(1)
 
     def scan(self, file):
         global infected_files, scanned, file_count, used
+        logging.info(f"Start scan.")
         try:
             # get file information
             file_name = os.path.basename(file)
             file_size = os.path.getsize(file)
 
             # log the scan has started
-            # log(
-            #    f'Scan {file_name} '
-            #    f'[{human_readable_size(file_size)}] '
-            #    f'Thread-{id} ')
+            logging.info(
+                f'Scan {file_name} '
+                f'[{human_readable_size(file_size)}] '
+                f'Thread-{id} ')
 
             start_time = time.time()
             if is_fake_scan:
                 status = "SKIPPED"
+                logging.info(f"Fake scan - skipped.")
             else:
                 # do not scan files bigger than 1G
                 if file_size > (1024 * 1024 * 1024):
                     status = "TOO BIG"
+                    logging.info(f"File too big.")
                 else:
                     worker = self.pandora.submit_from_disk(file, seed_expire=6000)
                     if (not 'taskId' in worker) or (not 'seed' in worker) :
@@ -180,6 +183,7 @@ class scanThread(threading.Thread):
             log(f"Unexpected error: {str(ex)}", flush=True)
             logging.info(f'boxname="{boxname}", ' f'error="{str(ex)}"', exc_info=True)
 
+        logging.info(f"Start done.")
 
 # ----------------------------------------------------------
 
@@ -331,7 +335,7 @@ def update_bar(progress, flush=False):
             if progress == 0:
                 progress_win.clear()
                 progress_win.border(0)
-                time.sleep(0)
+                time.sleep(1)
                 progress_win.addstr(0, 1, "Progress:")
             else:
                 pos = ((curses.COLS - 14) * progress) // 100
@@ -527,11 +531,13 @@ def scan():
         return "ERROR"
 
     # Print device information
-    print_size(human_readable_size(statvfs.f_frsize * statvfs.f_blocks))
-    print_used(human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)))
-    human_readable_size(statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree))
+    f_size = human_readable_size(statvfs.f_frsize * statvfs.f_blocks)
+    print_size(f_size)
+    logging.info(f'size="{f_size}")
 
-    used = statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)
+    f_used = statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)
+    print_used(human_readable_size(f_used)))
+    logging.info(f'used="{f_used}")
 
     # scan device
     infected_files = []
@@ -558,6 +564,7 @@ def scan():
     for root, _, files in os.walk(mount_point):
         for file in files:
             while work_queue.full():
+                time.sleep(1)
                 pass
             queue_lock.acquire()
             work_queue.put(os.path.join(root, file))
@@ -565,6 +572,7 @@ def scan():
 
     # Wait for queue to empty
     while not work_queue.empty():
+        time.sleep(1)
         pass
 
     # Notify threads it's time to exit
@@ -655,6 +663,8 @@ def mount():
     global mount_point
     mount_device()
     log(f"Partition mounted at {mount_point}", flush=True)
+    logging.info(f"Partition mounted at {mount_point}")
+
     if mount_point is None:
         # no partition
         if not has_curses:
@@ -702,7 +712,7 @@ def mouseClickThread():
                 down = True
             if ((buf[0] & 0x1) == 0) and down:
                 break
-        time.sleep(0.1)
+        time.sleep(1)
     mouse.close()
 
     mouseEvent.set()
