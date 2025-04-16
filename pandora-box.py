@@ -533,11 +533,11 @@ def scan():
     # Print device information
     f_size = human_readable_size(statvfs.f_frsize * statvfs.f_blocks)
     print_size(f_size)
-    logging.info(f'size="{f_size}")
+    logging.info(f'size="{f_size}"')
 
     f_used = statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)
     print_used(human_readable_size(f_used)))
-    logging.info(f'used="{f_used}")
+    logging.info(f'used="{f_used}"')
 
     # scan device
     infected_files = []
