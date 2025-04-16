@@ -96,7 +96,7 @@ class scanThread(threading.Thread):
             time.sleep(1)
 
     def scan(self, file):
-        global infected_files, scanned, file_count, used
+        global infected_files, scanned, file_count, f_used
         logging.info(f"Start scan.")
         try:
             # get file information
@@ -172,7 +172,7 @@ class scanThread(threading.Thread):
             queue_lock.release()
 
             # update status bar
-            update_bar(scanned * 100 // used)
+            update_bar(scanned * 100 // f_used)
 
             if has_quarantine and status == "ALERT":
                 if not os.path.isdir(qfolder):
