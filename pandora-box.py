@@ -495,7 +495,7 @@ def mount_device():
             try:
                 os.statvfs(mount_point)
             except Exception as ex:
-                log(f"Unexpected error: {ex}", flush=True)
+                log(f"Mount - Unexpected error: {ex}", flush=True)
                 loop += 1
                 continue
             break
@@ -507,7 +507,24 @@ def umount_device():
         log("Sync partitions", flush=True)
         os.system("sync")
     else:
-        os.system("pumount /media/box 2>/dev/null >/dev/null")
+        # os.system("pumount /media/box 2>/dev/null >/dev/null")
+        try:
+            result = subprocess.run(
+                ["pumount", "/media/box"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True
+            )
+            logging.info("Umount successful")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"pumount failed: return code {e.returncode}")
+            return None
+        except FileNotFoundError:
+            logging.error("Command 'pumount' not found")
+            return None
+        except Exception as e:
+            logging.error(f"Umount - Unexpected error: {e}")
+            return None
 
 
 def log_device_info(dev):
