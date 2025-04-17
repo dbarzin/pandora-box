@@ -1,57 +1,110 @@
-Pandora-box
-============
+# PandoraBox
 
-## Introduction
+PandoraBox is a USB scanning station designed to detect and remove malware from USB disks. It is based on [Pandora](https://github.com/pandora-analysis) by [CIRCL](https://www.circl.lu) and is distributed under the [GPLv3 license](https://www.gnu.org/licenses/licenses.html).
 
-As the use of USB disks are still prevalent, so has the risk of malware infection through these devices.
-Malware can easily spread from one computer to another through USB disks, making it a critical threat to
-information security. This is where our USB scanning device comes in.
+## Key Features
 
-Pandora-box is designed to detect and remove malware from USB disks. The software is based on [Pandora](https://github.com/pandora-analysis)
-from [CIRCL](https://www.circl.lu) and is distributed under [GPL](https://www.gnu.org/licenses/licenses.html),
-making it freely accessible to security professionals.
+- Detects USB insertion/removal in real time
+- Automatically or manually mounts USB devices
+- Multithreaded scanning using [pypandora](https://github.com/dbarzin/pypandora)
+- Automatic quarantine of infected files
+- Manual file removal after user confirmation
+- Interactive terminal interface (curses) or graphical feedback using images
+- Uses well-known malware detection tools:
+  - [ClamAV](http://www.clamav.net/)
+  - [Comodo Antivirus](https://antivirus.comodo.com/)
+  - [Hashlookup](https://circl.lu/services/hashlookup/)
+  - [Yara Rules](https://github.com/Neo23x0/signature-base)
 
-The software uses advanced scanning techniques to identify and remove malware from USB disks. It performs a
-comprehensive scan of the disk, analyzing each file for any signs of malicious activity. If it detects any malware,
-Pandora-box will quarantine the infected files and remove them from the disk.
-
-## Featues
-
-Pandora-Box is a USB scaning station based on [Pandora](https://github.com/pandora-analysis),
-a malware analysis tool.
-
-Pandora-box uses :
-
-- [ClamAV](http://www.clamav.net/) : an open-source antivirus engine for detecting trojans, viruses, malware & other malicious threats.
-- [Comodo Antivirus](https://antivirus.comodo.com/) : the free version of Comodo Antivirus.
-- [Hashlookup](https://circl.lu/services/hashlookup/) : a public API to lookup hash values against known database of files.
-- [Yara Rules](https://github.com/Neo23x0/signature-base) : the YARA signature and IOC database used by [LOKI](https://github.com/Neo23x0/Loki) and [THOR Lite](https://www.nextron-systems.com/thor-lite/) scanners.
-
-Other tools may be used by configuring Pandora [antivirus-workers](https://github.com/pandora-analysis/pandora#antivirus-workers).
-
-It runs on [Ubuntu 24.04 server LTS](https://ubuntu.com/download/server).
+Other malware detection tools can be configured using [Pandora antivirus-workers](https://github.com/pandora-analysis/pandora#antivirus-workers).
 
 ## Interface
 
-It has a graphical user interface :
+PandoraBox supports:
+
+### Graphical Feedback
 
 [<img src="images/key1.png" width="400">](images/key1.png)
 [<img src="images/wait1.png" width="400">](images/wait1.png)
 [<img src="images/ok.png" width="400">](images/ok.png)
 [<img src="images/bad.png" width="400">](images/bad.png)
 
-and a text user interface for advanced users :
+### Text Interface (Advanced Users)
 
 [<img src="images/pandora-curses.png" width="400">](images/pandora-curses.png)
 
-## Roadmap
-
-If you want to contribute, we have a [roadmap](ROADMAP.md).
-
 ## Installation
 
-The [installation and configuration procedure](INSTALL.md) is documented.
+PandoraBox runs on [Ubuntu 24.04 server LTS](https://ubuntu.com/download/server).
+
+### Dependencies
+
+- Python 3.8+
+- Python modules: `psutil`, `pyudev`, `pypandora`, `curses`, `logging`, `subprocess`
+
+Install dependencies:
+
+```bash
+pip install psutil pyudev pypandora
+```
+
+### Configuration
+
+Edit `pandora-box.ini` at the root of the project:
+
+```ini
+[DEFAULT]
+FAKE_SCAN = false
+USB_AUTO_MOUNT = true
+PANDORA_ROOT_URL = http://localhost
+QUARANTINE = true
+QUARANTINE_FOLDER = /var/quarantine
+CURSES = true
+THREADS = 4
+```
+
+### Setup & Usage
+
+```bash
+python3 pandora-box.py
+```
+
+> ⚠️ Run with sufficient privileges to access `/dev/sdX` and monitor udev events.
+
+More details in the [installation guide](INSTALL.md).
+
+## Application States
+
+- `START`: Initialization and config loading
+- `WAIT`: Wait for USB insertion
+- `SCAN`: Scan device contents
+- `CLEAN`: Prompt for infected file removal
+- `STOP`: Application ends or error
+
+## Roadmap
+
+If you'd like to contribute, check the [roadmap](ROADMAP.md).
+
+## Architecture
+
+PandoraBox is implemented as a Python class (`PandoraBox`) which handles:
+
+- Configuration parsing
+- Device detection with `pyudev`
+- File scanning using `pypandora`
+- Logging and progress tracking
+- Interactive interface handling
+
+## Security and Customization
+
+- Uses a system lock to prevent multiple instances
+- Can be integrated with additional tools or security measures
+- Easily extendable to new malware detection engines or logging systems
+
+## Author
+
+- Didier Barzin — [@dbarzin](https://github.com/dbarzin)
 
 ## License
 
-Pandora-box is an open source software distributed under [GPL](https://www.gnu.org/licenses/licenses.html).
+PandoraBox is open source software released under the [GPLv3 license](https://www.gnu.org/licenses/licenses.html).
