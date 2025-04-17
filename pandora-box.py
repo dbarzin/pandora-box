@@ -100,7 +100,7 @@ class scanThread(threading.Thread):
 
     def scan(self, file):
         global infected_files, scanned, file_count, f_used
-        logging.info(f"Start scan.")
+        logging.info(f'{"Start scan."}')
         try:
             # get file information
             file_name = os.path.basename(file)
@@ -116,12 +116,12 @@ class scanThread(threading.Thread):
             start_time = time.time()
             if isFakeScan:
                 status = "SKIPPED"
-                logging.info(f"Fake scan - skipped.")
+                logging.info(f'{"Fake scan - skipped."}')
             else:
                 # do not scan files bigger than 1G
                 if file_size > (1024 * 1024 * 1024):
                     status = "TOO BIG"
-                    logging.info(f"File too big.")
+                    logging.info(f'{"File too big."}')
                 else:
                     worker = self.pandora.submit_from_disk(
                         file, seed_expire=6000)
@@ -198,7 +198,7 @@ class scanThread(threading.Thread):
                 f'error="{str(ex)}"',
                 exc_info=True)
 
-        logging.info(f"Start done.")
+        logging.info(f'{"Start done."}')
 
 
 # ----------------------------------------------------------
@@ -508,9 +508,8 @@ def mount_device():
             logging.error("folder /media/box does not exists")
             return None
         # Mount device
-        # os.system(f"pmount {device.device_node} /media/box >/dev/null 2>/dev/null")
         try:
-            result = subprocess.run(
+            subprocess.run(
                 ["pmount", device.device_node, "/media/box"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -545,9 +544,8 @@ def umount_device():
         log("Sync partitions", flush=True)
         os.system("sync")
     else:
-        # os.system("pumount /media/box 2>/dev/null >/dev/null")
         try:
-            result = subprocess.run(
+            subprocess.run(
                 ["pumount", "/media/box"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,

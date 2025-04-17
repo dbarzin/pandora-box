@@ -65,12 +65,6 @@ THREADS = 4
 
 ### Setup & Usage
 
-```bash
-python3 pandora-box.py
-```
-
-> ⚠️ Run with sufficient privileges to access `/dev/sdX` and monitor udev events.
-
 More details in the [installation guide](INSTALL.md).
 
 ## Application States
