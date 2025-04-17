@@ -32,6 +32,7 @@ import socket
 import sys
 import time
 import threading
+import subprocess
 
 import pypandora
 from pathlib import Path
