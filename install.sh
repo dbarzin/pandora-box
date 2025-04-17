@@ -184,6 +184,9 @@ cd /home/$SUDO_USER/pandora-box
 apt --fix-broken install -y
 apt install -y fim pmount psmisc vim
 
+# Add user in disk group to allow pmount
+usermod -aG disk $SUDO_USER
+
 # Python libraries
 su - $SUDO_USER -c "./.local/bin/pip install pypandora psutil pyudev"
 
