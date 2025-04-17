@@ -466,8 +466,28 @@ def mount_device():
         mount_point = "/media/box"
         if not os.path.exists("/media/box"):
             log("folder /media/box does not exists", flush=True)
+            logging.error("folder /media/box does not exists")
             return None
-        os.system(f"pmount {device.device_node} /media/box >/dev/null 2>/dev/null")
+        # Mount device
+        # os.system(f"pmount {device.device_node} /media/box >/dev/null 2>/dev/null")
+        try:
+            result = subprocess.run(
+                ["pmount", device.device_node, "/media/box"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True
+            )
+            logging.info("Mount successful")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Mount failed: return code {e.returncode}")
+            return None
+        except FileNotFoundError:
+            logging.error("Command 'pmount' not found")
+            return None
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+            return None
+
         loop = 0
         while loop < 10:
             time.sleep(1)
@@ -504,8 +524,8 @@ def log_device_info(dev):
         f'partition_label="{dev.get("ID_FS_LABEL")}", '
         f'device_model="{dev.get("ID_MODEL")}", '
         f'model_id="{dev.get("ID_MODEL_ID")}", '
-        f'serial_short="dev.get("ID_SERIAL_SHORT")", '
-        f'serial="dev.get("ID_SERIAL")"'
+        f'serial_short="{dev.get("ID_SERIAL_SHORT")}", '
+        f'serial="{dev.get("ID_SERIAL")}"'
     )
 
 
@@ -537,7 +557,7 @@ def scan():
 
     f_used = statvfs.f_frsize * (statvfs.f_blocks - statvfs.f_bfree)
     print_used(human_readable_size(f_used))
-    logging.info(f'used="{f_used}"')
+    logging.info(f'used="{human_readable_size(f_used)}"')
 
     # scan device
     infected_files = []
