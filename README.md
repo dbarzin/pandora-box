@@ -6,7 +6,7 @@ PandoraBox is a USB scanning station designed to detect and remove malware from 
 
 - Detects USB insertion/removal in real time
 - Automatically or manually mounts USB devices
-- Multithreaded scanning using [pypandora](https://github.com/dbarzin/pypandora)
+- Multithreaded scanning using [pypandora](https://github.com/pandora-analysis/pypandora)
 - Automatic quarantine of infected files
 - Manual file removal after user confirmation
 - Interactive terminal interface (curses) or graphical feedback using images
