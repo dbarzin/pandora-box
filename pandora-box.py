@@ -511,7 +511,7 @@ def mount_device():
         try:
             subprocess.run(
                 ["sudo",
-                    "mount", "-o", "uid=1000,gid=1000,dmask=0000,fmask=0000", 
+                    "mount", "-o", "uid=1000,gid=1000,dmask=0000,fmask=0000",
                     device.device_node, "/media/box"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -597,6 +597,7 @@ def scan():
     global mount_point, infected_files, file_count, f_used
 
     # get device size
+    logging.info(f'start scan')
     try:
         statvfs = os.statvfs(mount_point)
     except Exception as ex:
