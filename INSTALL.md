@@ -192,7 +192,7 @@ Look a the Pandora-box logs files
 
 Clean pending jobs
 
-   cd ~/pandora
-   poetry run stop
-   rm pandora/cache/dump.rdb
-   poetry run start
+    cd ~/pandora
+    poetry run stop
+    rm pandora/cache/dump.rdb
+    poetry run start
