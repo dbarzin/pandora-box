@@ -180,12 +180,15 @@ echo '0 20 * * * /sbin/poweroff' >> /etc/crontab
 #---------------------
 cd /home/$SUDO_USER/pandora-box
 
-# FIM, pmount, psmisc (for killall) and vim
+# FIM, psmisc (for killall) and vim
 apt --fix-broken install -y
-apt install -y fim pmount psmisc vim
+apt install -y fim psmisc vim
 
-# Add user in plugdev group to allow pmount
-usermod -aG plugdev $SUDO_USER
+# Add exfat filesystem
+apt install exfat-fuse exfatprogs
+
+# Allow sudo_user users to mount and umount devices
+echo "$SUDO_USER ALL=(ALL) NOPASSWD: /bin/mount, /bin/umount" > /etc/sudoers.d/usbmount
 
 # Python libraries
 su - $SUDO_USER -c "./.local/bin/pip install pypandora psutil pyudev"

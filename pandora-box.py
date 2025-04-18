@@ -510,7 +510,7 @@ def mount_device():
         # Mount device
         try:
             subprocess.run(
-                ["pmount", device.device_node, "/media/box"],
+                ["sudo", "mount", device.device_node, "/media/box"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 check=True,
@@ -520,7 +520,7 @@ def mount_device():
             logging.error(f"Mount failed: return code {e.returncode}")
             return None
         except FileNotFoundError:
-            logging.error("Command 'pmount' not found")
+            logging.error("Command 'mount' not found")
             return None
         except Exception as e:
             logging.error(f"Unexpected error: {e}")
@@ -546,17 +546,17 @@ def umount_device():
     else:
         try:
             subprocess.run(
-                ["pumount", "/media/box"],
+                ["sudo", "umount", "/media/box"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 check=True,
             )
             logging.info("Umount successful")
         except subprocess.CalledProcessError as e:
-            logging.error(f"pumount failed: return code {e.returncode}")
+            logging.error(f"umount failed: return code {e.returncode}")
             return None
         except FileNotFoundError:
-            logging.error("Command 'pumount' not found")
+            logging.error("Command 'umount' not found")
             return None
         except Exception as e:
             logging.error(f"Umount - Unexpected error: {e}")
