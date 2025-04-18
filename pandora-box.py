@@ -22,6 +22,7 @@
 import configparser
 import curses
 import datetime
+import glob
 import logging
 import os
 import queue
@@ -409,7 +410,6 @@ def print_screen():
         print_serial("")
         init_bar()
         update_bar(0, flush=True)
-    log("Ready.", flush=True)
     logging.info(f'boxname="{boxname}", ' "pandora-box-start")
 
 
@@ -918,23 +918,14 @@ def move_to_script_folder():
 
 # --------------------------------------
 
-
-def get_enabled_workers():
-    config_dir = Path("~/pandora/pandora/workers")
-    yml_files = list(config_dir.glob("*.yml"))
-    return [str(file.stem) for file in yml_files if file.stem is not None]
-
-
 def wait_for_workers():
     pandora = pypandora.PyPandora(root_url=pandora_root_url)
-    target_count = len(get_enabled_workers()) - 1
-    while True:
-        workers = pandora.get_enabled_workers()
-        log(f"Workers ready : {len(workers)}/ {target_count}")
-        if len(workers) >= target_count:
-            break
-        time.sleep(2)
-
+    workers = pandora.get_enabled_workers()
+    while not pandora.is_up:
+        log(f"Waiting for Pandora", flush=True)
+        time.sleep(1)
+    for worker in workers:
+        log(f"Worker: {worker}", flush=True)
 
 # --------------------------------------
 
@@ -955,6 +946,10 @@ def startup():
         logo = file1.readlines()
     # Print logo screen
     print_screen()
+    # Wait for workers to start
+    wait_for_workers()
+    # Now Ready
+    log("Ready.", flush=True)
 
     return "WAIT"
 
@@ -1011,19 +1006,17 @@ def main(_):
     """Main entry point"""
     print("main")
     try:
-        # Wait for workers to start
-        # wait_for_workers()
         # Enter the mail loop
         state = "START"
         while state != "STOP":
             state = loop(state)
-    except Exception as ex:
-        print({str(ex)})
-        log(f"Unexpected error: {str(ex)}", flush=True)
-        logging.info(
-            f'boxname="{boxname}", '
-            f'error="{str(ex)}"',
-            exc_info=True)
+    #except Exception as ex:
+    #    print({str(ex)})
+    #    log(f"Unexpected error: {str(ex)}", flush=True)
+    #    logging.info(
+    #        f'boxname="{boxname}", '
+    #        f'error="{str(ex)}"',
+    #        exc_info=True)
     finally:
         end_curses()
 
