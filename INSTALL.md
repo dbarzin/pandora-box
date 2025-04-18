@@ -194,5 +194,5 @@ Clean pending jobs
 
     cd ~/pandora
     poetry run stop
-    rm pandora/cache/dump.rdb
+    rm cache/dump.rdb
     poetry run start
