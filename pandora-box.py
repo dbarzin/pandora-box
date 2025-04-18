@@ -510,7 +510,9 @@ def mount_device():
         # Mount device
         try:
             subprocess.run(
-                ["sudo", "mount", device.device_node, "/media/box"],
+                ["sudo",
+                    "mount", "-o", "uid=1000,gid=1000,dmask=0000,fmask=0000", 
+                    device.device_node, "/media/box"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 check=True,
