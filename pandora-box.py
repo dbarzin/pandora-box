@@ -208,7 +208,7 @@ class scanThread(threading.Thread):
 
 def config():
     global isFakeScan, hasUSBAutoMount, pandora_root_url
-    global hasQuarantine, quarantine_folder, has_curses, maxThreads
+    global hasQuarantine, quarantine_folder, has_curses, maxThreads, maxFileSize
     """ read configuration file """
     # intantiate a ConfirParser
     config_parser = configparser.ConfigParser()
