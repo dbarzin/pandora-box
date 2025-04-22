@@ -117,20 +117,19 @@ su - $SUDO_USER -c "cp ~/pandora/config/logging.json.sample ~/pandora/config/log
 apt install -y python3-yara
 
 # ClamAV
-
-# cd /home/$SUDO_USER
-# apt-get install -y hdparm clamav-daemon
+cd /home/$SUDO_USER
+apt-get install -y hdparm clamav-daemon
 
 # In order for the module to work, you need the signatures.
 # Running the command "freshclam" will do it but if the script is already running
 # (it is started by the systemd service clamav-freshclam)
 # You might want to run the commands below:
 
-# systemctl stop clamav-freshclam.service  # Stop the service
-# freshclam  # Run the signatures update
-# systemctl start clamav-freshclam.service # Start the service so we keep getting the updates
+systemctl stop clamav-freshclam.service  # Stop the service
+freshclam  # Run the signatures update
+systemctl start clamav-freshclam.service # Start the service so we keep getting the updates
 
-# service clamav-daemon start
+service clamav-daemon start
 
 # Comodo
 wget https://download.comodo.com/cis/download/installs/linux/cav-linux_x64.deb
@@ -141,8 +140,8 @@ wget http://cdn.download.comodo.com/av/updates58/sigs/bases/bases.cav -O /opt/CO
 # su - $SUDO_USER -c "cd ~/pandora; for file in pandora/workers/*.sample; do cp -i ${file} ${file%%.sample}; done"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp base.yml.sample base.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp blocklists.yml.sample blocklists.yml"
-# su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp comodo.yml.sample comodo.yml"
-# su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp clamav.yml.sample clamav.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp comodo.yml.sample comodo.yml"
+su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp clamav.yml.sample clamav.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp extractor.yml.sample extractor.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp hashlookup.yml.sample hashlookup.yml"
 su - $SUDO_USER -c "cd ~/pandora/pandora/workers; cp pdf.yml.sample pdf.yml"
@@ -161,7 +160,7 @@ su - $SUDO_USER -c "cd ~/pandora/config; sed -i 's/\"disable_unoserver\"\: false
 # remove some workers
 # rm pandora/workers/preview.yml
 
-# Update Pandor
+# Update Pandora
 su - $SUDO_USER -c "cd ~/pandora; poetry run update --yes"
 
 # Remove files from quarantine after 180 days
