@@ -24,6 +24,3 @@ THREADS = 1
 
 ; Max File Size (1G)
 MAX_FILE_SIZE = 1080000000
-
-; Max File Size (1G)
-MAX_FILE_SIZE = 1080000000
