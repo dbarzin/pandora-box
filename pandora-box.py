@@ -922,6 +922,8 @@ def move_to_script_folder():
 # --------------------------------------
 
 def wait_for_workers():
+    log(f"Starting..............", flush=True)
+    time.sleep(10)
     pandora = pypandora.PyPandora(root_url=pandora_root_url)
     workers = pandora.get_enabled_workers()
     while not pandora.is_up:
