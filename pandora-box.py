@@ -58,6 +58,7 @@ quarantine_folder = None
 has_curses = None
 maxThreads = None
 boxname = socket.gethostname()
+maxFileSize = None
 
 # -----------------------------------------------------------
 # Curses
@@ -100,7 +101,7 @@ class scanThread(threading.Thread):
             time.sleep(1)
 
     def scan(self, file):
-        global infected_files, scanned, file_count, f_used
+        global infected_files, scanned, file_count, f_used, maxFileSize
         logging.info(f'{"Start scan."}')
         try:
             # get file information
@@ -120,7 +121,7 @@ class scanThread(threading.Thread):
                 logging.info(f'{"Fake scan - skipped."}')
             else:
                 # do not scan files bigger than 1G
-                if file_size > (1024 * 1024 * 1024):
+                if file_size > maxFileSize :
                     status = "TOO BIG"
                     logging.info(f'{"File too big."}')
                 else:
@@ -225,6 +226,8 @@ def config():
     has_curses = config_parser["DEFAULT"]["CURSES"].lower() == "true"
     # MaxThreads
     maxThreads = int(config_parser["DEFAULT"]["THREADS"])
+    # MaxFileSize
+    maxFileSize = int(config_parser["DEFAULT"]["MAX_FILE_SIZE"])
 
 
 # ----------------------------------------------------------

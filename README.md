@@ -54,13 +54,31 @@ Edit `pandora-box.ini` at the root of the project:
 
 ```ini
 [DEFAULT]
-FAKE_SCAN = false
-USB_AUTO_MOUNT = true
-PANDORA_ROOT_URL = http://localhost
-QUARANTINE = true
+; Curses mode (full text)
+CURSES = False
+
+; Set USB_AUTO_MOUNT to True is if the OS automaticaly mount USB keys
+USB_AUTO_MOUNT = False
+
+; Set PANDORA_ROOT_URL to the URL of the Pandora server
+; the default value is "http://127.0.0.1:6100"
+PANDORA_ROOT_URL = http://127.0.0.1:6100
+
+; Set FAKE_SCAN to true to fake the scan process (used during developement only)
+FAKE_SCAN = False
+
+; Set to true to copy infected files to the quarantine folder
+; in the USB scanning station
+QUARANTINE = True
+
+; Set quarantine folder
 QUARANTINE_FOLDER = /var/quarantine
-CURSES = true
-THREADS = 4
+
+; Number of threads used by Pandora
+THREADS = 8
+
+; Max File Size (1G)
+MAX_FILE_SIZE = 1080000000
 ```
 
 ### Setup & Usage
