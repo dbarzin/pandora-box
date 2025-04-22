@@ -24,6 +24,15 @@ After reboot, login and type :
     cd pandora-box
     sudo ./install.sh
 
+To **reinstall** Pandora and Pandora-box
+
+    cd ~
+    rm -rf ~/pandora ~/pandora-box
+    git clone https://github.com/dbarzin/pandora-box
+    cd pandora-box
+    sudo ./install.sh
+
+
 ## Firewall
 
 Pandora-box needs web access to these websites :
