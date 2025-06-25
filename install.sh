@@ -95,8 +95,8 @@ apt install -y unrar  # for extracting rar files
 apt install -y libxml2-dev libxslt1-dev antiword unrtf poppler-utils tesseract-ocr flac ffmpeg lame libmad0 libsox-fmt-mp3 sox libjpeg-dev swig  # for textract
 apt install -y libssl-dev  # seems required for yara-python
 apt install -y libcairo2-dev  # Required by reportlab
-
 apt install -y rsyslog cron # log logging
+apt install -y ntfs-3g # for NTFS filesystems
 
 # autoremove old stuff
 apt autoremove -y
