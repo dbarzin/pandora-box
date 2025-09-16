@@ -104,16 +104,8 @@ class scanThread(threading.Thread):
         global infected_files, scanned, file_count, f_used, maxFileSize
         logging.info(f'{"Start scan."}')
         try:
-            # get file name
-            # Construire un nom "safe" pour l'upload (UTF-8 sans surrogates)
-            raw_name_bytes = os.fsencode(os.path.basename(file))  # bytes du FS (préserve 0xE9, etc.)
-            try:
-                file_name = raw_name_bytes.decode("utf-8")
-            except UnicodeDecodeError:
-                # Fallback fréquent pour des noms créés en ISO-8859-1/CP1252
-                file_name = raw_name_bytes.decode("latin-1", errors="replace")
-
-            # get file size
+            # get file information
+            file_name = os.path.basename(file)
             file_size = os.path.getsize(file)
 
             # log the scan has started
@@ -522,7 +514,7 @@ def mount_device():
         try:
             subprocess.run(
                 ["sudo",
-                    "mount", "-o", "uid=1000,gid=1000,dmask=0000,fmask=0000",
+                    "mount", "-o", "utf8,uid=1000,gid=1000,dmask=0000,fmask=0000",
                     device.device_node, "/media/box"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
