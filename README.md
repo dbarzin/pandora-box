@@ -1,3 +1,9 @@
+This repository has been archived and is no longer actively maintained.
+
+Pandora Box was originally designed as a malware detection tool for USB drives, relying on ClamAV and a set of analysis scripts. Over time, the Pandora project has evolved in a different direction — focusing on safe document viewing and text/office file analysis — which no longer aligns with the original scope of this project.
+
+A new project is currently being developed to take over this use case. It will provide USB drive malware detection capabilities, but will likely not be based on Pandora. Stay tuned.
+
 # PandoraBox
 
 PandoraBox is a USB scanning station designed to detect and remove malware from USB disks. It is based on [Pandora](https://github.com/pandora-analysis) by [CIRCL](https://www.circl.lu) and is distributed under the [GPLv3 license](https://www.gnu.org/licenses/licenses.html).
