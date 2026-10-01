@@ -1,10 +1,13 @@
-This repository has been archived and is no longer actively maintained.
-
-Pandora Box was originally designed as a malware detection tool for USB drives, relying on ClamAV and a set of analysis scripts. Over time, the Pandora project has evolved in a different direction — focusing on safe document viewing and text/office file analysis — which no longer aligns with the original scope of this project.
-
-A new project is currently being developed to take over this use case. It will provide USB drive malware detection capabilities, but will likely not be based on Pandora. Stay tuned.
-
 # PandoraBox
+
+> [!CAUTION]
+> **This project is archived and no longer maintained. It is replaced by [USB-Pasteur](https://github.com/dbarzin/usb-pasteur).**
+>
+> PandoraBox relied on [Pandora](https://github.com/pandora-analysis) by CIRCL. Pandora has evolved in a different direction (safe document viewing and office file analysis), which no longer matches the scope of a USB scanning station.
+>
+> [USB-Pasteur](https://github.com/dbarzin/usb-pasteur) is its successor: a hardened USB decontamination kiosk with no dependency on Pandora. It reuses the PandoraBox code (state machine, USB detection, quarantine, curses interface) and is **still under development**.
+>
+> No new features or fixes will be added here. Please open issues and contributions on [USB-Pasteur](https://github.com/dbarzin/usb-pasteur).
 
 PandoraBox is a USB scanning station designed to detect and remove malware from USB disks. It is based on [Pandora](https://github.com/pandora-analysis) by [CIRCL](https://www.circl.lu) and is distributed under the [GPLv3 license](https://www.gnu.org/licenses/licenses.html).
 
