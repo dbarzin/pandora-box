@@ -8,6 +8,8 @@ screen, in two versions.
 |---|---|
 | `usb-pasteur-7inch.stl` | the model for a 7-inch screen such as the Waveshare 7-inch HDMI LCD (C) |
 | `usb-pasteur-7inch.png` | views of the 7-inch model (front, back, right, bottom) |
+| `usb-pasteur-7inch-v2.stl` | the 7-inch model, 1.5 mm wider on the right for angled HDMI and USB cables |
+| `usb-pasteur-7inch-v2.png` | views of the 7-inch v2 model (front, back, right, bottom) |
 | `usb-pasteur-10inch.stl` | the model for a 10-inch screen |
 | `usb-pasteur-10inch.png` | views of the 10-inch model (front, back, top, bottom) |
 | `LICENSE` | CERN Open Hardware Licence Version 2 - Strongly Reciprocal |
@@ -22,8 +24,14 @@ The 10-inch model has a 180 x 128 mm window. The 7-inch model is sized for
 a 165 x 100 mm screen: a 14 mm band at the top and at the bottom of the
 window leaves a 100 mm high opening. Each band has two 3 mm holes to screw
 the screen from behind, 157.5 mm apart across the face and 115 mm apart
-along the slope. Its right wall, seen from the front, is 2 mm thick instead
-of 5 mm behind the screen, to leave room for the HDMI and USB cables.
+along the slope. Its side walls are 2 mm thick instead of 5 mm behind the
+screen, to leave room for the HDMI and USB cables.
+
+The 7-inch v2 model is for angled HDMI and USB cables, which stick out
+1.5 mm past the right edge of the screen: its right side is moved 1.5 mm
+outward, so the model is 185.5 mm wide. The window, the screen holes and
+the base holes do not move, and the side walls keep their 2 mm thickness
+behind the screen; the right base hole is now 10 mm from the side edge.
 
 The base of both models has three 3.8 mm holes to screw it on the VESA
 mounting bracket of the Lenovo ThinkCentre Tiny (M720), 8.5 mm from the side
