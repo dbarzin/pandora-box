@@ -25,7 +25,9 @@ a 165 x 100 mm screen: a 14 mm band at the top and at the bottom of the
 window leaves a 100 mm high opening. Each band has two 3 mm holes to screw
 the screen from behind, 157.5 mm apart across the face and 115 mm apart
 along the slope. Its side walls are 2 mm thick instead of 5 mm behind the
-screen, to leave room for the HDMI and USB cables.
+screen, to leave room for the HDMI and USB cables. On each side of the
+window, an 11 mm wide and 5 mm thick edge, flush with the front face, joins
+the top and bottom bands.
 
 The 7-inch v2 model is for angled HDMI and USB cables, which stick out
 1.5 mm past the right edge of the screen: its right side is moved 1.5 mm
