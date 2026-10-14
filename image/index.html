@@ -13,10 +13,10 @@
         <link rel="canonical" href="https://dbarzin.github.io/pandora-box/image/">
       
       
-        <link rel="prev" href="../hardware/">
+        <link rel="prev" href="../engines/">
       
       
-        <link rel="next" href="../interface/">
+        <link rel="next" href="../development/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>-- Image and installation - PandoraBox</title>
+        <title>-- Image internals - PandoraBox</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#kiosk-image" class="md-skip">
+        <a href="#image-internals" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              -- Image and installation
+              -- Image internals
             
           </span>
         </div>
@@ -259,8 +259,6 @@
       
   
   
-    
-  
   
   
     
@@ -272,8 +270,6 @@
       
         
       
-        
-      
     
     
     
@@ -283,11 +279,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -315,7 +313,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -351,280 +349,6 @@
   
 
       </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    -- Image and installation
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    -- Image and installation
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#layout" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Layout
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#build" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Build
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#signing-secure-boot-and-dm-verity" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Signing, Secure Boot and dm-verity
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#screen" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Screen
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#maintenance-device" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Maintenance device
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#usb-devices" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        USB devices
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#system-hardening" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        System hardening
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#scan-worker-sandbox" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Scan worker sandbox
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#unified-kernel-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Unified kernel image
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ab-updates-of-the-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A/B updates of the image
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dependencies
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#profile-online" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Profile online
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Profile online">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#time" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Time
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#test-profile" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Test profile
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#automated-test-in-a-virtual-machine" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Automated test in a virtual machine
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#interactive-virtual-machine" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Interactive virtual machine
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Interactive virtual machine">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#real-usb-keys" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Real USB keys
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -677,7 +401,7 @@
   <span class="md-ellipsis">
     
   
-    USING THE KIOSK
+    INSTALLATION
   
 
     
@@ -693,7 +417,345 @@
             <span class="md-nav__icon md-icon"></span>
             
   
-    USING THE KIOSK
+    INSTALLATION
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Building the image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Testing with QEMU
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Initial installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MAINTENANCE
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    MAINTENANCE
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Signatures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../update/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- System updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Logs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../siem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Log export to a SIEM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REFERENCE
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    REFERENCE
   
 
           </label>
@@ -762,101 +824,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../siem/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    -- Log export to a SIEM
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-      
-        
-      
-        
-      
-    
-    
-    
-      
-        
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    DETECTION
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    DETECTION
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../engines/" class="md-nav__link">
         
   
@@ -882,17 +849,44 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../signatures/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Image internals
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    -- Signature updates
+    -- Image internals
   
 
     
@@ -901,6 +895,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#partitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Partitions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signing-secure-boot-and-dm-verity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signing, Secure Boot and dm-verity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screen
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usb-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        USB devices
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        System hardening
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scan-worker-sandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scan worker sandbox
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unified-kernel-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified kernel image
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -939,10 +1030,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -960,8 +1051,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -1033,21 +1124,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#layout" class="md-nav__link">
+  <a href="#partitions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Layout
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#build" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Build
+        Partitions
       
     </span>
   </a>
@@ -1070,17 +1150,6 @@
     <span class="md-ellipsis">
       
         Screen
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#maintenance-device" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Maintenance device
       
     </span>
   </a>
@@ -1131,106 +1200,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#ab-updates-of-the-image" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        A/B updates of the image
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dependencies
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#profile-online" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Profile online
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Profile online">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#time" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Time
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#test-profile" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Test profile
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#automated-test-in-a-virtual-machine" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Automated test in a virtual machine
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#interactive-virtual-machine" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Interactive virtual machine
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Interactive virtual machine">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#real-usb-keys" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Real USB keys
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -1264,88 +1233,14 @@
   
 
 
-<h1 id="kiosk-image">Kiosk image<a class="headerlink" href="#kiosk-image" title="Permanent link">&para;</a></h1>
-<p>The kiosk is distributed as a complete system image (phase 2), built with
-<a href="https://github.com/systemd/mkosi">mkosi</a> from Debian 13 (trixie) packages,
-and tested in a QEMU/KVM virtual machine. Everything runs in a Debian 13
-container (<code>image/Dockerfile</code>: mkosi, QEMU, OVMF), so the developer only needs
-Docker.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The image and the signature sets are signed with development keys only.
-The production image has no signature set: the kiosk scans nothing until a
-signature update device is inserted (see <a href="../signatures/">signatures.md</a>).
-See the phase 2 tasks in the <a href="https://github.com/dbarzin/pandora-box/blob/main/ROADMAP.md#phase-2--minimal-hardened-image">roadmap</a>.</p>
-</div>
-<h2 id="layout">Layout<a class="headerlink" href="#layout" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Path</th>
-<th>Role</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>image/mkosi.conf</code></td>
-<td>Image definition: Debian 13, x86_64, systemd-boot, unified kernel image (UKI), packages</td>
-</tr>
-<tr>
-<td><code>image/mkosi.repart/</code></td>
-<td>Partitions: ESP, two system slots (read-only root filesystem, its dm-verity hash and signature), data partition</td>
-</tr>
-<tr>
-<td><code>image/mkosi.images/initrd/</code></td>
-<td>The initrd: the default initrd of mkosi, which restarts instead of opening an emergency shell, without the files a read-only root does not need</td>
-</tr>
-<tr>
-<td><code>image/mkosi.prepare.chroot</code></td>
-<td>Runtime dependencies in a virtual environment (<code>/usr/lib/pandora-box</code>), from <code>image/requirements.txt</code> (pinned with their hashes)</td>
-</tr>
-<tr>
-<td><code>image/mkosi.build.chroot</code></td>
-<td>pandora-box wheel, built from the repository without network</td>
-</tr>
-<tr>
-<td><code>image/mkosi.postinst.chroot</code></td>
-<td>Installs pandora-box, its configuration, systemd service, tmpfiles and logrotate files (<code>packaging/</code>), and the clamd settings</td>
-</tr>
-<tr>
-<td><code>image/mkosi.extra/</code></td>
-<td>Files copied into the image: systemd presets (enabled and disabled units), <code>/etc/fstab</code>, growth of the data partition (<code>/usr/lib/repart.d/</code>), A/B updates (<code>/usr/lib/sysupdate.d/</code>, boot assessment), USBGuard policy, kernel settings (<code>sysctl.d</code>), firewall (<code>nftables.conf</code>), clamd sandbox</td>
-</tr>
-<tr>
-<td><code>image/mkosi.profiles/test/</code></td>
-<td>Test profile, for the virtual machine tests only</td>
-</tr>
-<tr>
-<td><code>image/vm/</code></td>
-<td>Virtual machine tests: corpus, QEMU driver, automated test</td>
-</tr>
-<tr>
-<td><code>image/build.sh</code>, <code>image/vm.sh</code></td>
-<td>Build and run in the container</td>
-</tr>
-<tr>
-<td><code>image/build-test.sh</code>, <code>image/package-update.sh</code></td>
-<td>Build the images of the virtual machine test; build a signed image update</td>
-</tr>
-</tbody>
-</table>
-<h2 id="build">Build<a class="headerlink" href="#build" title="Permanent link">&para;</a></h2>
-<p>Requirements: Docker, about 5 GB of disk space, network access (Debian
-packages and Python wheels).</p>
-<div class="highlight"><pre><span></span><code>image/build.sh<span class="w">                  </span><span class="c1"># production image</span>
-image/build.sh<span class="w"> </span>--profile<span class="w"> </span><span class="nb">test</span><span class="w">   </span><span class="c1"># test image</span>
-</code></pre></div>
-<p>The image is written to <code>image/mkosi.output/</code>: <code>pandora-box.raw</code> (or
-<code>pandora-box-test.raw</code>, a GPT disk image), the UKI (<code>.efi</code>) and the list of
-installed packages (<code>.manifest</code>). The first build takes a few minutes; the
-following ones reuse the installed packages (mkosi incremental build, cached
-in the <code>pandora-box-mkosi</code> Docker volume) and take less than a minute.</p>
-<p>The cache is not rebuilt when <code>image/requirements.txt</code> or
-<code>image/mkosi.prepare.chroot</code> change: rebuild it with <code>image/build.sh -f</code>
-(<code>docker volume rm pandora-box-mkosi</code> removes it completely).</p>
+<h1 id="image-internals">Image internals<a class="headerlink" href="#image-internals" title="Permanent link">&para;</a></h1>
+<p>How the kiosk image is made and protected. To build it, test it, install it
+and maintain it, see <a href="../build/">Building the image</a>,
+<a href="../vm/">Testing with QEMU</a>, <a href="../install/">Initial installation</a> and
+<a href="../update/">System updates</a>.</p>
+<p>The image is built with <a href="https://github.com/systemd/mkosi">mkosi</a> from Debian
+13 (trixie) packages.</p>
+<h2 id="partitions">Partitions<a class="headerlink" href="#partitions" title="Permanent link">&para;</a></h2>
 <p>The disk image has two system slots (A/B updates) and a data partition:</p>
 <table>
 <thead>
@@ -1440,7 +1335,7 @@ and mkosi can sign with a key in a hardware token
 public key <code>image/update.pem</code> is installed in <code>/usr/share/pandora-box/keys/</code>
 (under dm-verity). <code>image/build.sh</code> generates a development pair when they
 do not exist; the test profile signs its signature set with it. See
-<a href="../signatures/">signatures.md</a>.</p>
+<a href="../signatures/">Signatures</a>.</p>
 <p>On a kiosk, the certificate is enrolled in the firmware in place of the
 Microsoft keys (PK, KEK and db), so that it starts nothing else. The ESP
 contains the keys in the format expected by the firmware
@@ -1476,28 +1371,6 @@ the size and the pixel format it draws for (<code>display_started</code>).</p>
 text on the console instead: it shrinks the console to the screen of
 <code>video=</code> (8x16 font: 37 lines, 128 columns) the same way, and logs the size
 it draws for (<code>display_started</code>, <code>display_resized</code>).</p>
-<h2 id="maintenance-device">Maintenance device<a class="headerlink" href="#maintenance-device" title="Permanent link">&para;</a></h2>
-<p>A kiosk has no login and accepts no connection: to diagnose it without
-taking its disk out, a <strong>maintenance device</strong> brings its logs back. On the
-computer that holds the update key, with a USB key mounted:</p>
-<div class="highlight"><pre><span></span><code>image/maintenance-key.sh<span class="w"> </span>/media/<span class="nv">$USER</span>/KEY<span class="w">            </span><span class="c1"># any kiosk</span>
-image/maintenance-key.sh<span class="w"> </span>/media/<span class="nv">$USER</span>/KEY<span class="w"> </span>kiosk-1<span class="w">    </span><span class="c1"># only kiosk.name = kiosk-1</span>
-</code></pre></div>
-<p>writes <code>pandora-box-maintenance/</code> on the key: a request signed with the
-update key, valid 7 days. Inserted into the kiosk, even one without
-signatures, the key is not scanned: the kiosk verifies the request, writes
-its logs to <code>pandora-box-maintenance/&lt;kiosk&gt;-&lt;date&gt;/</code> (journal of the boot
-and of the previous one, kernel, services, logs of the kiosk and of
-USBGuard, USB devices and rules, disks, boot entries, hardware and screens,
-installed signature set) and ejects the key (<code>src/pandora_box/maintenance.py</code>).
-Nothing changes on the kiosk, and the export holds no key, credential or
-scan report. A request signed by another key, too old, for another kiosk
-or modified is refused (<code>maintenance_refused</code> in the log).</p>
-<p>One key can hold a maintenance request, a signature set
-(<code>pandora-box-signatures/</code>) and an image update (<code>pandora-box-image/</code>):
-the kiosk handles them in that order in one insertion, each verified on its
-own; the export shows the kiosk before the updates, and the image update
-comes last as it restarts the kiosk.</p>
 <h2 id="usb-devices">USB devices<a class="headerlink" href="#usb-devices" title="Permanent link">&para;</a></h2>
 <p>A kiosk must only use USB storage devices: a key that is also a keyboard
 (BadUSB) could type commands, a network adapter could open a network.</p>
@@ -1625,215 +1498,6 @@ modules. That one only holds what mounts the root filesystem
 EROFS loads by name. The other modules are loaded from the root filesystem.
 A computer whose disk controller is not in this list cannot find its root
 filesystem: add its module there.</p>
-<h2 id="ab-updates-of-the-image">A/B updates of the image<a class="headerlink" href="#ab-updates-of-the-image" title="Permanent link">&para;</a></h2>
-<p>The system is updated as a whole, never file by file
-(<code>src/pandora_box/imageupdate.py</code>, <code>image/mkosi.extra/usr/lib/sysupdate.d/</code>).</p>
-<ul>
-<li><strong>Building an update.</strong> Build a new version (its version is the time of
-  the build: newer than the running one), then package it:</li>
-</ul>
-<div class="highlight"><pre><span></span><code>image/build.sh
-image/package-update.sh<span class="w"> </span>image/mkosi.output/pandora-box.raw<span class="w"> </span>update<span class="w"> </span>image/update.key
-</code></pre></div>
-<p><code>update/</code> holds the partitions of slot A of the new image (compressed
-  with xz, the format that <code>systemd-sysupdate</code> of Debian 13 decompresses),
-  named with their UUID, the UKI, and a manifest signed with the update key
-  (the format of the signature sets, content <code>image</code>, serial = version).
-  About 215 MB, of which 40 MB for the UKI.
-- <strong>Installing it.</strong> Copy <code>update/</code> as <code>pandora-box-image/</code> at the root of a
-  USB key and insert it into the kiosk (<code>updates.image_from_devices</code>). The
-  kiosk verifies the signature, that the version is newer than the running
-  one and every file, copies them to <code>/var/lib/pandora-box-image</code>, then
-  <code>systemd-sysupdate</code> writes the partitions to the free slot and the UKI to
-  the ESP with 3 boot tries (<code>pandora-box_2+3-0.efi</code>), and the kiosk
-  restarts. The running version is never overwritten; the device is not
-  scanned.
-- <strong>Online.</strong> With the profile <code>online</code> and <code>updates.image_url</code> (the URL of
-  a published update folder), <code>pandora-box-update.service</code> downloads a newer
-  update as its unprivileged user (every file checked), then installs it as
-  root without network (<code>pandora-box-image install</code>), with the same checks
-  as an update device. The kiosk restarts on the new version when it is idle
-  (between two devices): a scan is never interrupted.
-- <strong>Boot assessment.</strong> The new version is kept (<code>systemd-bless-boot</code>) once
-  <code>boot-complete.target</code> is reached, which requires the kiosk to be ready
-  (<code>Type=notify</code>). A boot that fails restarts: kernel panic (<code>panic=10</code>),
-  failure in the initrd (its emergency shell restarts,
-  <code>image/mkosi.images/initrd/</code>), or no <code>boot-complete.target</code> in 15 minutes.
-  After 3 failed tries, systemd-boot boots the previous version again; the
-  data (<code>/var</code>) is shared by the versions.</p>
-<p>Two keys protect the update: the update key decides what is installed, the
-Secure Boot key decides what can boot (the UKI is signed and holds the root
-hash of its slot).</p>
-<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
-<p>Runtime dependencies are pinned with their hashes in <code>image/requirements.txt</code>.
-After a change of the dependencies in <code>pyproject.toml</code>, regenerate it with
-<code>image/lock-requirements.sh</code>.</p>
-<h2 id="profile-online">Profile online<a class="headerlink" href="#profile-online" title="Permanent link">&para;</a></h2>
-<p><code>--profile online</code> adds online signature updates from their sources (see
-<a href="../signatures/#online-updates">signatures.md</a>): systemd-networkd (DHCP on the
-wired network), systemd-resolved, systemd-timesyncd, freshclam, the
-<code>pandora-box-update</code> timer and a firewall that only lets the update service,
-the log export to a SIEM (see <a href="../siem/">siem.md</a>) and NTP out
-(<code>image/mkosi.profiles/online/</code>). Its <code>postinst.chroot</code> enables <code>[updates]</code>
-in the configuration of the kiosk, and installs the credentials of
-<code>image/credentials.toml</code> (outside git) in <code>/etc/credstore</code>: an image built
-with them must not be published. Without the profile, the image has no
-network configuration at all.</p>
-<div class="highlight"><pre><span></span><code>cp<span class="w"> </span>image/credentials.toml.example<span class="w"> </span>image/credentials.toml<span class="w">   </span><span class="c1"># then the abuse.ch Auth-Key</span>
-image/build.sh<span class="w"> </span>--profile<span class="w"> </span>online
-</code></pre></div>
-<h3 id="time">Time<a class="headerlink" href="#time" title="Permanent link">&para;</a></h3>
-<p>The clock of the kiosk dates its logs and scan reports, and decides whether
-the certificates of the update servers and of the SIEM are valid. An online
-kiosk synchronizes it with <strong>systemd-timesyncd</strong>, from the NTP servers of
-<code>NTP=</code> in
-<code>image/mkosi.profiles/online/mkosi.extra/usr/lib/systemd/timesyncd.conf.d/50-pandora-box.conf</code>
-(empty by default), else those the DHCP server gives, else the Debian pool
-(<code>FallbackNTP=</code>). To use the servers of the organization, set them there
-before building the image:</p>
-<div class="highlight"><pre><span></span><code><span class="k">[Time]</span>
-<span class="na">NTP</span><span class="o">=</span><span class="s">ntp1.example.org ntp2.example.org</span>
-</code></pre></div>
-<p>Only systemd-timesyncd may send NTP requests (UDP 123) through the firewall;
-<code>timedatectl timesync-status</code> shows the server in use. NTP is not
-authenticated (timesyncd has no NTS): someone in the path of the requests
-can shift the clock, so prefer NTP servers of the local network. Without the
-profile, the kiosk keeps the time of its hardware clock (UTC).</p>
-<h2 id="test-profile">Test profile<a class="headerlink" href="#test-profile" title="Permanent link">&para;</a></h2>
-<p><code>--profile test</code> builds <code>pandora-box-test.raw</code>, for the virtual machine tests
-only, never for a kiosk. It includes the profile <code>online</code>, and adds:</p>
-<ul>
-<li>a test-only signature set, generated from <code>image/vm/corpus.py</code>, signed
-  with the development update key and installed (serial 1): a ClamAV
-  database that detects the EICAR test file, a MalwareBazaar database, a
-  Hashlookup filter and a YARA rule, each detecting one file of the test key;</li>
-<li>the matching configuration, with every engine enabled, and online updates
-  from <code>http://10.0.2.2:8080/</code> (the build container, seen from the QEMU user
-  network);</li>
-<li>a root shell without password on the virtio console (<code>hvc0</code>), and kernel
-  messages on the serial port;</li>
-<li><code>kiosk-screen</code>, which prints the texts of the kiosk screen in that shell (the
-  graphical interface logs them, <code>display_screen</code> events at the DEBUG level).</li>
-</ul>
-<h2 id="automated-test-in-a-virtual-machine">Automated test in a virtual machine<a class="headerlink" href="#automated-test-in-a-virtual-machine" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>image/build-test.sh<span class="w">   </span><span class="c1"># the test image (version 1) and updates to versions 2 to 4</span>
-image/vm.sh<span class="w"> </span><span class="nb">test</span>
-</code></pre></div>
-<p>The test boots the test image in QEMU (KVM when <code>/dev/kvm</code> is writable,
-otherwise much slower emulation), with UEFI firmware (OVMF) where the image
-signing certificate is enrolled (Secure Boot enabled), and an empty USB 3
-controller. It plays the whole user workflow, through QMP and the shell on
-the virtio console:</p>
-<ol>
-<li>the kiosk starts with its five engines and the signature set 1, verified,
-   and no systemd unit fails;</li>
-<li>the scan workers (one engine each) run in their sandbox (user,
-   capabilities, <code>no_new_privs</code>, seccomp, network namespace, no device or
-   kiosk data in their file system); Secure Boot is enabled, the kernel is
-   locked down and the root filesystem is on dm-verity;</li>
-<li>the root filesystem is read-only EROFS, and <code>/var</code> was grown to fill the
-   8 GB disk of the machine;</li>
-<li>an emulated USB key (a vfat disk image holding the corpus) is inserted,
-   which triggers the same udev events as a real device;</li>
-<li>each file gets the expected verdict from the expected engine;</li>
-<li>the cleaning is confirmed with a key press on the kiosk screen; the
-   infected files are quarantined (checked against their SHA-256) and
-   removed from the key, which is ejected;</li>
-<li>the key is removed: only the clean files are left on it;</li>
-<li>the cleaned key is inserted again and reported clean;</li>
-<li>keys of the other filesystems go through the same scan and cleaning, then
-   are reported clean: exfat, NTFS, ext4 (its files private to their owner,
-   as on the key of a Linux user) and a key with an MBR partition table and a
-   vfat partition; a key on EROFS (a filesystem the kernel mounts, but not
-   allowed) and an ext4 key whose group descriptors are overwritten are
-   refused; a vfat key with a cut cluster chain is mounted, but the file
-   cannot be read: the key is reported not verified (<code>image/vm/keys.py</code>;
-   exfat and NTFS have no tool writing files without mounting them: they
-   are formatted in the container, then filled by the kernel of the machine,
-   the kiosk stopped);</li>
-<li>a signature update key with a newer set (serial 2) is installed, the
-    engines are reloaded and the new sample it detects is found; a modified
-    set, a set signed with another key and an older set are refused; a newer
-    set published on an HTTP server by the test is downloaded by the update
-    service (only its changed file), installed and loaded by the idle kiosk,
-    and only the update service user can open a network connection
-    (systemd-timesyncd alone sends NTP requests); the
-    log entries of the kiosk are sent to a syslog receiver of the test
-    (<code>[siem]</code>), by the SIEM export user, who cannot read the reports; an
-    emulated USB keyboard and network adapter are blocked by USBGuard (no
-    input device, no network interface) and the excluded drivers are not in
-    the image; the kernel settings, the firewall and the service sandboxes are
-    in place;</li>
-<li>after a reboot, the scan reports are still there, the root filesystem is
-    unchanged and the signature set 5 is verified at start; a key pressed
-    while the firmware and the boot loader start does not open the boot
-    loader menu;</li>
-<li>an image update key to version 2 is inserted: the kiosk installs it in
-    the free slot and restarts, version 2 boots from slot B and is kept (its
-    UKI loses its boot counter), with the same data; version 3, published on
-    an HTTP server by the test, is downloaded and installed by the update
-    service, then the idle kiosk restarts on it and it is kept; finally a
-    version 4 whose root filesystem is modified is installed from a key: it
-    fails 3 boots (dm-verity, the initrd restarts) and systemd-boot goes back
-    to version 3.</li>
-</ol>
-<p>Two more machines boot the same image:</p>
-<ul>
-<li>with a block of the root filesystem modified on the disk (a canary file of
-  the test image): it cannot be read and the kernel reports the corruption;</li>
-<li>with firmware trusting another key: the firmware refuses systemd-boot
-  ("Access Denied") and nothing starts.</li>
-</ul>
-<p>The built image is never modified: the machine writes to a new disk overlay
-(<code>system.qcow2</code>) at every start. It takes about 7 minutes with KVM.
-<code>image/vm.sh test --workdir DIR</code> keeps the serial console logs, the QEMU logs
-and the key images in <code>DIR</code>, and the kiosk log (<code>kiosk.log</code>) when the test
-fails.</p>
-<h2 id="interactive-virtual-machine">Interactive virtual machine<a class="headerlink" href="#interactive-virtual-machine" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code>image/vm.sh<span class="w"> </span>run<span class="w">                              </span><span class="c1"># test image</span>
-image/vm.sh<span class="w"> </span>run<span class="w"> </span>image/mkosi.output/pandora-box.raw
-</code></pre></div>
-<p>The kiosk screen is shown over VNC, display <code>:0</code>
-(port 5900), for example with <code>gvncviewer localhost:0</code> (most viewers read
-<code>host:N</code> as a display number, port 5900 + N); <code>kiosk-screen</code> also prints it in the shell of the test
-image. The terminal shows this shell (virtio console), not the kiosk, and, after
-<code>Ctrl-A C</code>, the QEMU monitor; <code>Ctrl-A X</code> stops the machine. A test key is
-created in <code>image/vm/work/usbkey.img</code>; insert and remove it from the monitor:</p>
-<div class="highlight"><pre><span></span><code>(qemu) drive_add 0 if=none,id=key,format=raw,file=/src/image/vm/work/usbkey.img
-(qemu) device_add usb-storage,bus=xhci.0,drive=key,id=usbkey,removable=on
-(qemu) device_del usbkey
-</code></pre></div>
-<p>Paths are seen from the container, where the repository is mounted on <code>/src</code>.
-Any disk image can be used as a key, but hostile samples should only ever be
-copied into key images, never onto the development desktop.</p>
-<h3 id="real-usb-keys">Real USB keys<a class="headerlink" href="#real-usb-keys" title="Permanent link">&para;</a></h3>
-<p>A USB key plugged into this computer can be passed through to the machine.
-List the USB storage devices of this computer, with their port (<code>BUS-PORT</code>)
-and identifier (<code>VENDOR:PRODUCT</code>):</p>
-<p><div class="highlight"><pre><span></span><code>image/vm.sh<span class="w"> </span>usb
-</code></pre></div>
-<div class="highlight"><pre><span></span><code>1-4  abcd:1234  General UDisk
-    sda     3,8G
-    └─sda1  3,7G vfat   /media/didier/6B20-F9DE
-</code></pre></div></p>
-<p>Then start the machine with <code>--usb</code>, followed by a port, which passes through
-any key plugged into that port, like the USB port of a kiosk, or by an
-identifier, which passes through that model of key on any port:</p>
-<div class="highlight"><pre><span></span><code>image/vm.sh<span class="w"> </span>run<span class="w"> </span>--usb<span class="w"> </span><span class="m">1</span>-4
-</code></pre></div>
-<p>QEMU attaches the key to the machine as soon as it is plugged in (or at once
-if it is already there) and takes it from this computer: its kernel driver is
-detached. Before starting the machine, unmount the key
-(<code>udisksctl unmount -b /dev/sda1</code>) and disable the automatic mounting of USB
-devices of the desktop, so that this computer never mounts a key meant for
-the kiosk. <code>--usb</code> can be given several times. On GNOME:</p>
-<div class="highlight"><pre><span></span><code>gsettings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>org.gnome.desktop.media-handling<span class="w"> </span>automount<span class="w"> </span><span class="nb">false</span>
-gsettings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>org.gnome.desktop.media-handling<span class="w"> </span>automount-open<span class="w"> </span><span class="nb">false</span>
-<span class="c1"># after the tests: the same commands with "true"</span>
-</code></pre></div>
-<p>QEMU then runs as root in the container, with access to the USB devices of
-this computer and its network (to receive the udev events of the keys
-plugged in later); the kiosk screen is on <code>localhost:5900</code> as before.</p>
 
 
 

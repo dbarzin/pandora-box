@@ -5,6 +5,10 @@
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
+         <loc>https://dbarzin.github.io/pandora-box/build/</loc>
+         <lastmod>2026-10-14</lastmod>
+    </url>
+    <url>
          <loc>https://dbarzin.github.io/pandora-box/configuration/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
@@ -25,7 +29,15 @@
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
+         <loc>https://dbarzin.github.io/pandora-box/install/</loc>
+         <lastmod>2026-10-14</lastmod>
+    </url>
+    <url>
          <loc>https://dbarzin.github.io/pandora-box/interface/</loc>
+         <lastmod>2026-10-14</lastmod>
+    </url>
+    <url>
+         <loc>https://dbarzin.github.io/pandora-box/logs/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
@@ -34,6 +46,14 @@
     </url>
     <url>
          <loc>https://dbarzin.github.io/pandora-box/signatures/</loc>
+         <lastmod>2026-10-14</lastmod>
+    </url>
+    <url>
+         <loc>https://dbarzin.github.io/pandora-box/update/</loc>
+         <lastmod>2026-10-14</lastmod>
+    </url>
+    <url>
+         <loc>https://dbarzin.github.io/pandora-box/vm/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
 </urlset>
