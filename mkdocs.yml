@@ -69,13 +69,19 @@ nav:
   - GETTING STARTED:
       - Introduction: index.md
       - -- Hardware: hardware.md
-      - -- Image and installation: image.md
-  - USING THE KIOSK:
+  - INSTALLATION:
+      - -- Building the image: build.md
+      - -- Testing with QEMU: vm.md
+      - -- Initial installation: install.md
+  - MAINTENANCE:
+      - -- Signatures: signatures.md
+      - -- System updates: update.md
+      - -- Logs: logs.md
+      - -- Log export to a SIEM: siem.md
+  - REFERENCE:
       - -- Interface: interface.md
       - -- Configuration: configuration.md
-      - -- Log export to a SIEM: siem.md
-  - DETECTION:
       - -- Detection engines: engines.md
-      - -- Signature updates: signatures.md
+      - -- Image internals: image.md
   - DEVELOPMENT:
       - -- Development: development.md

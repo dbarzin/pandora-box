@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build a signed image update (A/B, docs/image.md) from a built image, in the
+# Build a signed image update (A/B, docs/update.md) from a built image, in the
 # build container:
 #   image/package-update.sh IMAGE OUTPUT KEY
 # IMAGE: disk image built by image/build.sh (with its split

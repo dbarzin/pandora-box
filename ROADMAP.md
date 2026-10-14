@@ -125,7 +125,7 @@ image/vm.sh test      # end-to-end test in a virtual machine
 - **Display**: Waveshare 7-inch HDMI LCD (C), capacitive touchscreen, 1024x600 (USB touch controller `0eef:0005`)
 - **Enclosure**: 3D-printed
 
-Validated hardware, its settings and the BIOS configuration: [docs/hardware.md](docs/hardware.md).
+Validated hardware and its settings: [docs/hardware.md](docs/hardware.md); BIOS configuration: [docs/install.md](docs/install.md).
 
 Tasks:
 
@@ -179,7 +179,7 @@ See [docs/signatures.md](docs/signatures.md).
 
 ### Testing in a virtual machine
 
-The container end-to-end tests (`tests/e2e/run.sh`) cover the scan workflow, but not the image itself: boot, Secure Boot, dm-verity, kernel settings, udev, USBGuard, systemd services. The whole chain is tested locally in a QEMU/KVM virtual machine, without the reference hardware: the image boots with UEFI firmware (OVMF) and an empty USB 3 controller, and emulated USB keys (disk images) are inserted and removed while the kiosk runs, which triggers the same udev events as a real device. Hostile samples are only ever copied into key images, never onto the development desktop. See [docs/image.md](docs/image.md) for the automated test and the interactive virtual machine.
+The container end-to-end tests (`tests/e2e/run.sh`) cover the scan workflow, but not the image itself: boot, Secure Boot, dm-verity, kernel settings, udev, USBGuard, systemd services. The whole chain is tested locally in a QEMU/KVM virtual machine, without the reference hardware: the image boots with UEFI firmware (OVMF) and an empty USB 3 controller, and emulated USB keys (disk images) are inserted and removed while the kiosk runs, which triggers the same udev events as a real device. Hostile samples are only ever copied into key images, never onto the development desktop. See [docs/vm.md](docs/vm.md) for the automated test and the interactive virtual machine.
 
 Tasks:
 

@@ -9,8 +9,8 @@ understand.
 
 In the image, the root filesystem is read-only: the configuration is part of
 the image, taken from `packaging/pandora-box.toml` when the image is built.
-To change it, edit that file and build a new image, or an image update (see
-[Image and installation](image.md)).
+To change it, edit that file, build a new image and install it as an update
+(see [Building the image](build.md) and [System updates](update.md)).
 
 Check a configuration, its signatures, its engines and its theme without
 starting the kiosk:
@@ -30,10 +30,10 @@ pandora-box --config pandora-box.toml --check-config
 | `[limits]` | Maximum file size, number of files, folder depth |
 | `[policy]` | Number of engines needed for a malicious verdict |
 | `[engines.*]` | Each detection engine: see [Detection engines](engines.md) |
-| `[signatures]` | Signature sets and their verification: see [Signature updates](signatures.md) |
-| `[updates]` | Online signature and image updates |
+| `[signatures]` | Signature sets and their verification: see [Signatures](signatures.md) |
+| `[updates]` | Online signature and image updates: see [Signatures](signatures.md#online-updates) and [System updates](update.md#online) |
 | `[siem]` | Log export to a SIEM: see [Log export to a SIEM](siem.md) |
-| `[report]`, `[quarantine]`, `[logging]` | Folders of the scan reports, of the quarantine, log file and level |
+| `[report]`, `[quarantine]`, `[logging]` | Folders of the scan reports, of the quarantine, log file and level: see [Logs](logs.md) |
 
 ## Reference
 

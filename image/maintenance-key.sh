@@ -1,7 +1,7 @@
 #!/bin/sh
 # Prepare a maintenance device: the kiosk writes its logs to it (journal,
 # kiosk, USBGuard, services, hardware), then ejects it; nothing changes on
-# the kiosk (docs/image.md).
+# the kiosk (docs/logs.md).
 #   image/maintenance-key.sh DEVICE [KIOSK]
 # DEVICE: the mounted USB key (vfat, exfat, NTFS or ext4). KIOSK: only the
 # kiosk of that name (kiosk.name), default any. The request is signed with

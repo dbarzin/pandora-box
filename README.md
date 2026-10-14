@@ -52,7 +52,7 @@ PandoraBox aims to be a **free, auditable and hardened** alternative to commerci
 - **Screen:** Waveshare 7-inch HDMI LCD (C), capacitive touch screen, 1024x600
 - **Enclosure:** 3D-printed, in the [3D](3D/) folder (CERN-OHL-S v2)
 
-See the [hardware guide](https://dbarzin.github.io/pandora-box/hardware/) for the BIOS settings.
+See the [hardware guide](https://dbarzin.github.io/pandora-box/hardware/), and the [installation guide](https://dbarzin.github.io/pandora-box/install/) for the BIOS settings.
 
 ## 📦 **Installation**
 
@@ -65,7 +65,7 @@ image/build.sh                                  # build the image
 image/build-test.sh && image/vm.sh test         # optional: test it in a virtual machine
 ```
 
-Then write `image/mkosi.output/pandora-box.raw` to the disk of the kiosk, enroll the Secure Boot key and install a signature set from a USB key. Every step, the updates and the maintenance are described in the [installation guide](https://dbarzin.github.io/pandora-box/image/).
+Then write `image/mkosi.output/pandora-box.raw` to the disk of the kiosk, enroll the Secure Boot key and install a signature set from a USB key. Every step is described in the documentation: [building the image](https://dbarzin.github.io/pandora-box/build/), [testing with QEMU](https://dbarzin.github.io/pandora-box/vm/), [initial installation](https://dbarzin.github.io/pandora-box/install/), and the maintenance: [signatures](https://dbarzin.github.io/pandora-box/signatures/), [system updates](https://dbarzin.github.io/pandora-box/update/), [logs](https://dbarzin.github.io/pandora-box/logs/).
 
 To work on the code, see the [development guide](https://dbarzin.github.io/pandora-box/development/).
 

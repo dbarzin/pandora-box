@@ -40,25 +40,42 @@ and works without network.
 
 - **Minimal, hardened image**: the system contains only what is needed to
   scan. Read-only root filesystem with dm-verity, Secure Boot, USBGuard, no
-  account and no login. See [Image and installation](image.md).
+  account and no login. See [Image internals](image.md).
 - **Defense in depth**: the USB key is hostile, and the analyzers are assumed
   to be compromisable. Each engine runs in its own sandbox, without network.
 - **Offline by default**: no network is needed to scan; signatures and system
   updates come on signed USB keys, or through a dedicated online channel. See
-  [Signature updates](signatures.md).
+  [Signatures](signatures.md).
 - **Customizable**: the organization sets its logo, colors and texts of the
   interface. See [Interface](interface.md).
 
 ## Documentation
 
+### Install a kiosk
+
+| Step | Page |
+|---|---|
+| 1. Choose the hardware | [Hardware](hardware.md): validated computer and screen, enclosure |
+| 2. Build the image | [Building the image](build.md): configuration, keys, profile `online` |
+| 3. Test it in a virtual machine | [Testing with QEMU](vm.md): automated test, interactive machine, real USB keys |
+| 4. Install the kiosk | [Initial installation](install.md): BIOS, writing the disk, Secure Boot, first signature set |
+
+### Maintain a kiosk
+
+| Task | Page |
+|---|---|
+| Update the signatures | [Signatures](signatures.md): signature update devices, publication, online updates |
+| Update the system | [System updates](update.md): A/B image updates, from a USB key or online |
+| Read the logs | [Logs](logs.md): maintenance device; [Log export to a SIEM](siem.md) |
+
+### Reference
+
 | Page | Content |
 |---|---|
-| [Hardware](hardware.md) | Validated computer and screen, BIOS settings, enclosure |
-| [Image and installation](image.md) | Build, install, update and maintain the kiosk image |
 | [Interface](interface.md) | Screens of the kiosk, theme of the organization |
 | [Configuration](configuration.md) | Every setting of `pandora-box.toml` |
 | [Detection engines](engines.md) | Engines, verdict policy, scan report |
-| [Signature updates](signatures.md) | Signed signature sets, offline and online updates |
+| [Image internals](image.md) | Partitions, boot chain, USB devices, hardening, sandbox |
 | [Development](development.md) | Run the kiosk from the sources, tests |
 
 The progress of the project is followed in the

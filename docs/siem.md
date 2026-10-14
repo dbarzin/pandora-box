@@ -10,7 +10,7 @@ they are logged.
 ## Configuration
 
 The export is off by default. It needs the image profile `online`
-([image.md](image.md#profile-online)), which brings the network and the
+([Building the image](build.md#profile-online)), which brings the network and the
 `pandora-box-siem` service, and the `[siem]` section of the configuration
 (`packaging/pandora-box.toml`):
 
@@ -64,7 +64,7 @@ message.
 
 Every entry holds `timestamp`, `level`, `kiosk` and `event`, then the fields
 of the event. The timestamps come from the clock of the kiosk, synchronized
-by NTP in the profile `online` ([image.md](image.md#time)).
+by NTP in the profile `online` ([Time](build.md#time)).
 
 ## Transport
 
@@ -137,4 +137,4 @@ pandora-box-siem --config pandora-box.toml --state /tmp/siem-state.json
 
 with `host = "127.0.0.1"`, `transport = "tcp"` and `port = 5514`. The
 virtual machine test sends the logs of the kiosk to a syslog receiver of the
-test ([image.md](image.md#automated-test-in-a-virtual-machine)).
+test ([Testing with QEMU](vm.md#automated-test)).

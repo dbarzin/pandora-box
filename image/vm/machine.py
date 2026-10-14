@@ -6,7 +6,7 @@ inserted and removed while it runs, which triggers the same udev events as a
 real device. It is driven through QMP (key insertion, key presses on the
 kiosk screen) and a root shell on the virtio console (test profile only).
 
-Interactive use (see docs/image.md):
+Interactive use (see docs/vm.md):
 
     python3 machine.py run [IMAGE] [--workdir DIR] [--usb VENDOR:PRODUCT|BUS-PORT]
 """

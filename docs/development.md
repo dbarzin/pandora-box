@@ -1,6 +1,6 @@
 # Development
 
-This page explains how to work on PandoraBox on a development computer: run the kiosk outside the image, with or without real engines, and run the tests. To build the kiosk image and test it in a virtual machine, see [Image and installation](image.md).
+This page explains how to work on PandoraBox on a development computer: run the kiosk outside the image, with or without real engines, and run the tests. To build the kiosk image and test it in a virtual machine, see [Building the image](build.md) and [Testing with QEMU](vm.md).
 
 The code is in the `pandora_box` package (`src/pandora_box/`):
 

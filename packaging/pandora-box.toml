@@ -218,7 +218,7 @@ sources = []
 url = ""
 # URLs in place of the default ones of the sources, e.g. a company mirror:
 # mirrors = { clamav = "https://clamav.example.org", hashlookup = "https://..." }
-# Folder of a published image update (A/B updates, docs/image.md); "" for
+# Folder of a published image update (A/B updates, docs/update.md); "" for
 # no online image updates
 image_url = ""
 # HTTP(S) proxy, e.g. "http://proxy.example.org:3128" ("": direct)
@@ -226,7 +226,7 @@ proxy = ""
 # Timeout of each request, in seconds
 timeout = 300.0
 # Install the signed image update of a device that holds a pandora-box-image
-# folder at its root, then restart (A/B updates, docs/image.md)
+# folder at its root, then restart (A/B updates, docs/update.md)
 image_from_devices = true
 
 [siem]
