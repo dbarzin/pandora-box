@@ -1,59 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/build/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/build/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/configuration/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/configuration/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/development/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/development/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/engines/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/engines/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/hardware/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/hardware/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/image/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/image/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/install/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/install/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/interface/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/interface/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/logs/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/logs/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/siem/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/siem/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/signatures/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/signatures/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/update/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/update/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
     <url>
-         <loc>https://dbarzin.github.io/pandora-box/vm/</loc>
+         <loc>https://sourcentis.github.io/pandora-box/vm/</loc>
          <lastmod>2026-10-14</lastmod>
     </url>
 </urlset>
