@@ -12,7 +12,7 @@ from pathlib import Path
 from usb_pasteur import __version__, imageupdate, maintenance
 from usb_pasteur.config import Config
 from usb_pasteur.device import DeviceError, Mounter, SystemMountWatcher, UsbDevice
-from usb_pasteur.engines import Engine, EngineError, EngineKind
+from usb_pasteur.engines import Engine, EngineError, EngineKind, Verdict
 from usb_pasteur.engines.registry import NoEngineError, engine_specs, load_engines
 from usb_pasteur.hashing import hash_fd
 from usb_pasteur.imageupdate import UPDATE_FOLDER as IMAGE_FOLDER
@@ -47,6 +47,7 @@ from usb_pasteur.sigsets import (
 from usb_pasteur.statemachine import State, StateMachine
 from usb_pasteur.text import escape
 from usb_pasteur.ui import Display
+from usb_pasteur.ui.base import Screen
 from usb_pasteur.workers import EngineInfo, WorkerPool, auto_workers
 
 logger = get_logger("kiosk")
@@ -295,27 +296,27 @@ class Kiosk:
         # The version of the image (date and time of its build); the version
         # of the Python package only outside an image (development)
         if image_version is None:
-            self.display.message(f"USB-Pasteur {__version__} (development)")
+            info = [f"USB-Pasteur {__version__} (development)"]
         else:
-            self.display.message(f"USB-Pasteur {image_version}{_build_date(image_version)}")
+            info = [f"USB-Pasteur {image_version}{_build_date(image_version)}"]
         if installed is None:
-            self.display.message("Signatures: none installed")
+            info.append("Signatures: none installed")
         else:
             created = installed.created.astimezone(UTC)
-            self.display.message(
-                f"Signatures: set {installed.serial} of {created:%Y-%m-%d %H:%M} UTC"
-            )
-        self.display.message(f"Engines: {describe_engines(self.scanner.engines)}")
+            info.append(f"Signatures: set {installed.serial} of {created:%Y-%m-%d %H:%M} UTC")
+        info.append(f"Engines: {describe_engines(self.scanner.engines)}")
         if self.config.kiosk.fake_scan:
-            self.display.message("FAKE SCAN MODE - for development only, no real detection")
+            info.append("FAKE SCAN MODE - for development only, no real detection")
         if self.config.device.auto_mount:
-            self.display.message(
-                "AUTO-MOUNT MODE - for development only, devices are not mounted read-only"
-            )
+            info.append("AUTO-MOUNT MODE - for development only, devices are not mounted read-only")
+        for line in info:
+            self.display.message(line)
+        self.display.show_info(info)
         self._show_ready()
         return State.WAIT
 
     def _show_ready(self) -> None:
+        self._show_waiting()
         if self.signatures_error is not None:
             log_event(logger, "signatures_unusable", logging.ERROR, error=self.signatures_error)
             self.display.message(f"NO VALID SIGNATURES: {self.signatures_error}")
@@ -328,6 +329,10 @@ class Kiosk:
         if undated:
             log_event(logger, "signatures_undated", signatures=undated)
         self.display.message("Ready. Insert a USB device.")
+
+    def _show_waiting(self) -> None:
+        """The screen of a kiosk without device: ready, or without signatures."""
+        self.display.show(Screen.READY if self.signatures_error is None else Screen.UNAVAILABLE)
 
     def on_wait(self) -> State:
         self._unmount()
@@ -343,6 +348,7 @@ class Kiosk:
             log_event(logger, "device_removed", node=event.device.node)
             self.device = None
             self.display.show_device(None)
+            self._show_waiting()
             self.display.message("Device removed")
             return State.WAIT
         self.device = event.device
@@ -358,6 +364,7 @@ class Kiosk:
             serial=d.serial,
         )
         self.display.show_device(d)
+        self.display.show(Screen.SCANNING)
         self.display.message("Device inserted")
         return State.INSERTED
 
@@ -375,6 +382,15 @@ class Kiosk:
         # image update, each verified on its own: all are handled, the image
         # last as it restarts the kiosk. Such a device is never scanned.
         not_scanned = ""
+        if any(
+            _has_folder(root, name) and enabled
+            for name, enabled in (
+                (maintenance.FOLDER, True),
+                (UPDATE_FOLDER, self.config.signatures.update_from_devices),
+                (IMAGE_FOLDER, self.config.updates.image_from_devices),
+            )
+        ):
+            self.display.show(Screen.SERVICE)
         if _has_folder(root, maintenance.FOLDER):
             self._export_logs(self.device)
             not_scanned = "A maintenance device is not scanned. Remove the device."
@@ -480,6 +496,7 @@ class Kiosk:
         except OSError:
             version = "?"
         log_event(logger, "restarting", image_version=version)
+        self.display.show(Screen.SERVICE)
         self.display.message(f"System version {version} installed: the kiosk restarts.")
         imageupdate.reboot()
         return State.STOP
@@ -540,6 +557,7 @@ class Kiosk:
 
         def on_progress(result: FileResult, done: int, total: int) -> None:
             self.display.message(f"[{done}/{total}] {describe(result)}")
+            self.display.file_scanned(result, done, total)
             self.display.progress(min(99, done * 100 // max(1, total)))
 
         self.summary = self.scanner.scan_tree(root, on_progress)
@@ -595,12 +613,15 @@ class Kiosk:
         if not infected:
             self._release()
             if not_verified:
+                self.display.show(Screen.NOT_VERIFIED, self.summary.unscanned)
                 self.display.message("DEVICE NOT VERIFIED: do not use it. Remove the device.")
             else:
+                self.display.show(*self._clean_screen())
                 self.display.message("No infected file found. You can remove the device.")
             return State.WAIT
 
         log_event(logger, "infected_files", count=len(infected))
+        self.display.show(Screen.THREATS, infected)
         self._list(f"{len(infected)} infected files detected:", infected)
         # The device is not mounted while the user decides: it can be removed
         try:
@@ -614,8 +635,10 @@ class Kiosk:
         device = self.device
         if device is None or not self.mounter.device_present(device):
             log_event(logger, "device_removed_before_clean", logging.WARNING)
+            self.display.show(Screen.NOT_CLEANED, infected)
             self.display.message("Device removed before cleaning: NOT CLEANED")
-            return State.ERROR
+            self._release()
+            return State.WAIT
         try:
             # Read-write only to remove the infected files
             self.mounter.mount(device, read_only=False)
@@ -624,6 +647,7 @@ class Kiosk:
             self.display.message(f"Cannot clean device: {ex}")
             return State.ERROR
         log_event(logger, "device_mounted_rw", node=device.node)
+        self.display.show(Screen.CLEANING)
 
         for result in infected:
             if self._remove(result):
@@ -636,21 +660,39 @@ class Kiosk:
         self._release()
         log_event(logger, "device_cleaned", removed=removed, infected=len(infected))
         if removed == len(infected) and not_verified:
+            self.display.show(Screen.NOT_VERIFIED, self.summary.unscanned)
             self.display.message(
                 "Device cleaned, but NOT VERIFIED: do not use it. Remove the device."
             )
         elif removed == len(infected):
+            screen, kept = self._clean_screen()
+            if screen is Screen.WARNING:
+                self.display.show(Screen.WARNING, kept)
+            else:
+                self.display.show(Screen.CLEANED, self.actions.removed)
             self.display.message("Device cleaned! You can remove the device.")
         else:
+            self.display.show(Screen.NOT_CLEANED, self.actions.remove_failed)
             self.display.message(f"Device NOT cleaned: {len(infected) - removed} files remain")
         return State.WAIT
 
     def on_error(self) -> State:
         self._release()
+        self.display.show(Screen.ERROR)
         self.display.message("Error: please remove the device.")
         return State.WAIT
 
     # -- helpers -----------------------------------------------------------
+
+    def _clean_screen(self) -> tuple[Screen, list[FileResult]]:
+        """No infected file is left: a warning for the files kept (warn policies)."""
+        files = [] if self.summary is None else self.summary.files
+        kept = [
+            f
+            for f in files
+            if f not in self.to_remove and (f.verdict is Verdict.SUSPICIOUS or f.unscanned)
+        ]
+        return (Screen.WARNING, kept) if kept else (Screen.CLEAN, [])
 
     def _save_report(self) -> None:
         """Write the scan report; a failure is logged and shown, not fatal."""

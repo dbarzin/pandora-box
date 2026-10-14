@@ -11,8 +11,23 @@
 # only the EICAR test file is reported as malicious.
 fake_scan = false
 
-# User interface: "curses" (full screen text) or "console" (plain text)
-interface = "curses"
+# User interface: "framebuffer" (graphical, touch screen), "curses" (full
+# screen text, administrator mode) or "console" (plain text)
+interface = "framebuffer"
+
+[display]
+# Graphical interface (kiosk.interface = "framebuffer"). Theme folder: logo,
+# colors, texts and images in place of the built-in ones ("" for the built-in
+# theme, the default). In the image, the files of image/theme/: see
+# docs/interface.md.
+theme = "/usr/share/usb-pasteur/theme"
+# Language of the texts: "en", "fr", or a language the theme adds
+language = "en"
+# Framebuffer device
+framebuffer = "/dev/fb0"
+# Minimum time a scan result stays on the screen, in seconds: the device is
+# ejected, and may be removed right after
+result_seconds = 30.0
 
 [device]
 # Folder where the USB device is mounted (must exist)

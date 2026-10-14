@@ -139,19 +139,24 @@ installed.
 
 ## Screen
 
-The kiosk draws its interface on the first console (`tty1`), in text mode
-on the framebuffer of the graphics driver: 128x37 characters on the screen
-of the reference hardware, a Waveshare 7-inch HDMI LCD (1024x600). The
-firmware of the ThinkCentre starts in 1024x768, and the Intel driver keeps
-that mode: the bottom of the interface would be off the screen. The kernel
-command line therefore sets the mode of the screen, `video=1024x600M@60`
-(CVT timings, as Waveshare documents them); with another screen, change it
-in `image/mkosi.conf`. The Intel driver still keeps the framebuffer of the
-firmware, large enough for that mode: the console stays 1024x768, 48 lines.
-The kiosk therefore shrinks the console to the screen of `video=` (8x16
-font: 37 lines, 128 columns), drawn in its visible part, and does it again
-whenever the kernel resizes the console. It logs the size it draws for
-(`display_started`, `display_resized`).
+The kiosk draws its graphical interface into the framebuffer of the graphics
+driver (`/dev/fb0`), without a display server or a browser, and puts the
+first console (`tty1`) in graphics mode so that the kernel does not draw text
+over it: see [interface.md](interface.md). The screen of the reference
+hardware is a Waveshare 7-inch HDMI LCD (1024x600). The firmware of the
+ThinkCentre starts in 1024x768, and the Intel driver keeps that mode: the
+bottom of the interface would be off the screen. The kernel command line
+therefore sets the mode of the screen, `video=1024x600M@60` (CVT timings, as
+Waveshare documents them); with another screen, change it in
+`image/mkosi.conf`. The Intel driver still keeps the framebuffer of the
+firmware, large enough for that mode: the kiosk only draws its visible part,
+the size of `video=`, and follows a change of the framebuffer size. It logs
+the size and the pixel format it draws for (`display_started`).
+
+The curses interface (`kiosk.interface = "curses"`, administrator mode) draws
+text on the console instead: it shrinks the console to the screen of
+`video=` (8x16 font: 37 lines, 128 columns) the same way, and logs the size
+it draws for (`display_started`, `display_resized`).
 
 ## Maintenance device
 
@@ -401,7 +406,8 @@ only, never for a kiosk. It includes the profile `online`, and adds:
   network);
 - a root shell without password on the virtio console (`hvc0`), and kernel
   messages on the serial port;
-- `kiosk-screen`, which prints the text of the kiosk screen in that shell.
+- `kiosk-screen`, which prints the texts of the kiosk screen in that shell (the
+  graphical interface logs them, `display_screen` events at the DEBUG level).
 
 ## Automated test in a virtual machine
 
@@ -485,7 +491,7 @@ image/vm.sh run                              # test image
 image/vm.sh run image/mkosi.output/usb-pasteur.raw
 ```
 
-The kiosk screen (first console, `tty1`) is shown over VNC, display `:0`
+The kiosk screen is shown over VNC, display `:0`
 (port 5900), for example with `gvncviewer localhost:0` (most viewers read
 `host:N` as a display number, port 5900 + N); `kiosk-screen` also prints it in the shell of the test
 image. The terminal shows this shell (virtio console), not the kiosk, and, after

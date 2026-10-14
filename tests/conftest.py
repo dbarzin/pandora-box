@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -13,6 +13,8 @@ from usb_pasteur.engines import EngineSpec, FakeEngine
 from usb_pasteur.engines.fake import EICAR
 from usb_pasteur.monitor import DeviceEvent
 from usb_pasteur.pipeline import PipelineOptions
+from usb_pasteur.results import FileResult
+from usb_pasteur.ui.base import Screen
 from usb_pasteur.workers import WorkerPool
 
 
@@ -24,6 +26,9 @@ class RecordingDisplay:
     devices: list[UsbDevice | None] = field(default_factory=list)
     percents: list[int] = field(default_factory=list)
     confirmations: int = 0
+    screens: list[tuple[Screen, list[str]]] = field(default_factory=list)
+    info: list[str] = field(default_factory=list)
+    scanned: list[tuple[str, int, int]] = field(default_factory=list)
 
     def start(self) -> None:
         pass
@@ -33,6 +38,15 @@ class RecordingDisplay:
 
     def message(self, text: str) -> None:
         self.messages.append(text)
+
+    def show(self, screen: Screen, files: Sequence[FileResult] = ()) -> None:
+        self.screens.append((screen, [f.rel_path for f in files]))
+
+    def show_info(self, lines: Sequence[str]) -> None:
+        self.info = list(lines)
+
+    def file_scanned(self, result: FileResult, done: int, total: int) -> None:
+        self.scanned.append((result.rel_path, done, total))
 
     def show_device(self, device: UsbDevice | None) -> None:
         self.devices.append(device)

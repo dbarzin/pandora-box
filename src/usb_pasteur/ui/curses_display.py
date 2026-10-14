@@ -6,16 +6,19 @@ import contextlib
 import curses
 import fcntl
 import os
-import re
 import struct
 import termios
 import textwrap
 from collections import deque
+from collections.abc import Sequence
 from pathlib import Path
 
 from usb_pasteur.device import UsbDevice
 from usb_pasteur.logs import get_logger, log_event
+from usb_pasteur.results import FileResult
 from usb_pasteur.text import human_size, printable
+from usb_pasteur.ui.base import Screen, video_mode
+from usb_pasteur.ui.touch import Mice
 
 logger = get_logger("display")
 
@@ -28,23 +31,19 @@ LOGO = (
 _TITLE_HEIGHT = len(LOGO) + 2
 _STATUS_HEIGHT = 5
 _PROGRESS_HEIGHT = 3
-_MICE = "/dev/input/mice"
 
 _RED, _BLUE, _GREEN = 1, 2, 3
 
-# Mode of the screen on the kernel command line, e.g. video=1024x600M@60 or
-# video=HDMI-A-1:1024x600
-_VIDEO = re.compile(r"(?:^|\s)video=(?:[\w-]+:)?(\d+)x(\d+)")
 # Font of the Linux console (fbcon) for these resolutions
 _FONT_WIDTH, _FONT_HEIGHT = 8, 16
 
 
 def screen_size(cmdline: str) -> tuple[int, int] | None:
     """Lines and columns of the screen set on the kernel command line."""
-    match = _VIDEO.search(cmdline)
-    if match is None:
+    mode = video_mode(cmdline)
+    if mode is None:
         return None
-    return int(match[2]) // _FONT_HEIGHT, int(match[1]) // _FONT_WIDTH
+    return mode[1] // _FONT_HEIGHT, mode[0] // _FONT_WIDTH
 
 
 def fit_console(fd: int = 1, cmdline: Path = Path("/proc/cmdline")) -> tuple[int, int] | None:
@@ -182,6 +181,16 @@ class CursesDisplay:
             self.logs.append(line)
         self._draw_logs()
 
+    # The messages already tell what the kiosk does
+    def show(self, screen: Screen, files: Sequence[FileResult] = ()) -> None:
+        pass
+
+    def show_info(self, lines: Sequence[str]) -> None:
+        pass
+
+    def file_scanned(self, result: FileResult, done: int, total: int) -> None:
+        pass
+
     def show_device(self, device: UsbDevice | None) -> None:
         self.device = device
         self.usage = None
@@ -240,7 +249,7 @@ class CursesDisplay:
             return
         curses.flushinp()
         self.screen.timeout(200)
-        mice = _Mice()
+        mice = Mice()
         try:
             # getch waits up to 200 ms, which paces the loop; a change of the
             # screen size is not a key press
@@ -274,36 +283,3 @@ def _addstr(win: curses.window, y: int, x: int, text: str, attr: int = 0) -> Non
     # Text that does not fit on a small screen is dropped
     with contextlib.suppress(curses.error):
         win.addstr(y, x, text, attr)
-
-
-class _Mice:
-    """Touchscreens are seen as a mouse: read raw events when allowed."""
-
-    def __init__(self) -> None:
-        self.fd: int | None
-        try:
-            self.fd = os.open(_MICE, os.O_RDONLY | os.O_NONBLOCK)
-        except OSError:
-            self.fd = None
-        self.pressed = False
-
-    def released(self) -> bool:
-        """Return True once a left button press has been followed by a release."""
-        if self.fd is None:
-            return False
-        while True:
-            try:
-                buf = os.read(self.fd, 3)
-            except BlockingIOError:
-                return False
-            if len(buf) < 3:
-                return False
-            if buf[0] & 0x1:
-                self.pressed = True
-            elif self.pressed:
-                return True
-
-    def close(self) -> None:
-        if self.fd is not None:
-            os.close(self.fd)
-            self.fd = None

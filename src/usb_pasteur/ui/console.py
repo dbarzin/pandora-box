@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import sys
+from collections.abc import Sequence
 from typing import TextIO
 
 from usb_pasteur.device import UsbDevice
+from usb_pasteur.results import FileResult
 from usb_pasteur.text import human_size, printable
+from usb_pasteur.ui.base import Screen
 
 
 class ConsoleDisplay:
@@ -24,6 +27,16 @@ class ConsoleDisplay:
 
     def message(self, text: str) -> None:
         print(printable(text), file=self.out, flush=True)
+
+    # The messages already tell what the kiosk does
+    def show(self, screen: Screen, files: Sequence[FileResult] = ()) -> None:
+        pass
+
+    def show_info(self, lines: Sequence[str]) -> None:
+        pass
+
+    def file_scanned(self, result: FileResult, done: int, total: int) -> None:
+        pass
 
     def show_device(self, device: UsbDevice | None) -> None:
         if device is not None:

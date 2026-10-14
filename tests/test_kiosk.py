@@ -13,6 +13,7 @@ from usb_pasteur.device import UsbDevice
 from usb_pasteur.engines import EngineError, EngineSpec
 from usb_pasteur.kiosk import Kiosk, NoEngineError, build_engines, build_pool
 from usb_pasteur.monitor import Action, DeviceEvent
+from usb_pasteur.ui.base import Screen
 from usb_pasteur.workers import WorkerPool
 
 from .conftest import DirectoryMounter, ListSource, RecordingDisplay, started_pool
@@ -49,6 +50,18 @@ def test_infected_device_is_cleaned(
     assert "Device cleaned! You can remove the device." in display.messages
     assert display.percents[-1] == 100
     assert not mounter.mounted
+    # What the graphical interface shows: the files before they are removed
+    assert [screen for screen, _ in display.screens] == [
+        Screen.READY,
+        Screen.SCANNING,
+        Screen.THREATS,
+        Screen.CLEANING,
+        Screen.CLEANED,
+    ]
+    assert display.screens[2][1] == ["docs/eicar.com"]
+    assert display.screens[4][1] == ["docs/eicar.com"]
+    assert display.scanned[-1][1:] == (len(display.scanned), len(display.scanned))
+    assert display.info[0].startswith("USB-Pasteur ")
     manifests = list((tmp_path / "quarantine").glob("*/manifest.json"))
     assert json.loads(manifests[0].read_text())["files"][0]["original_path"] == "docs/eicar.com"
 
@@ -66,6 +79,7 @@ def test_clean_device(
     assert display.confirmations == 0
     assert "No infected file found. You can remove the device." in display.messages
     assert not (tmp_path / "quarantine").exists()
+    assert display.screens[-1] == (Screen.CLEAN, [])
 
 
 def test_device_removed_before_clean(
@@ -84,6 +98,7 @@ def test_device_removed_before_clean(
 
     assert (usb_tree / "docs" / "eicar.com").exists()
     assert "Device removed before cleaning: NOT CLEANED" in display.messages
+    assert display.screens[-1] == (Screen.NOT_CLEANED, ["docs/eicar.com"])
 
 
 def test_scan_is_read_only(
@@ -114,6 +129,7 @@ def test_rejected_filesystem(
     Kiosk(config, display, ListSource([event]), pool, mounter).run()
     assert "Cannot mount device: filesystem not allowed: ntfs" in display.messages
     assert "Error: please remove the device." in display.messages
+    assert display.screens[-1] == (Screen.ERROR, [])
 
 
 def test_device_removed(
@@ -123,6 +139,7 @@ def test_device_removed(
     make_kiosk(config, display, mounter, [DeviceEvent(Action.REMOVE, DEVICE)], pool).run()
     assert display.devices == [None]
     assert "Device removed" in display.messages
+    assert display.screens[-1] == (Screen.READY, [])
 
 
 def test_fake_scan_banner(
@@ -178,6 +195,8 @@ def test_suspicious_warn(
     assert "WARNING: 1 suspicious files, use with caution:" in display.messages
     assert "macro.suspect" in display.messages
     assert "1 infected files detected:" in display.messages
+    # Cleaned, but the suspicious file is kept: a warning
+    assert display.screens[-1] == (Screen.WARNING, ["macro.suspect"])
     manifest = next((tmp_path / "quarantine").glob("*/manifest.json"))
     quarantined = {e["original_path"] for e in json.loads(manifest.read_text())["files"]}
     assert quarantined == {"docs/eicar.com"}
@@ -193,6 +212,7 @@ def test_suspicious_warn_only(config: Config, display: RecordingDisplay, tmp_pat
     assert display.confirmations == 0
     assert "WARNING: 1 suspicious files, use with caution:" in display.messages
     assert "No infected file found. You can remove the device." in display.messages
+    assert display.screens[-1] == (Screen.WARNING, ["macro.suspect"])
 
 
 def run_with_errors(on_error: str, config: Config, display: RecordingDisplay, root: Path) -> None:
@@ -219,6 +239,7 @@ def test_on_error_block(config: Config, display: RecordingDisplay, tmp_path: Pat
     assert "bad-file.txt" in display.messages
     assert display.messages[-1] == "DEVICE NOT VERIFIED: do not use it. Remove the device."
     assert display.confirmations == 0
+    assert display.screens[-1] == (Screen.NOT_VERIFIED, ["bad-file.txt"])
 
 
 def test_on_error_block_with_infected_file(
@@ -231,6 +252,7 @@ def test_on_error_block_with_infected_file(
     assert display.messages[-1] == (
         "Device cleaned, but NOT VERIFIED: do not use it. Remove the device."
     )
+    assert display.screens[-1] == (Screen.NOT_VERIFIED, ["bad-file.txt"])
 
 
 def test_on_error_warn(config: Config, display: RecordingDisplay, tmp_path: Path) -> None:

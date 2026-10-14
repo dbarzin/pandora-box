@@ -11,7 +11,7 @@ from typing import Any, TypeVar
 
 DEFAULT_CONFIG_PATH = Path("/etc/usb-pasteur/usb-pasteur.toml")
 
-INTERFACES = ("curses", "console")
+INTERFACES = ("framebuffer", "curses", "console")
 LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 SUSPICIOUS_POLICIES = ("block", "warn")
 ERROR_POLICIES = ("block", "warn")
@@ -39,7 +39,7 @@ class ConfigError(Exception):
 class KioskConfig:
     name: str = field(default_factory=socket.gethostname)
     fake_scan: bool = False
-    interface: str = "curses"
+    interface: str = "framebuffer"
 
 
 @dataclass(frozen=True)
@@ -223,6 +223,23 @@ class UpdatesConfig:
     image_from_devices: bool = True
 
 
+_LANGUAGE = re.compile(r"^[a-z]{2}$")
+
+
+@dataclass(frozen=True)
+class DisplayConfig:
+    # Theme folder (usb_pasteur.ui.theme): logo, colors, texts and images in
+    # place of the built-in ones; None for the built-in theme
+    theme: Path | None = None
+    # Language of the texts of the theme
+    language: str = "en"
+    # Framebuffer device of the graphical interface
+    framebuffer: Path = Path("/dev/fb0")
+    # Minimum time a scan result stays on the screen, in seconds: the device
+    # is ejected, its removal may come right after the result
+    result_seconds: float = 30.0
+
+
 @dataclass(frozen=True)
 class Config:
     kiosk: KioskConfig = field(default_factory=KioskConfig)
@@ -236,6 +253,7 @@ class Config:
     quarantine: QuarantineConfig = field(default_factory=QuarantineConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     updates: UpdatesConfig = field(default_factory=UpdatesConfig)
+    display: DisplayConfig = field(default_factory=DisplayConfig)
 
 
 def load_config(path: Path) -> Config:
@@ -264,7 +282,7 @@ def parse_config(data: dict[str, Any]) -> Config:
     kiosk_cfg = KioskConfig(
         name=_get(kiosk, "kiosk", "name", str, KioskConfig().name),
         fake_scan=_get(kiosk, "kiosk", "fake_scan", bool, False),
-        interface=_choice(kiosk, "kiosk", "interface", INTERFACES, "curses"),
+        interface=_choice(kiosk, "kiosk", "interface", INTERFACES, KioskConfig.interface),
     )
     if not kiosk_cfg.name.strip():
         raise ConfigError("kiosk.name must not be empty")
@@ -399,6 +417,25 @@ def parse_config(data: dict[str, Any]) -> Config:
         quarantine=quarantine_cfg,
         logging=logging_cfg,
         updates=_parse_updates(data.get("updates", {})),
+        display=_parse_display(data.get("display", {})),
+    )
+
+
+def _parse_display(display: dict[str, Any]) -> DisplayConfig:
+    _reject_unknown(display, {"theme", "language", "framebuffer", "result_seconds"}, "display")
+    theme = None
+    if display.get("theme", "") != "":
+        theme = _path(display, "display", "theme", Path())
+    language = _get(display, "display", "language", str, DisplayConfig.language)
+    if not _LANGUAGE.match(language):
+        raise ConfigError('display.language must be a language code, e.g. "en" or "fr"')
+    return DisplayConfig(
+        theme=theme,
+        language=language,
+        framebuffer=_path(display, "display", "framebuffer", DisplayConfig.framebuffer),
+        result_seconds=_positive(
+            display, "display", "result_seconds", DisplayConfig.result_seconds
+        ),
     )
 
 

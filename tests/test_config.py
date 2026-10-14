@@ -19,7 +19,9 @@ EXAMPLE = Path(__file__).parent.parent / "packaging" / "usb-pasteur.toml"
 def test_defaults() -> None:
     config = parse_config({})
     assert config.kiosk.fake_scan is False
-    assert config.kiosk.interface == "curses"
+    assert config.kiosk.interface == "framebuffer"
+    assert config.display.theme is None
+    assert config.display.language == "en"
     assert config.device.mount_point == Path("/media/usb-pasteur")
     assert config.scan.workers == 0  # "auto"
     assert config.scan.suspicious == "block"

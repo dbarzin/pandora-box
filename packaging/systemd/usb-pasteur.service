@@ -20,7 +20,8 @@ ExecStart=/usr/bin/usb-pasteur
 Restart=always
 RestartSec=2
 
-# Display the curses interface on tty1
+# The interface is on tty1: the graphical one draws into the framebuffer
+# and puts the console in graphics mode, the curses one draws text
 StandardInput=tty
 StandardOutput=tty
 StandardError=journal

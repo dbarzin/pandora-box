@@ -32,6 +32,13 @@ rules = [{ name = "vm-test", path = "/var/lib/usb-pasteur-signatures/current/yar
 [logging]
 level = "DEBUG"
 
+# The texts of the screen are checked in English; a shorter result display:
+# the test inserts the next key soon after the removal
+[display]
+theme = "/usr/share/usb-pasteur/theme"
+language = "en"
+result_seconds = 10.0
+
 # Sources published by the virtual machine test (image/vm/run_tests.py) on
 # the host of the QEMU user network; ClamAV is kept from the installed set
 [updates]

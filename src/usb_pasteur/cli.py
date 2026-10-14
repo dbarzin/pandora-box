@@ -19,6 +19,8 @@ from usb_pasteur.logs import setup_logging
 from usb_pasteur.sandbox import SandboxError
 from usb_pasteur.sigsets import SignatureSetError
 from usb_pasteur.ui import ConsoleDisplay, Display
+from usb_pasteur.ui.framebuffer import FramebufferError
+from usb_pasteur.ui.theme import ThemeError, load_theme
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -50,7 +52,14 @@ def apply_overrides(config: Config, args: argparse.Namespace) -> Config:
     return dataclasses.replace(config, kiosk=kiosk)
 
 
-def make_display(interface: str) -> Display:
+def make_display(config: Config) -> Display:
+    """The display of the interface; raise ThemeError when its theme is invalid."""
+    interface = config.kiosk.interface
+    if interface == "framebuffer":
+        from usb_pasteur.ui.framebuffer import FramebufferDisplay
+
+        theme = load_theme(config.display.theme, config.display.language)
+        return FramebufferDisplay(config.display, theme)
     if interface == "curses":
         from usb_pasteur.ui.curses_display import CursesDisplay
 
@@ -62,6 +71,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     try:
         config = apply_overrides(load_config(args.config), args)
+        # Before the engines: a kiosk that cannot show anything is useless
+        display = make_display(config)
         pool = build_pool(config)
         if args.check_config:
             check_signatures(config)
@@ -69,6 +80,9 @@ def main(argv: list[str] | None = None) -> int:
             build_engines(config)
     except (ConfigError, NoEngineError, SandboxError) as ex:
         print(f"usb-pasteur: {ex}", file=sys.stderr)
+        return 2
+    except ThemeError as ex:
+        print(f"usb-pasteur: theme: {ex}", file=sys.stderr)
         return 2
     except SignatureSetError as ex:
         print(f"usb-pasteur: signatures: {ex}", file=sys.stderr)
@@ -112,11 +126,16 @@ def main(argv: list[str] | None = None) -> int:
 
     from usb_pasteur.monitor import UdevSource
 
-    display = make_display(config.kiosk.interface)
     # Before curses starts: ncurses handles SIGTERM itself when it has its
     # default action, and exits(1) without the cleanup below
     stop_on_sigterm()
-    display.start()
+    try:
+        display.start()
+    except FramebufferError as ex:
+        print(f"usb-pasteur: display: {ex}", file=sys.stderr)
+        pool.stop()
+        lock.release()
+        return 1
     notify_ready()
     try:
         Kiosk(config, display, UdevSource(), pool, signatures_error=signatures_error).run()

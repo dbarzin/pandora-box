@@ -100,7 +100,7 @@ def wait_event(
 
 
 def wait_screen(vm: Machine, text: str, timeout: float = 30.0) -> str:
-    """Wait until the kiosk screen (tty1) shows the text; return the screen."""
+    """Wait until the kiosk screen shows the text; return its texts."""
     deadline = time.monotonic() + timeout
     while True:
         screen = vm.shell.run("kiosk-screen")
@@ -109,6 +109,49 @@ def wait_screen(vm: Machine, text: str, timeout: float = 30.0) -> str:
         if time.monotonic() > deadline:
             raise TestFailure(f"not on the kiosk screen: {text}\n{screen}")
         time.sleep(0.5)
+
+
+# Color of the header of the built-in theme
+HEADER_COLOR = (0x8B, 0x00, 0x19)
+
+
+def screen_pixels(vm: Machine) -> tuple[int, int, bytes]:
+    """Width, height and RGB pixels of the screen of the machine (QMP screendump)."""
+    path = vm.workdir / "screen.ppm"
+    vm.monitor.execute("screendump", filename=str(path))
+    data = path.read_bytes()
+    # Binary PPM: "P6", width, height, maximum value, each followed by one
+    # whitespace, then the pixels (which may start with whitespace bytes)
+    fields = []
+    start = 0
+    for _ in range(4):
+        end = start
+        while data[end : end + 1].isspace():
+            end += 1
+        stop = end
+        while not data[stop : stop + 1].isspace():
+            stop += 1
+        fields.append(data[end:stop])
+        start = stop + 1
+    magic, width, height, maximum = fields
+    check(magic == b"P6" and maximum == b"255", "unexpected screendump format")
+    return int(width), int(height), data[start:]
+
+
+def check_drawn(vm: Machine) -> None:
+    """The waiting screen is drawn on the screen, not only logged: its header."""
+    deadline = time.monotonic() + 30
+    while True:
+        width, height, pixels = screen_pixels(vm)
+        # Middle of the left of the header, away from the title
+        offset = (20 * width + 10) * 3
+        color = tuple(pixels[offset : offset + 3])
+        if color == HEADER_COLOR:
+            break
+        check(time.monotonic() < deadline, f"header not drawn on the screen: {color}")
+        time.sleep(1.0)
+    check((width, height) == (1024, 600), f"screen size: {width}x{height}")
+    print(f"waiting screen drawn on the {width}x{height} screen")
 
 
 def last_report(vm: Machine) -> dict[str, Any]:
@@ -131,7 +174,7 @@ def check_boot(vm: Machine, timeout: float) -> None:
     )
     failed = vm.shell.run("systemctl --failed --no-legend --plain").strip()
     check(not failed, f"failed units:\n{failed}")
-    screen = wait_screen(vm, "Ready. Insert a USB device.")
+    screen = wait_screen(vm, "Please insert a USB key")
     # The test set is new; its ClamAV database has no date (custom
     # signatures only): logged, not shown
     check("WARNING" not in screen, f"warning on the kiosk screen:\n{screen}")
@@ -142,6 +185,7 @@ def check_boot(vm: Machine, timeout: float) -> None:
         f"USB-Pasteur {system} of {built}" in screen, f"no image version on the screen:\n{screen}"
     )
     check("Signatures: set 1 of " in screen, f"no signature set on the screen:\n{screen}")
+    check_drawn(vm)
     check(count_events(vm, "signatures_undated") == 1, "undated ClamAV database not logged")
     print(f"kiosk started with engines {', '.join(engines)}, signature set 1 verified")
 
@@ -804,9 +848,9 @@ def check_infected_key(vm: Machine, key: Path) -> None:
     check(infected["count"] == len(expected), f"infected files: {infected['count']}")
 
     step("confirm the cleaning with a touch on the kiosk screen")
-    # The screen must still show the scan while the kiosk waits for a key
+    # The infected files are listed before they are removed
     time.sleep(1.0)
-    screen = wait_screen(vm, "PRESS A KEY OR TOUCH THE SCREEN TO CLEAN")
+    screen = wait_screen(vm, "Touch the screen to clean the key")
     for path in expected:
         check(path in screen, f"{path} not listed on the kiosk screen\n{screen}")
     # A touch before the kiosk waits for it may be discarded: touch again
@@ -814,7 +858,7 @@ def check_infected_key(vm: Machine, key: Path) -> None:
     cleaned = wait_event(vm, "device_cleaned", action=vm.touch, timeout=60)
     check(cleaned["removed"] == len(expected), f"removed files: {cleaned['removed']}")
     wait_event(vm, "device_ejected")
-    wait_screen(vm, "Device cleaned! You can remove the device.")
+    wait_screen(vm, "USB key cleaned")
 
     step("check the report and the quarantine")
     report = last_report(vm)
@@ -933,7 +977,7 @@ def check_filesystem_keys(vm: Machine, workdir: Path) -> None:
         keys.fill_in_machine(vm, images[fs_type], fs_type)
     vm.shell.run("systemctl start usb-pasteur", timeout=300)
     wait_next_event(vm, "kiosk_started", started, timeout=300)
-    wait_screen(vm, "Ready. Insert a USB device.")
+    wait_screen(vm, "Please insert a USB key")
     for name, image in images.items():
         scan_and_clean(vm, name, image)
 
@@ -950,7 +994,7 @@ def check_refused_keys(vm: Machine, workdir: Path) -> None:
         vm.insert_key(image)
         failed = log.wait("mount_failed")
         check(error in failed["error"], f"{name}: {failed}")
-        wait_screen(vm, "Error: please remove the device.")
+        wait_screen(vm, "An error occurred")
         vm.remove_key()
         log.wait("device_removed")
         print(f"{name}: refused, {failed['error'].splitlines()[0]}")
@@ -965,7 +1009,7 @@ def check_refused_keys(vm: Machine, workdir: Path) -> None:
         verdict["verdict"] == "not_verified" and not verdict["complete"],
         f"corrupted-vfat: verdict {verdict}",
     )
-    wait_screen(vm, "DEVICE NOT VERIFIED: do not use it. Remove the device.")
+    wait_screen(vm, "USB key NOT verified")
     report = last_report(vm)
     check(keys.UNREADABLE in json.dumps(report), f"corrupted-vfat: {keys.UNREADABLE} not reported")
     vm.remove_key()
@@ -1020,7 +1064,7 @@ def check_structure_key(vm: Machine, workdir: Path) -> None:
     pdf = next(e for e in files["active.pdf"]["engines"] if e["engine"] == "heuristics")
     check(pdf["detections"] == ["Heuristics.PDF.JavaScript"], f"active.pdf: {pdf}")
     check(files["active.pdf"]["verdict"] == "suspicious", f"active.pdf: {files['active.pdf']}")
-    wait_screen(vm, "NOT VERIFIED")
+    wait_screen(vm, "USB key NOT verified")
     vm.remove_key()
     log.wait("device_removed")
     left = read_key(image)

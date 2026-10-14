@@ -1,5 +1,28 @@
 #!/usr/lib/usb-pasteur/bin/python3
-"""Print the text of the kiosk screen (first console, tty1)."""
+"""Print the texts of the kiosk screen.
+
+The graphical interface logs the texts it draws (display_screen events, at
+the DEBUG level of the test profile); the curses one is read from tty1.
+"""
+
+import json
+import sys
+
+LOG = "/var/log/usb-pasteur/usb-pasteur.log"
+
+lines = None
+try:
+    with open(LOG, encoding="utf-8") as log:
+        for line in log:
+            if '"display_screen"' in line:
+                event = json.loads(line)
+                if event.get("event") == "display_screen":
+                    lines = event["lines"]
+except OSError:
+    pass
+if lines is not None:
+    print("\n".join(lines))
+    sys.exit(0)
 
 with open("/dev/vcsa1", "rb") as screen:
     rows, cols, _, _ = screen.read(4)

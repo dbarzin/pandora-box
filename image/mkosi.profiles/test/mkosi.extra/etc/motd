@@ -1,8 +1,8 @@
 
 USB-Pasteur TEST IMAGE - root shell on the virtio console, never on a kiosk.
 
-The kiosk runs on the first console (tty1), not here: see it over VNC
-(display :0, port 5900) or print it with: kiosk-screen
+The kiosk draws on the screen (framebuffer), not here: see it over VNC
+(display :0, port 5900) or print its texts with: kiosk-screen
   systemctl status usb-pasteur       kiosk service
   tail -f /var/log/usb-pasteur/usb-pasteur.log
   ls /var/lib/usb-pasteur/reports    scan reports

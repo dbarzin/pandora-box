@@ -38,7 +38,7 @@ Goal: restart from a clean base while reusing what works in pandora-box.
 | Curses interface (administrator mode) | Kept |
 | Logging, logrotate, systemd service | Kept, moved to structured JSON |
 | USB auto-mount mode | Kept for development only (`device.auto_mount`): never on the kiosk, which mounts devices read-only itself |
-| Image slideshow display (`fim`) | Removed, replaced by the kiosk interface in phase 3 |
+| Image slideshow display (`fim`) | Removed, replaced by the graphical kiosk interface in phase 3, which reuses its images |
 | Single-instance lock | Kept |
 | `pypandora` calls | Removed, replaced by the engine pipeline |
 | Comodo engine | Removed (no longer maintained on Linux) |
@@ -75,7 +75,7 @@ The pandora-box code has been ported to the `usb_pasteur` package (`src/usb_past
 | `report.py`, `schemas/` | JSON scan report and its JSON Schema |
 | `signatures.py` | Signature provenance and freshness, verification hook (phase 2) |
 | `quarantine.py` | Copy of infected files with a manifest referencing the report |
-| `ui/` | Curses (administrator) and console interfaces |
+| `ui/` | Graphical kiosk interface (framebuffer, themes), curses (administrator) and console interfaces |
 | `logs.py`, `lock.py` | JSON logs, single-instance lock |
 
 Deployment files are in `packaging/`: example configuration, systemd service, tmpfiles and logrotate.
@@ -270,11 +270,16 @@ Tasks:
 
 ## Phase 3 — Kiosk interface
 
-- [ ] Local web interface (FastAPI + htmx) displayed in kiosk mode (`cage` + Chromium)
-- [ ] User flow: insertion, progress, verdict, available actions
-- [ ] Touch-first interface designed for the 7-inch screen (large buttons, no keyboard needed)
+### Current status
+
+The kiosk draws a graphical interface on its touch screen: waiting for a key, scan progress (files scanned, threats found, latest files and their verdict), the dangerous files listed before they are removed, a touch anywhere on the screen to clean, then the result. It is drawn with Pillow straight into the framebuffer, without a display server or a browser. An administrator customizes it with a theme built into the image: logo, colors, texts and images. See [docs/interface.md](docs/interface.md).
+
+- [x] Graphical interface drawn into the framebuffer (Pillow), console in graphics mode: no display server, browser or local web server (the earlier plan, FastAPI + htmx in `cage` + Chromium, would have added a browser and a socket to the image)
+- [x] User flow: insertion, progress, dangerous files listed, cleaning on a touch of the screen (no buttons), verdict
+- [x] Touch-first interface designed for the 7-inch screen (1024x600), drawn for the size of any screen
+- [x] Customization by the administrator: theme folder built into the image (logo, colors, texts of every screen, images, fonts), checked at build time, `usb-pasteur-theme preview` to see the screens without a kiosk
 - [ ] Security awareness messages during the scan
-- [ ] Internationalization: FR, EN, DE, NL
+- [ ] Internationalization: FR, EN (built-in), DE, NL (a theme can add a language)
 - [ ] Protected administrator mode (curses or web): scan reports, signature status
 - [ ] Accessibility (contrast, font size)
 
