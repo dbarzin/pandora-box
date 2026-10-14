@@ -810,6 +810,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#keys-with-several-partitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keys with several partitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#limits" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1154,6 +1165,17 @@
     <span class="md-ellipsis">
       
         Device verdict
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keys-with-several-partitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keys with several partitions
       
     </span>
   </a>
@@ -1575,6 +1597,32 @@ then <strong>clean</strong>. The kiosk then applies:</p>
 </table>
 <p>Files that could not be scanned are listed but <strong>never removed</strong>: they are not
 known to be malicious.</p>
+<h3 id="keys-with-several-partitions">Keys with several partitions<a class="headerlink" href="#keys-with-several-partitions" title="Permanent link">&para;</a></h3>
+<p>A key is scanned as a whole: all its partitions make one insertion, one
+verdict, one report and one confirmation. The kiosk mounts each filesystem
+in turn, read-only, and scans it; to clean the key, it mounts read-write only
+the partitions that hold the files to remove, then ejects the key once.</p>
+<ul>
+<li>A key with a single filesystem, with or without a partition table, is
+  scanned as before.</li>
+<li>A partition that cannot be scanned is a reason of a <strong>not verified</strong>
+  device (<code>scan.on_error</code>), as a computer may still read it: an encrypted
+  partition (LUKS, BitLocker), a partition without a filesystem the kiosk
+  recognizes, a filesystem that is not allowed (<code>device.allowed_filesystems</code>)
+  or that cannot be mounted. Its other partitions are still scanned and
+  cleaned. When none can be mounted, the kiosk shows an error.</li>
+<li>Partitions that hold no files are ignored: MBR extended partitions (the
+  container of the logical ones), GPT BIOS boot and Microsoft reserved
+  partitions.</li>
+<li>On the screen and in the report, a file is named after its partition
+  (<code>sdb2/docs/report.pdf</code>). The report lists the partitions
+  (<code>device.partitions</code>: filesystem, size, scanned or why not), and each file
+  gives its <code>partition</code>, its <code>path</code> being relative to the root of that
+  partition. The quarantine manifest gives the <code>partition</code> of each file too.</li>
+<li>A maintenance, signature or image update device has a single filesystem:
+  the folders of such a device are not looked for on a key with several
+  partitions, which is scanned.</li>
+</ul>
 <h3 id="limits">Limits<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h3>
 <table>
 <thead>

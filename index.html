@@ -902,7 +902,9 @@ and works without network.</p>
   heuristics (programs disguised as documents, PDF with JavaScript). See
   <a href="engines/">Detection engines</a>.</li>
 <li><strong>Fail closed</strong>: a file that could not be fully scanned (encrypted archive,
-  limit exceeded, engine error) is never reported as clean.</li>
+  limit exceeded, engine error) is never reported as clean. Every partition
+  of a key is scanned; a partition that cannot be (encrypted, unknown
+  filesystem) makes the key not verified.</li>
 <li><strong>Nothing is removed without the user</strong>: the dangerous files are listed on
   the screen, copied to the quarantine of the kiosk, then removed from the key
   only after a touch of the screen.</li>
