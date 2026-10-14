@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from pandora_box import siem
-from pandora_box.config import SiemConfig, parse_config
+from pandora_box.config import ConfigError, SiemConfig, parse_config
 from pandora_box.logs import get_logger, log_event, setup_logging
 from pandora_box.siem import LogFollower, Position, Sender, frame, syslog_message
 
@@ -441,6 +441,6 @@ def test_config() -> None:
     ],
 )
 def test_invalid_config(data: dict[str, object], message: str) -> None:
-    with pytest.raises(siem.ConfigError) as info:
+    with pytest.raises(ConfigError) as info:
         parse_config(data)
     assert message in str(info.value)
