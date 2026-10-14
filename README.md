@@ -18,11 +18,6 @@ PandoraBox aims to be a **free, auditable and hardened** alternative to commerci
 🗺️ [Read the Roadmap](ROADMAP.md) |
 🔍 [View the Sources](src/pandora_box/)
 
-> [!WARNING]
-> **PandoraBox is under active development and is not production-ready.**
-> There is no release yet, no release signing key and no external security audit.
-> Until the first release, do not rely on it to check USB devices: use a supported commercial or open source solution.
-
 ## 🌟 **Key Features**
 
 - 🔍 **Several detection engines:** known malicious hashes ([MalwareBazaar](https://bazaar.abuse.ch/)), known files ([CIRCL Hashlookup](https://www.circl.lu/services/hashlookup/)), [ClamAV](https://www.clamav.net/), [YARA-X](https://virustotal.github.io/yara-x/) with the [YARA Forge](https://yarahq.github.io/) rules, and heuristics for programs disguised as documents and PDF with JavaScript.
