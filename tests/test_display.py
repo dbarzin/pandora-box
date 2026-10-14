@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.ui.curses_display import fit_console, screen_size
+from pandora_box.ui.curses_display import LOGO, LOGO_SMALL, fit_console, screen_size, select_logo
 
 
 @pytest.mark.parametrize(
@@ -25,6 +25,19 @@ from usb_pasteur.ui.curses_display import fit_console, screen_size
 )
 def test_screen_size(cmdline: str, size: tuple[int, int] | None) -> None:
     assert screen_size(cmdline) == size
+
+
+@pytest.mark.parametrize(
+    ("lines", "cols", "logo"),
+    [
+        (48, 128, LOGO),
+        (30, 100, LOGO),
+        (25, 80, LOGO_SMALL),
+        (24, 128, LOGO_SMALL),
+    ],
+)
+def test_select_logo(lines: int, cols: int, logo: tuple[str, ...]) -> None:
+    assert select_logo(lines, cols) is logo
 
 
 @pytest.fixture

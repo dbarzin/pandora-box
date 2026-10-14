@@ -7,14 +7,14 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur import __version__
-from usb_pasteur.config import Config, parse_config
-from usb_pasteur.device import UsbDevice
-from usb_pasteur.engines import EngineError, EngineSpec
-from usb_pasteur.kiosk import Kiosk, NoEngineError, build_engines, build_pool
-from usb_pasteur.monitor import Action, DeviceEvent
-from usb_pasteur.ui.base import Screen
-from usb_pasteur.workers import WorkerPool
+from pandora_box import __version__
+from pandora_box.config import Config, parse_config
+from pandora_box.device import UsbDevice
+from pandora_box.engines import EngineError, EngineSpec
+from pandora_box.kiosk import Kiosk, NoEngineError, build_engines, build_pool
+from pandora_box.monitor import Action, DeviceEvent
+from pandora_box.ui.base import Screen
+from pandora_box.workers import WorkerPool
 
 from .conftest import DirectoryMounter, ListSource, RecordingDisplay, started_pool
 from .engines import MisbehavingEngine, SuspiciousEngine
@@ -61,7 +61,7 @@ def test_infected_device_is_cleaned(
     assert display.screens[2][1] == ["docs/eicar.com"]
     assert display.screens[4][1] == ["docs/eicar.com"]
     assert display.scanned[-1][1:] == (len(display.scanned), len(display.scanned))
-    assert display.info[0].startswith("USB-Pasteur ")
+    assert display.info[0].startswith("PandoraBox ")
     manifests = list((tmp_path / "quarantine").glob("*/manifest.json"))
     assert json.loads(manifests[0].read_text())["files"][0]["original_path"] == "docs/eicar.com"
 
@@ -121,7 +121,7 @@ def test_scan_is_read_only(
 def test_rejected_filesystem(
     config: Config, display: RecordingDisplay, tmp_path: Path, pool: WorkerPool
 ) -> None:
-    from usb_pasteur.device import Mounter
+    from pandora_box.device import Mounter
 
     (tmp_path / "media").mkdir()
     mounter = Mounter(tmp_path / "media", ["vfat"])
@@ -147,7 +147,7 @@ def test_fake_scan_banner(
 ) -> None:
     make_kiosk(config, display, DirectoryMounter(tmp_path), [], pool).run()
     # The versions first, then the banner
-    assert display.messages[0] == f"USB-Pasteur {__version__} (development)"
+    assert display.messages[0] == f"PandoraBox {__version__} (development)"
     assert display.messages[1] == "Signatures: none installed"
     assert display.messages[2] == "Engines: fake (fake)"
     assert display.messages[3].startswith("FAKE SCAN MODE")
@@ -293,9 +293,9 @@ def test_progress_messages(
 def test_stale_signatures(config: Config) -> None:
     from datetime import UTC, datetime
 
-    from usb_pasteur.engines import EngineKind, SignatureInfo
-    from usb_pasteur.kiosk import stale_signatures
-    from usb_pasteur.workers import EngineInfo
+    from pandora_box.engines import EngineKind, SignatureInfo
+    from pandora_box.kiosk import stale_signatures
+    from pandora_box.workers import EngineInfo
 
     old = SignatureInfo("daily", "1", datetime(2020, 1, 1, tzinfo=UTC))
     new = SignatureInfo("daily", "2", datetime.now(UTC))
@@ -323,7 +323,7 @@ def test_auto_mount(
     import subprocess
 
     commands: list[str] = []
-    from usb_pasteur.device import SystemMountWatcher
+    from pandora_box.device import SystemMountWatcher
 
     config = dataclasses.replace(config, device=dataclasses.replace(config.device, auto_mount=True))
     # The device node must exist: the kiosk checks it before cleaning
@@ -442,9 +442,9 @@ def test_device_removed_is_not_ejected(
 
 
 def test_describe_engines() -> None:
-    from usb_pasteur.engines import EngineKind
-    from usb_pasteur.kiosk import describe_engines
-    from usb_pasteur.workers import EngineInfo
+    from pandora_box.engines import EngineKind
+    from pandora_box.kiosk import describe_engines
+    from pandora_box.workers import EngineInfo
 
     engines = [
         EngineInfo("malwarebazaar", EngineKind.HASH, "1", 10.0),

@@ -10,7 +10,7 @@ Docker.
 > The image and the signature sets are signed with development keys only.
 > The production image has no signature set: the kiosk scans nothing until a
 > signature update device is inserted (see [signatures.md](signatures.md)).
-> See the phase 2 tasks in the [README](../README.md#phase-2--minimal-hardened-image).
+> See the phase 2 tasks in the [roadmap](https://github.com/dbarzin/pandora-box/blob/main/ROADMAP.md#phase-2--minimal-hardened-image).
 
 ## Layout
 
@@ -19,9 +19,9 @@ Docker.
 | `image/mkosi.conf` | Image definition: Debian 13, x86_64, systemd-boot, unified kernel image (UKI), packages |
 | `image/mkosi.repart/` | Partitions: ESP, two system slots (read-only root filesystem, its dm-verity hash and signature), data partition |
 | `image/mkosi.images/initrd/` | The initrd: the default initrd of mkosi, which restarts instead of opening an emergency shell, without the files a read-only root does not need |
-| `image/mkosi.prepare.chroot` | Runtime dependencies in a virtual environment (`/usr/lib/usb-pasteur`), from `image/requirements.txt` (pinned with their hashes) |
-| `image/mkosi.build.chroot` | usb-pasteur wheel, built from the repository without network |
-| `image/mkosi.postinst.chroot` | Installs usb-pasteur, its configuration, systemd service, tmpfiles and logrotate files (`packaging/`), and the clamd settings |
+| `image/mkosi.prepare.chroot` | Runtime dependencies in a virtual environment (`/usr/lib/pandora-box`), from `image/requirements.txt` (pinned with their hashes) |
+| `image/mkosi.build.chroot` | pandora-box wheel, built from the repository without network |
+| `image/mkosi.postinst.chroot` | Installs pandora-box, its configuration, systemd service, tmpfiles and logrotate files (`packaging/`), and the clamd settings |
 | `image/mkosi.extra/` | Files copied into the image: systemd presets (enabled and disabled units), `/etc/fstab`, growth of the data partition (`/usr/lib/repart.d/`), A/B updates (`/usr/lib/sysupdate.d/`, boot assessment), USBGuard policy, kernel settings (`sysctl.d`), firewall (`nftables.conf`), clamd sandbox |
 | `image/mkosi.profiles/test/` | Test profile, for the virtual machine tests only |
 | `image/vm/` | Virtual machine tests: corpus, QEMU driver, automated test |
@@ -38,31 +38,31 @@ image/build.sh                  # production image
 image/build.sh --profile test   # test image
 ```
 
-The image is written to `image/mkosi.output/`: `usb-pasteur.raw` (or
-`usb-pasteur-test.raw`, a GPT disk image), the UKI (`.efi`) and the list of
+The image is written to `image/mkosi.output/`: `pandora-box.raw` (or
+`pandora-box-test.raw`, a GPT disk image), the UKI (`.efi`) and the list of
 installed packages (`.manifest`). The first build takes a few minutes; the
 following ones reuse the installed packages (mkosi incremental build, cached
-in the `usb-pasteur-mkosi` Docker volume) and take less than a minute.
+in the `pandora-box-mkosi` Docker volume) and take less than a minute.
 
 The cache is not rebuilt when `image/requirements.txt` or
 `image/mkosi.prepare.chroot` change: rebuild it with `image/build.sh -f`
-(`docker volume rm usb-pasteur-mkosi` removes it completely).
+(`docker volume rm pandora-box-mkosi` removes it completely).
 
 The disk image has two system slots (A/B updates) and a data partition:
 
 | Partition | Filesystem | Content |
 |---|---|---|
-| ESP | vfat, 512 MB | systemd-boot and the UKIs (`usb-pasteur_<version>.efi`), all signed |
-| root, slot A (`usb-pasteur_<version>`) | EROFS, read-only, 1 GB | the whole system but `/var` (about 400 MB used) |
+| ESP | vfat, 512 MB | systemd-boot and the UKIs (`pandora-box_<version>.efi`), all signed |
+| root, slot A (`pandora-box_<version>`) | EROFS, read-only, 1 GB | the whole system but `/var` (about 400 MB used) |
 | root-verity, slot A | 64 MB | dm-verity hash tree of the root filesystem |
 | root-verity-sig, slot A | 16 KB | signature of the root hash |
 | root, root-verity, root-verity-sig, slot B (`_empty`) | same sizes | the next version (A/B updates) |
-| data (`usb-pasteur-data`) | ext4, 1 GB in the image | `/var`: scan reports, quarantine, logs, signed signature sets (clamd reads its databases there) |
+| data (`pandora-box-data`) | ext4, 1 GB in the image | `/var`: scan reports, quarantine, logs, signed signature sets (clamd reads its databases there) |
 
 The version of the image is the date and time of its build, UTC, like the
 serial of a signature set: `20261005143700` (`image/build.sh` sets it,
 `--image-version=N` overrides it). It is in `/etc/os-release`
-(`IMAGE_VERSION`), in the labels of its partitions (`usb-pasteur_<version>`,
+(`IMAGE_VERSION`), in the labels of its partitions (`pandora-box_<version>`,
 `_verity`, `_veritysig`: 36 characters at most) and in the name of its UKI.
 
 The root filesystem is read-only by design (EROFS cannot be written at all):
@@ -79,9 +79,9 @@ The image contains:
 
 - the kernel, systemd and udev, Python 3 and clamd (`clamav-daemon`), with no
   network service: `systemd-networkd`, `systemd-resolved`, freshclam and the
-  ClamAV on-access scanner are disabled (`10-usb-pasteur.preset`);
-- usb-pasteur in `/usr/lib/usb-pasteur` (`/usr/bin/usb-pasteur`), its
-  configuration in `/etc/usb-pasteur/usb-pasteur.toml` and its service, which
+  ClamAV on-access scanner are disabled (`10-pandora-box.preset`);
+- pandora-box in `/usr/lib/pandora-box` (`/usr/bin/pandora-box`), its
+  configuration in `/etc/pandora-box/pandora-box.toml` and its service, which
   shows the curses interface on the first console;
 - no `login` program and no root password: no interactive session is
   possible.
@@ -113,7 +113,7 @@ and mkosi can sign with a key in a hardware token
 (`--secure-boot-key-source=provider:pkcs11`).
 
 The image also trusts the signature sets signed with `image/update.key`: its
-public key `image/update.pem` is installed in `/usr/share/usb-pasteur/keys/`
+public key `image/update.pem` is installed in `/usr/share/pandora-box/keys/`
 (under dm-verity). `image/build.sh` generates a development pair when they
 do not exist; the test profile signs its signature set with it. See
 [signatures.md](signatures.md).
@@ -169,19 +169,19 @@ image/maintenance-key.sh /media/$USER/KEY            # any kiosk
 image/maintenance-key.sh /media/$USER/KEY kiosk-1    # only kiosk.name = kiosk-1
 ```
 
-writes `usb-pasteur-maintenance/` on the key: a request signed with the
+writes `pandora-box-maintenance/` on the key: a request signed with the
 update key, valid 7 days. Inserted into the kiosk, even one without
 signatures, the key is not scanned: the kiosk verifies the request, writes
-its logs to `usb-pasteur-maintenance/<kiosk>-<date>/` (journal of the boot
+its logs to `pandora-box-maintenance/<kiosk>-<date>/` (journal of the boot
 and of the previous one, kernel, services, logs of the kiosk and of
 USBGuard, USB devices and rules, disks, boot entries, hardware and screens,
-installed signature set) and ejects the key (`src/usb_pasteur/maintenance.py`).
+installed signature set) and ejects the key (`src/pandora_box/maintenance.py`).
 Nothing changes on the kiosk, and the export holds no key, credential or
 scan report. A request signed by another key, too old, for another kiosk
 or modified is refused (`maintenance_refused` in the log).
 
 One key can hold a maintenance request, a signature set
-(`usb-pasteur-signatures/`) and an image update (`usb-pasteur-image/`):
+(`pandora-box-signatures/`) and an image update (`pandora-box-image/`):
 the kiosk handles them in that order in one insertion, each verified on its
 own; the export shows the kiosk before the updates, and the image update
 comes last as it restarts the kiosk.
@@ -227,7 +227,7 @@ A kiosk must only use USB storage devices: a key that is also a keyboard
 
 After the ANSSI configuration recommendations for GNU/Linux systems:
 
-- **Kernel settings** (`/usr/lib/sysctl.d/90-usb-pasteur.conf`): kernel
+- **Kernel settings** (`/usr/lib/sysctl.d/90-pandora-box.conf`): kernel
   logs and addresses hidden, no ptrace, no kexec, no unprivileged eBPF, user
   namespaces or userfaultfd, io_uring disabled, no SysRq, no core dumps,
   protected links and FIFOs, no IP forwarding or redirects.
@@ -240,11 +240,11 @@ After the ANSSI configuration recommendations for GNU/Linux systems:
   except on the loopback interface.
 - **No login**: no login console on the screens (`getty@` and `getty-static`
   disabled), no `login` program, no root password, Ctrl-Alt-Del masked.
-- **clamd sandbox** (`clamav-daemon.service.d/50-usb-pasteur.conf`): no
+- **clamd sandbox** (`clamav-daemon.service.d/50-pandora-box.conf`): no
   network, read-only system, no device, system call filter,
   `MemoryDenyWriteExecute` (the Debian clamd interprets bytecode signatures,
   without JIT); it runs as the `clamav` user.
-- **Kiosk service** (`packaging/systemd/usb-pasteur.service`): read-only
+- **Kiosk service** (`packaging/systemd/pandora-box.service`): read-only
   system, system call filter, limited capabilities. It keeps `AF_NETLINK`
   (udev events), the capabilities needed to start the worker sandbox
   (namespaces, change of user, loopback interface of the workers) and
@@ -254,7 +254,7 @@ After the ANSSI configuration recommendations for GNU/Linux systems:
 - **Kernel modules removed**: network protocols the kiosk never uses (DCCP,
   SCTP, RDS, TIPC) and FireWire, another way to reach the memory of the
   kiosk, besides the USB network, Bluetooth and Wi-Fi drivers. The protocols
-  and FireWire are also listed in `/etc/modprobe.d/usb-pasteur.conf`, where
+  and FireWire are also listed in `/etc/modprobe.d/pandora-box.conf`, where
   the auditing tools look for them.
 - **Audit log** (`/etc/audit/audit.rules`, auditd): loading of kernel modules,
   mounts (except those of systemd and bubblewrap), every program started,
@@ -273,7 +273,7 @@ login (password policy, banners, package tools, fail2ban) or come later
 
 The scan workers parse hostile files with several engines (libmagic, YARA-X,
 the clamd client...): they are assumed compromisable (`scan.sandbox`,
-`src/usb_pasteur/sandbox.py`).
+`src/pandora_box/sandbox.py`).
 
 - **One engine per worker**: a compromised engine (a crafted file
   exploiting YARA-X or libmagic) cannot forge the result of another engine.
@@ -295,13 +295,13 @@ the clamd client...): they are assumed compromisable (`scan.sandbox`,
   files of `/etc`, the signature folders of the enabled engines
   (read-only), the YARA-X cache and the clamd socket folder: no device
   mount point, no reports, quarantine, logs or configuration.
-- **Dedicated user** `usb-pasteur-scan` (`packaging/sysusers/`), switched to
+- **Dedicated user** `pandora-box-scan` (`packaging/sysusers/`), switched to
   by `setpriv`: no capability, no supplementary group, `no_new_privs`.
-- **System call filter** (`src/usb_pasteur/seccomp.py`), installed once
+- **System call filter** (`src/pandora_box/seccomp.py`), installed once
   the engines are loaded: no program execution, debugging, mounts,
   namespaces, eBPF, kernel modules, io_uring, network sockets...
 - **Untrusted answers**: workers answer in JSON (never pickle), limited in
-  size and validated (`src/usb_pasteur/protocol.py`); the path and size of
+  size and validated (`src/pandora_box/protocol.py`); the path and size of
   the file always come from the kiosk. A malformed answer kills the worker
   and the file is reported as an error.
 
@@ -328,14 +328,14 @@ filesystem: add its module there.
 ## A/B updates of the image
 
 The system is updated as a whole, never file by file
-(`src/usb_pasteur/imageupdate.py`, `image/mkosi.extra/usr/lib/sysupdate.d/`).
+(`src/pandora_box/imageupdate.py`, `image/mkosi.extra/usr/lib/sysupdate.d/`).
 
 - **Building an update.** Build a new version (its version is the time of
   the build: newer than the running one), then package it:
 
   ```sh
   image/build.sh
-  image/package-update.sh image/mkosi.output/usb-pasteur.raw update image/update.key
+  image/package-update.sh image/mkosi.output/pandora-box.raw update image/update.key
   ```
 
   `update/` holds the partitions of slot A of the new image (compressed
@@ -343,18 +343,18 @@ The system is updated as a whole, never file by file
   named with their UUID, the UKI, and a manifest signed with the update key
   (the format of the signature sets, content `image`, serial = version).
   About 215 MB, of which 40 MB for the UKI.
-- **Installing it.** Copy `update/` as `usb-pasteur-image/` at the root of a
+- **Installing it.** Copy `update/` as `pandora-box-image/` at the root of a
   USB key and insert it into the kiosk (`updates.image_from_devices`). The
   kiosk verifies the signature, that the version is newer than the running
-  one and every file, copies them to `/var/lib/usb-pasteur-image`, then
+  one and every file, copies them to `/var/lib/pandora-box-image`, then
   `systemd-sysupdate` writes the partitions to the free slot and the UKI to
-  the ESP with 3 boot tries (`usb-pasteur_2+3-0.efi`), and the kiosk
+  the ESP with 3 boot tries (`pandora-box_2+3-0.efi`), and the kiosk
   restarts. The running version is never overwritten; the device is not
   scanned.
 - **Online.** With the profile `online` and `updates.image_url` (the URL of
-  a published update folder), `usb-pasteur-update.service` downloads a newer
+  a published update folder), `pandora-box-update.service` downloads a newer
   update as its unprivileged user (every file checked), then installs it as
-  root without network (`usb-pasteur-image install`), with the same checks
+  root without network (`pandora-box-image install`), with the same checks
   as an update device. The kiosk restarts on the new version when it is idle
   (between two devices): a scan is never interrupted.
 - **Boot assessment.** The new version is kept (`systemd-bless-boot`) once
@@ -379,7 +379,7 @@ After a change of the dependencies in `pyproject.toml`, regenerate it with
 
 `--profile online` adds online signature updates from their sources (see
 [signatures.md](signatures.md#online-updates)): systemd-networkd (DHCP on the
-wired network), systemd-resolved, freshclam, the `usb-pasteur-update` timer
+wired network), systemd-resolved, freshclam, the `pandora-box-update` timer
 and a firewall that only lets the update service out
 (`image/mkosi.profiles/online/`). Its `postinst.chroot` enables `[updates]`
 in the configuration of the kiosk, and installs the credentials of
@@ -394,7 +394,7 @@ image/build.sh --profile online
 
 ## Test profile
 
-`--profile test` builds `usb-pasteur-test.raw`, for the virtual machine tests
+`--profile test` builds `pandora-box-test.raw`, for the virtual machine tests
 only, never for a kiosk. It includes the profile `online`, and adds:
 
 - a test-only signature set, generated from `image/vm/corpus.py`, signed
@@ -488,7 +488,7 @@ fails.
 
 ```sh
 image/vm.sh run                              # test image
-image/vm.sh run image/mkosi.output/usb-pasteur.raw
+image/vm.sh run image/mkosi.output/pandora-box.raw
 ```
 
 The kiosk screen is shown over VNC, display `:0`

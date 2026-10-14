@@ -1,5 +1,5 @@
-import usb_pasteur
+import pandora_box
 
 
 def test_version() -> None:
-    assert usb_pasteur.__version__
+    assert pandora_box.__version__

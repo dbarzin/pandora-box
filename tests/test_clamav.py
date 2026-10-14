@@ -9,11 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.clamd import ClamdError, Reply, Status, parse_scan_replies, parse_version
-from usb_pasteur.config import parse_config
-from usb_pasteur.engines import EngineError, EngineResult, FileInfo, Verdict
-from usb_pasteur.engines.clamav import ClamavEngine
-from usb_pasteur.engines.registry import engine_specs
+from pandora_box.clamd import ClamdError, Reply, Status, parse_scan_replies, parse_version
+from pandora_box.config import parse_config
+from pandora_box.engines import EngineError, EngineResult, FileInfo, Verdict
+from pandora_box.engines.clamav import ClamavEngine
+from pandora_box.engines.registry import engine_specs
 
 from .fake_clamd import fake_clamd
 from .samples import eicar
@@ -183,7 +183,7 @@ def test_spec_from_config() -> None:
     assert engine.suspicious_names == ()
 
 
-CLAMD_SOCKET = Path(os.environ.get("USB_PASTEUR_CLAMD_SOCKET", "/run/clamav/clamd.ctl"))
+CLAMD_SOCKET = Path(os.environ.get("PANDORA_BOX_CLAMD_SOCKET", "/run/clamav/clamd.ctl"))
 
 
 @pytest.mark.integration

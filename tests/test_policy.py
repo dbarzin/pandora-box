@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.engines import EngineResult, Verdict
-from usb_pasteur.policy import KNOWN_FILE, DeviceVerdict, aggregate_file, device_verdict
-from usb_pasteur.results import FileResult, ScanSummary
+from pandora_box.engines import EngineResult, Verdict
+from pandora_box.policy import KNOWN_FILE, DeviceVerdict, aggregate_file, device_verdict
+from pandora_box.results import FileResult, ScanSummary
 
 CONTENT = ("clamav", "yara")
 C, S, M, E, K = Verdict.CLEAN, Verdict.SUSPICIOUS, Verdict.MALICIOUS, Verdict.ERROR, Verdict.SKIPPED

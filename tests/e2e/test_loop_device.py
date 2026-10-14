@@ -19,15 +19,15 @@ from pathlib import Path
 import jsonschema
 import pytest
 
-from usb_pasteur.bloom import write_filter
-from usb_pasteur.config import parse_config
-from usb_pasteur.device import UsbDevice
-from usb_pasteur.engines import FileInfo, Verdict
-from usb_pasteur.engines.clamav import ClamavEngine
-from usb_pasteur.hashdb import write_database
-from usb_pasteur.kiosk import Kiosk, build_pool, make_mounter
-from usb_pasteur.monitor import Action, DeviceEvent
-from usb_pasteur.report import load_schema
+from pandora_box.bloom import write_filter
+from pandora_box.config import parse_config
+from pandora_box.device import UsbDevice
+from pandora_box.engines import FileInfo, Verdict
+from pandora_box.engines.clamav import ClamavEngine
+from pandora_box.hashdb import write_database
+from pandora_box.kiosk import Kiosk, build_pool, make_mounter
+from pandora_box.monitor import Action, DeviceEvent
+from pandora_box.report import load_schema
 
 from ..conftest import ListSource, RecordingDisplay
 from ..samples import eicar
@@ -129,7 +129,7 @@ def test_scan_and_clean(usb_key: UsbDevice, tmp_path: Path) -> None:
             "device": {"mount_point": str(mount_point), "eject": False},
             "quarantine": {"folder": str(tmp_path / "quarantine")},
             "report": {"folder": str(tmp_path / "reports")},
-            "logging": {"file": str(tmp_path / "usb-pasteur.log")},
+            "logging": {"file": str(tmp_path / "pandora-box.log")},
         }
     )
     display = RecordingDisplay()
@@ -176,9 +176,9 @@ def test_scan_and_clean(usb_key: UsbDevice, tmp_path: Path) -> None:
 # -- Real engines -------------------------------------------------------------
 
 YARA_RULE = """
-rule UsbPasteur_E2E_Marker {
+rule PandoraBox_E2E_Marker {
     meta: score = 90
-    strings: $a = "USB-PASTEUR-E2E-YARA-MARKER"
+    strings: $a = "PANDORA-BOX-E2E-YARA-MARKER"
     condition: $a
 }
 """
@@ -198,8 +198,8 @@ def clamd() -> Iterator[Path]:
     folder.chmod(0o755)
     database = folder / "db"
     database.mkdir()
-    (database / "usb-pasteur-test.hdb").write_text(
-        f"{hashlib.md5(EICAR).hexdigest()}:{len(EICAR)}:UsbPasteur.Test.EICAR\n"
+    (database / "pandora-box-test.hdb").write_text(
+        f"{hashlib.md5(EICAR).hexdigest()}:{len(EICAR)}:PandoraBox.Test.EICAR\n"
     )
     socket_path = folder / "clamd.sock"
     config = folder / "clamd.conf"
@@ -230,7 +230,7 @@ def test_real_engines(fs_type: str, clamd: Path, tmp_path: Path) -> None:
     files = {
         "readme.txt": b"hello",
         "docs/eicar.com": EICAR,
-        "docs/marker.bin": b"xx USB-PASTEUR-E2E-YARA-MARKER xx",
+        "docs/marker.bin": b"xx PANDORA-BOX-E2E-YARA-MARKER xx",
         "sample.bin": MALWAREBAZAAR_SAMPLE,
         "known.txt": KNOWN_FILE,
     }
@@ -263,7 +263,7 @@ def test_real_engines(fs_type: str, clamd: Path, tmp_path: Path) -> None:
             },
             "quarantine": {"folder": str(tmp_path / "quarantine")},
             "report": {"folder": str(tmp_path / "reports")},
-            "logging": {"file": str(tmp_path / "usb-pasteur.log")},
+            "logging": {"file": str(tmp_path / "pandora-box.log")},
         }
     )
     display = RecordingDisplay()
@@ -291,12 +291,12 @@ def test_real_engines(fs_type: str, clamd: Path, tmp_path: Path) -> None:
         entry = next(f for f in report["files"] if f["path"] == path)
         return {e["engine"]: e["detections"] for e in entry["engines"] if e["detections"]}
 
-    assert detections("docs/eicar.com") == {"clamav": ["UsbPasteur.Test.EICAR.UNOFFICIAL"]}
+    assert detections("docs/eicar.com") == {"clamav": ["PandoraBox.Test.EICAR.UNOFFICIAL"]}
     eicar_entry = next(f for f in report["files"] if f["path"] == "docs/eicar.com")
     clamav_result = next(e for e in eicar_entry["engines"] if e["engine"] == "clamav")
     # The descriptor was passed to clamd (no fallback to INSTREAM)
     assert clamav_result["facts"] == {"mode": "fildes"}
-    assert detections("docs/marker.bin") == {"yara": ["e2e:UsbPasteur_E2E_Marker"]}
+    assert detections("docs/marker.bin") == {"yara": ["e2e:PandoraBox_E2E_Marker"]}
     assert detections("sample.bin") == {"malwarebazaar": ["MalwareBazaar.KnownMalware"]}
     known = next(f for f in report["files"] if f["path"] == "known.txt")
     assert known["verdict"] == "clean"

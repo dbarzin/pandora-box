@@ -8,7 +8,7 @@ enabled, **online** from a published set.
 ## Signature sets
 
 A signature set is a folder holding the signature files of the engines and a
-signed list of them (`src/usb_pasteur/sigsets.py`):
+signed list of them (`src/pandora_box/sigsets.py`):
 
 ```
 manifest.json          serial, creation date, and the SHA-256 and size of every file
@@ -21,15 +21,15 @@ yara/yara-forge/yara-rules-core.yar
 ```
 
 The paths are those of the default configuration
-(`/var/lib/usb-pasteur-signatures/current/...`). The `manifest.json` of a
-subfolder (written by `usb-pasteur-signatures publish`) gives the source,
+(`/var/lib/pandora-box-signatures/current/...`). The `manifest.json` of a
+subfolder (written by `pandora-box-signatures publish`) gives the source,
 version and date of its files; without it, the date of a file is the
 creation date of the set, used for the signature freshness warnings.
 
 ## Trust
 
 - The kiosk trusts the Ed25519 public keys (`*.pem`) of `signatures.keys`,
-  `/usr/share/usb-pasteur/keys/` in the image: they are part of the root
+  `/usr/share/pandora-box/keys/` in the image: they are part of the root
   filesystem, protected by dm-verity and Secure Boot. The update key is
   separate from the image signing key: sets are signed far more often.
 - The signature is verified with `openssl`, on the exact bytes of the
@@ -54,7 +54,7 @@ clamd. clamd reads the `clamav` folder of the installed set
 
 ## Updating a kiosk
 
-Copy a signed set into a `usb-pasteur-signatures` folder at the root of a
+Copy a signed set into a `pandora-box-signatures` folder at the root of a
 USB key (vfat, exFAT, NTFS or ext4) and insert it into the kiosk. The kiosk
 verifies and installs the set, reloads its engines, then asks to remove the
 key: a signature update device is never scanned, so do not use it to carry
@@ -68,9 +68,9 @@ The kiosk shows and logs the result (`signatures_installed`,
 A kiosk works offline by default. An image built with the **profile
 `online`** (`image/build.sh --profile online`) updates its signatures
 itself, **from their sources**: ClamAV (freshclam), YARA Forge, MalwareBazaar
-and Hashlookup, the sources of `usb-pasteur-signatures publish`. The profile
+and Hashlookup, the sources of `pandora-box-signatures publish`. The profile
 brings DHCP on the wired network (IPv4), DNS (systemd-resolved, without LLMNR
-or mDNS), freshclam, the `usb-pasteur-update` timer (every 6 hours, 5 minutes
+or mDNS), freshclam, the `pandora-box-update` timer (every 6 hours, 5 minutes
 after boot), and a firewall that only lets out the update service (TCP),
 DHCP and DNS. Nothing comes in but the answers to these connections. It
 enables the `[updates]` section of the configuration with every source:
@@ -91,7 +91,7 @@ MalwareBazaar needs an **abuse.ch Auth-Key** (free account:
 https://auth.abuse.ch/). It is given at build time in `image/credentials.toml`
 (see `image/credentials.toml.example`; git ignores the file), and the profile
 installs it on the read-only root filesystem as a **systemd credential**,
-`/etc/credstore/usb-pasteur.abusech-auth-key`, readable by root only: systemd
+`/etc/credstore/pandora-box.abusech-auth-key`, readable by root only: systemd
 gives it to the update service alone (`ImportCredential=`). Without it,
 MalwareBazaar is not downloaded and its database is kept from the last
 signature update device.
@@ -101,15 +101,15 @@ image or the disk of the kiosk can read them.
 
 ### The update service
 
-`usb-pasteur-update.service` runs in two steps
-(`src/usb_pasteur/online.py`):
+`pandora-box-update.service` runs in two steps
+(`src/pandora_box/online.py`):
 
-1. as the `usb-pasteur-update` user, the only one the firewall lets out,
+1. as the `pandora-box-update` user, the only one the firewall lets out,
    without privileges and in a systemd sandbox, it downloads the sources
-   (with an HTTP cache, `/var/lib/usb-pasteur-update/staging-sources`: an
+   (with an HTTP cache, `/var/lib/pandora-box-update/staging-sources`: an
    unchanged source is not downloaded again; freshclam downloads the daily
    differences of ClamAV), checks that the engines load them, and builds a
-   set in `/var/lib/usb-pasteur-update/staging` when they changed. The files
+   set in `/var/lib/pandora-box-update/staging` when they changed. The files
    of the sources it does not download are taken from the installed set;
 2. as root, without network, it signs the staged set with the **key of the
    kiosk** and installs it (`install --staged`): every check of a signature
@@ -117,7 +117,7 @@ image or the disk of the kiosk can read them.
    set.
 
 The key of the kiosk is an Ed25519 key generated on the kiosk the first time
-(`/var/lib/usb-pasteur-signatures/local-key/`, the private key readable by
+(`/var/lib/pandora-box-signatures/local-key/`, the private key readable by
 root only). The kiosk trusts it besides the keys of its image: it verifies
 the installed set at each start, whoever signed it. Signature update devices
 signed with the update key are still accepted (a kiosk without network, or
@@ -137,7 +137,7 @@ is ignored: only `updates.proxy` is used.
 ### A published set instead
 
 A kiosk can also download a signed set published by
-`usb-pasteur-signatures publish` on a web server, in place of the sources:
+`pandora-box-signatures publish` on a web server, in place of the sources:
 `url` (the folder of the set) instead of `sources`. It then needs no
 credential, and only installs a set signed with the update key, newer than
 the installed one, downloading only the files that changed.
@@ -147,9 +147,9 @@ see [image.md](image.md#ab-updates-of-the-image)).
 
 ## Publishing a set
 
-`usb-pasteur-signatures publish` downloads the signatures of every engine
+`pandora-box-signatures publish` downloads the signatures of every engine
 from their sources, checks that the engines of a kiosk can load them, then
-builds and signs a set (`src/usb_pasteur/publish.py`):
+builds and signs a set (`src/pandora_box/publish.py`):
 
 | Source | Files | Notes |
 |---|---|---|
@@ -160,7 +160,7 @@ builds and signs a set (`src/usb_pasteur/publish.py`):
 | `hashlookup` | `hashlookup/hashlookup-full.bloom` | about 1 GB, published monthly |
 
 Downloads are HTTPS only and cached (`--cache`, default
-`~/.cache/usb-pasteur-signatures`): a source that did not change (ETag,
+`~/.cache/pandora-box-signatures`): a source that did not change (ETag,
 Last-Modified) is not downloaded again. Before signing, the set is loaded
 with the engines of the kiosk: the YARA rules must compile with YARA-X, the
 MalwareBazaar database and the Hashlookup filter must load, and `clamscan`
@@ -175,8 +175,8 @@ engines, for instance every day on the computer that holds the signing key:
 
 ```sh
 export ABUSECH_AUTH_KEY=...
-publish/publish.sh /srv/usb-pasteur/usb-pasteur-signatures /secure/update.key
-cp -r /srv/usb-pasteur/usb-pasteur-signatures /media/KEY/
+publish/publish.sh /srv/pandora-box/pandora-box-signatures /secure/update.key
+cp -r /srv/pandora-box/pandora-box-signatures /media/KEY/
 ```
 
 The full set is about 1.2 GB (ClamAV about 115 MB, YARA Forge core 8 MB,
@@ -188,9 +188,9 @@ storage are not defined yet.
 The command also works on sets built by other means:
 
 ```sh
-usb-pasteur-signatures build FOLDER --key update.key   # manifest.json + signature
-usb-pasteur-signatures verify FOLDER --keys KEYS_FOLDER
-usb-pasteur-signatures install FOLDER                   # by hand, on a kiosk
+pandora-box-signatures build FOLDER --key update.key   # manifest.json + signature
+pandora-box-signatures verify FOLDER --keys KEYS_FOLDER
+pandora-box-signatures install FOLDER                   # by hand, on a kiosk
 ```
 
 `build` and `publish` number the set with its creation date
@@ -203,6 +203,6 @@ usb-pasteur-signatures install FOLDER                   # by hand, on a kiosk
 `update.pem`, and the test image installs a set signed with `update.key`.
 Never use them for a kiosk.
 
-On a development computer, `usb-pasteur-signatures publish` without `--key`
+On a development computer, `pandora-box-signatures publish` without `--key`
 builds an unsigned set and prints the matching configuration, with
 `verify = false` in `[signatures]`.

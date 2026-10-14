@@ -1,4 +1,4 @@
-# A/B update of the system image (usb_pasteur.imageupdate): the verity partition
+# A/B update of the system image (pandora_box.imageupdate): the verity partition
 # of the new version, staged by the kiosk from a verified image update, is
 # written to the free slot. The running version is never overwritten.
 [Transfer]
@@ -8,13 +8,13 @@ Verify=no
 
 [Source]
 Type=regular-file
-Path=/var/lib/usb-pasteur-image/files
-MatchPattern=usb-pasteur_@v_@u.verity.raw.xz
+Path=/var/lib/pandora-box-image/files
+MatchPattern=pandora-box_@v_@u.verity.raw.xz
 
 [Target]
 Type=partition
 Path=auto
-MatchPattern=usb-pasteur_@v_verity
+MatchPattern=pandora-box_@v_verity
 MatchPartitionType=root-verity
 PartitionFlags=0
 ReadOnly=1

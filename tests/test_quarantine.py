@@ -4,11 +4,11 @@ import json
 import stat
 from pathlib import Path
 
-from usb_pasteur.config import LimitsConfig
-from usb_pasteur.engines.fake import EICAR
-from usb_pasteur.quarantine import Quarantine
-from usb_pasteur.scanner import Scanner
-from usb_pasteur.workers import WorkerPool
+from pandora_box.config import LimitsConfig
+from pandora_box.engines.fake import EICAR
+from pandora_box.quarantine import Quarantine
+from pandora_box.scanner import Scanner
+from pandora_box.workers import WorkerPool
 
 
 def test_store(usb_tree: Path, tmp_path: Path, fake_pool: WorkerPool) -> None:

@@ -9,17 +9,17 @@ from pathlib import Path
 import flor
 import pytest
 
-from usb_pasteur.bloom import BloomError, BloomFilter, write_filter
-from usb_pasteur.config import parse_config
-from usb_pasteur.engines import Engine, EngineError, EngineResult, FakeEngine, FileInfo, Verdict
-from usb_pasteur.engines.hashes import (
+from pandora_box.bloom import BloomError, BloomFilter, write_filter
+from pandora_box.config import parse_config
+from pandora_box.engines import Engine, EngineError, EngineResult, FakeEngine, FileInfo, Verdict
+from pandora_box.engines.hashes import (
     MALWAREBAZAAR_DETECTION,
     HashlookupEngine,
     MalwareBazaarEngine,
 )
-from usb_pasteur.engines.registry import NoEngineError, engine_specs, load_engines
-from usb_pasteur.hashdb import HashDatabase, HashDatabaseError, main, parse_export, write_database
-from usb_pasteur.pipeline import KNOWN_FILE, PipelineOptions, run_engines
+from pandora_box.engines.registry import NoEngineError, engine_specs, load_engines
+from pandora_box.hashdb import HashDatabase, HashDatabaseError, main, parse_export, write_database
+from pandora_box.pipeline import KNOWN_FILE, PipelineOptions, run_engines
 
 MALWARE = b"pretend malware sample"
 KNOWN = b"a well known system file"
@@ -71,7 +71,7 @@ def test_empty_database(tmp_path: Path) -> None:
     ("damage", "message"),
     [
         (lambda b: b[:10], "truncated"),
-        (lambda b: b"XXXXXXXX" + b[8:], "not a USB-Pasteur hash database"),
+        (lambda b: b"XXXXXXXX" + b[8:], "not a PandoraBox hash database"),
         (lambda b: b[:-1], "size does not match"),
         (lambda b: b[:64] + b[96:128] + b[64:96] + b[128:], "not sorted"),
     ],

@@ -36,11 +36,11 @@ path and keep no state between files.
 ## Engines
 
 Every engine is enabled by default. If an enabled engine cannot load its data,
-the kiosk refuses to start (`usb-pasteur --check-config` shows why). At least
+the kiosk refuses to start (`pandora-box --check-config` shows why). At least
 one content engine (ClamAV or YARA-X) is required: hash lookups alone only
 recognize files that are already known.
 
-For development, `usb-pasteur-signatures publish dev-signatures --sources
+For development, `pandora-box-signatures publish dev-signatures --sources
 yara-forge,malwarebazaar,hashlookup` downloads the YARA rules, the
 MalwareBazaar list and the Hashlookup filter into `./dev-signatures/`, checks
 them, and prints the matching configuration (an unsigned set: see
@@ -61,9 +61,9 @@ Offline list of SHA-256 hashes of known malware, from
   is never partially loaded. In October 2026, the export held 1.1 million
   hashes, a 37 MB database.
 - **Conversion**:
-  `python -m usb_pasteur.hashdb build full_sha256.zip malwarebazaar.sha256.bin`
-  (`python -m usb_pasteur.hashdb info <database>` describes a database).
-- **Format** (`usb_pasteur/hashdb.py`): a 64-byte header (magic, version,
+  `python -m pandora_box.hashdb build full_sha256.zip malwarebazaar.sha256.bin`
+  (`python -m pandora_box.hashdb info <database>` describes a database).
+- **Format** (`pandora_box/hashdb.py`): a 64-byte header (magic, version,
   count, creation time, SHA-256 of the source export) followed by the sorted
   32-byte digests. The file is memory-mapped and searched by bisection: one
   million hashes take 32 MB, shared by the workers through the page cache.
@@ -79,7 +79,7 @@ filter of known files (NSRL, Linux distributions, software repositories).
   upper case hexadecimal, in the DCSO bloom format.
 - **Format**: the format of the DCSO `bloom` Go tool and of the `flor` Python
   library. `flor` loads the whole bit array in memory (1 GB per worker), so
-  USB-Pasteur has its own memory-mapped reader (`usb_pasteur/bloom.py`). The
+  PandoraBox has its own memory-mapped reader (`pandora_box/bloom.py`). The
   tests check that it agrees with `flor`. Against the real CIRCL filter, it
   agrees with `flor`, finds most Debian system binaries, and answers "known"
   for about 1 in 10,000 random hashes, as expected.
@@ -103,7 +103,7 @@ filter of known files (NSRL, Linux distributions, software repositories).
 ### ClamAV
 
 [ClamAV](https://www.clamav.net/) through the `clamd` daemon, with a small
-built-in client for its Unix socket protocol (`usb_pasteur/clamd.py`):
+built-in client for its Unix socket protocol (`pandora_box/clamd.py`):
 `zPING`, `zVERSION`, `zFILDES` and `zINSTREAM`.
 
 - **Modes** (`[engines.clamav] mode`): `fildes` passes the open file
@@ -234,7 +234,7 @@ the report, used for the YARA `filetype` variable and by the heuristics.
 ### Heuristics
 
 The structure of the files, without signatures
-(`src/usb_pasteur/engines/heuristics.py`, `[engines.heuristics]`); findings
+(`src/pandora_box/engines/heuristics.py`, `[engines.heuristics]`); findings
 are suspicious, never malicious:
 
 - **PDF with active content** (like pdfid): JavaScript (`/JavaScript`, `/JS`)
@@ -322,7 +322,7 @@ of the official `daily` database).
 ## Scan report
 
 Every scan writes a JSON report in `report.folder`, described by
-[`src/usb_pasteur/schemas/scan-report-v1.schema.json`](../src/usb_pasteur/schemas/scan-report-v1.schema.json):
+[`src/pandora_box/schemas/scan-report-v1.schema.json`](https://github.com/dbarzin/pandora-box/blob/main/src/pandora_box/schemas/scan-report-v1.schema.json):
 device, configuration, engines and signature versions, every file with its
 hashes, type, verdict and per-engine results, the device verdict and the
 actions taken. The quarantine manifest references it.

@@ -7,12 +7,13 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.config import Config, parse_config
-from usb_pasteur.device import UsbDevice
-from usb_pasteur.engines.fake import EICAR
-from usb_pasteur.kiosk import Kiosk, build_pool, check_signatures, restart_clamd
-from usb_pasteur.monitor import Action, DeviceEvent
-from usb_pasteur.sigsets import UPDATE_FOLDER, SignatureSetError, install, installed_manifest
+from pandora_box.config import Config, parse_config
+from pandora_box.device import UsbDevice
+from pandora_box.engines.fake import EICAR
+from pandora_box.kiosk import Kiosk, build_pool, check_signatures, restart_clamd
+from pandora_box.monitor import Action, DeviceEvent
+from pandora_box.sigsets import UPDATE_FOLDER, SignatureSetError, install, installed_manifest
+from pandora_box.ui.base import Screen
 
 from .conftest import DirectoryMounter, ListSource, RecordingDisplay
 from .test_sigsets import make_key, make_set
@@ -62,9 +63,15 @@ def run(
     devices: dict[UsbDevice, Path],
     signatures_error: str | None = None,
     start: bool = True,
+    remove: bool = False,
 ) -> None:
+    """Insert the devices one after the other (and remove each one: remove)."""
     mounter = DevicesMounter({d.node: p for d, p in devices.items()})
-    events = [DeviceEvent(Action.ADD, d) for d in devices]
+    events = []
+    for d in devices:
+        events.append(DeviceEvent(Action.ADD, d))
+        if remove:
+            events.append(DeviceEvent(Action.REMOVE, d))
     pool = build_pool(config)
     if start:
         pool.start()
@@ -78,9 +85,16 @@ def test_update_device_is_installed_not_scanned(
     config: Config, display: RecordingDisplay, tmp_path: Path, key: Path
 ) -> None:
     root = update_key(tmp_path, "update", 1, key)
-    run(config, display, {KEY_A: root})
+    run(config, display, {KEY_A: root}, remove=True)
     assert "Signatures updated: set 1" in display.messages
     assert "A signature update device is not scanned. Remove the device." in display.messages
+    # The screen of the update stays until the device is removed
+    assert [screen for screen, _ in display.screens] == [
+        Screen.READY,
+        Screen.SCANNING,
+        Screen.SERVICE,
+        Screen.READY,
+    ]
     assert installed_manifest(config.signatures.folder).serial == 1  # type: ignore[union-attr]
     # Not scanned, not cleaned
     assert (root / "eicar.com").exists()
@@ -122,6 +136,11 @@ def test_kiosk_without_signatures_only_accepts_an_update(
     )
     assert "NO VALID SIGNATURES: no signature set installed" in display.messages
     assert "Cannot scan: no valid signatures. Remove the device." in display.messages
+    assert [screen for screen, _ in display.screens][:3] == [
+        Screen.UNAVAILABLE,
+        Screen.SCANNING,
+        Screen.UNAVAILABLE,
+    ]
     # Refused before the update, scanned and cleaned after it
     assert (before / "eicar.com").exists()
     assert "Signatures updated: set 1" in display.messages
@@ -182,7 +201,7 @@ def test_clamd_is_not_restarted_in_fake_scan_mode(
 ) -> None:
     """The test set has ClamAV files: no restart of a clamd the kiosk does not use."""
     restarts: list[bool] = []
-    monkeypatch.setattr("usb_pasteur.kiosk.restart_clamd", lambda: restarts.append(True))
+    monkeypatch.setattr("pandora_box.kiosk.restart_clamd", lambda: restarts.append(True))
     run(config, display, {KEY_A: update_key(tmp_path, "update", 1, key)})
     assert "Signatures updated: set 1" in display.messages
     assert restarts == []
@@ -191,11 +210,11 @@ def test_clamd_is_not_restarted_in_fake_scan_mode(
 def test_restart_clamd_never_asks_for_a_password(monkeypatch: pytest.MonkeyPatch) -> None:
     commands: list[list[str]] = []
     monkeypatch.setattr(
-        "usb_pasteur.kiosk.subprocess.run",
+        "pandora_box.kiosk.subprocess.run",
         lambda argv, **kwargs: commands.append(list(argv)),
     )
-    monkeypatch.setattr("usb_pasteur.kiosk.Path.is_dir", lambda self: True)
-    monkeypatch.setattr("usb_pasteur.kiosk.Path.exists", lambda self: True)
+    monkeypatch.setattr("pandora_box.kiosk.Path.is_dir", lambda self: True)
+    monkeypatch.setattr("pandora_box.kiosk.Path.exists", lambda self: True)
     restart_clamd()
     assert commands == [
         ["/usr/bin/systemctl", "--no-ask-password", "try-restart", "clamav-daemon.service"]
@@ -205,13 +224,13 @@ def test_restart_clamd_never_asks_for_a_password(monkeypatch: pytest.MonkeyPatch
 def test_versions_are_shown_at_start(
     config: Config, display: RecordingDisplay, tmp_path: Path, key: Path
 ) -> None:
-    from usb_pasteur import __version__
+    from pandora_box import __version__
 
     install(make_set(tmp_path / "set", FILES, 7, key), config.signatures.folder,
             [config.signatures.keys / "update.pem"])  # fmt: skip
     created = installed_manifest(config.signatures.folder).created  # type: ignore[union-attr]
     run(config, display, {KEY_A: data_key(tmp_path, "data")})
-    assert display.messages[0] == f"USB-Pasteur {__version__} (development)"
+    assert display.messages[0] == f"PandoraBox {__version__} (development)"
     assert display.messages[1] == f"Signatures: set 7 of {created:%Y-%m-%d %H:%M} UTC"
 
 
@@ -219,6 +238,6 @@ def test_image_version_is_shown_at_start(
     config: Config, display: RecordingDisplay, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # On an image: its version, the date and time of its build
-    monkeypatch.setattr("usb_pasteur.imageupdate.running_version", lambda: 20261005134734)
+    monkeypatch.setattr("pandora_box.imageupdate.running_version", lambda: 20261005134734)
     run(config, display, {KEY_A: data_key(tmp_path, "data")})
-    assert display.messages[0] == "USB-Pasteur 20261005134734 of 2026-10-05 13:47 UTC"
+    assert display.messages[0] == "PandoraBox 20261005134734 of 2026-10-05 13:47 UTC"

@@ -1,6 +1,6 @@
-# Contributing to USB-Pasteur
+# Contributing to PandoraBox
 
-Thank you for your interest in USB-Pasteur! Contributions of all kinds are welcome: bug reports, documentation, detection engines, hardening improvements, translations, hardware validation and code.
+Thank you for your interest in PandoraBox! Contributions of all kinds are welcome: bug reports, documentation, detection engines, hardening improvements, translations, hardware validation and code.
 
 Please read this guide before opening an issue or a pull request.
 
@@ -10,17 +10,17 @@ Be respectful, constructive and patient. Harassment or discriminatory behavior w
 
 ## Reporting security issues
 
-**Do not open a public issue for a security vulnerability.** USB-Pasteur is a security product: please follow the process described in [SECURITY.md](SECURITY.md).
+**Do not open a public issue for a security vulnerability.** PandoraBox is a security product: please follow the process described in [SECURITY.md](SECURITY.md).
 
 ## Reporting bugs and requesting features
 
-- Search the [existing issues](https://github.com/dbarzin/usb-pasteur/issues) first to avoid duplicates.
+- Search the [existing issues](https://github.com/dbarzin/pandora-box/issues) first to avoid duplicates.
 - For a bug, include:
-  - the USB-Pasteur version or commit,
+  - the PandoraBox version or commit,
   - the hardware (model, USB ports, display) or the development environment,
   - the steps to reproduce, the expected result and the actual result,
   - the relevant logs or scan report (remove any sensitive data first).
-- For a feature request, explain the use case and how it fits the [roadmap](README.md) and the guiding principles (minimal image, defense in depth, offline by default).
+- For a feature request, explain the use case and how it fits the [roadmap](ROADMAP.md) and the guiding principles (minimal image, defense in depth, offline by default).
 
 **Never attach real malware samples to an issue.** Use the EICAR test file or share hashes (SHA-256) instead.
 
@@ -37,11 +37,11 @@ Be respectful, constructive and patient. Harassment or discriminatory behavior w
 
 ### Development environment
 
-USB-Pasteur requires **Python 3.11+** (the system image uses Python 3.13). Upgrade pip first (`pip install -U pip`): old versions, such as the one of Debian 12, take a very long time to report dependency errors.
+PandoraBox requires **Python 3.11+** (the system image uses Python 3.13). Upgrade pip first (`pip install -U pip`): old versions, such as the one of Debian 12, take a very long time to report dependency errors.
 
 ```sh
-git clone https://github.com/<your-account>/usb-pasteur.git
-cd usb-pasteur
+git clone https://github.com/<your-account>/pandora-box.git
+cd pandora-box
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -U pip
@@ -50,14 +50,14 @@ pip install -e ".[dev]"
 
 Use the `FAKE_SCAN` mode (`fake_scan = true` in the configuration, or `--fake-scan`) to work on the orchestrator and the interface without real detection engines: only the EICAR test file is reported as malicious. Use `--interface console` to run without curses.
 
-To work with the real engines, install `clamav-daemon` and download the other signatures with `usb-pasteur-signatures publish dev-signatures --sources yara-forge,malwarebazaar,hashlookup`: see [docs/engines.md](docs/engines.md).
+To work with the real engines, install `clamav-daemon` and download the other signatures with `pandora-box-signatures publish dev-signatures --sources yara-forge,malwarebazaar,hashlookup`: see [docs/engines.md](docs/engines.md).
 
 ### Coding standards
 
 - Format and lint with `ruff`; check types with `mypy`. Public functions must have type hints.
-- Follow the existing structure and naming of the `usb_pasteur` package.
+- Follow the existing structure and naming of the `pandora_box` package.
 - Treat every USB device and every file it contains as **hostile input**: validate paths, sizes and types, never execute or interpret content, and respect the configured limits.
-- Detection engines must implement the common interface (`usb_pasteur.engines.Engine`: `load()`, `version()`, `signature_info()` and `scan(file_info) -> EngineResult`), read files only through the descriptor given in `FileInfo`, keep no state between files, and must not require network access at scan time.
+- Detection engines must implement the common interface (`pandora_box.engines.Engine`: `load()`, `version()`, `signature_info()` and `scan(file_info) -> EngineResult`), read files only through the descriptor given in `FileInfo`, keep no state between files, and must not require network access at scan time.
 - Do not add dependencies without discussing them first: each new package increases the attack surface of the image.
 - Keep log messages and scan reports structured (JSON) and free of secrets.
 
@@ -91,4 +91,4 @@ Reports on validated ThinkCentre models, touchscreens and enclosure improvements
 
 ## License
 
-USB-Pasteur is licensed under the [GNU General Public License v3.0](LICENSE). By submitting a contribution, you agree that it will be distributed under the same license, and you confirm that you have the right to submit it.
+PandoraBox is licensed under the [GNU General Public License v3.0](LICENSE). By submitting a contribution, you agree that it will be distributed under the same license, and you confirm that you have the right to submit it.

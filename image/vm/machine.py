@@ -1,4 +1,4 @@
-"""QEMU/KVM virtual machine running a USB-Pasteur image.
+"""QEMU/KVM virtual machine running a PandoraBox image.
 
 The machine boots the image with UEFI (OVMF, Secure Boot capable firmware)
 and has an empty USB 3 (xHCI) controller: emulated USB keys (disk images) are
@@ -472,7 +472,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     run = sub.add_parser("run", help="start the machine interactively")
     run.add_argument(
-        "image", type=Path, nargs="?", default=Path("image/mkosi.output/usb-pasteur-test.raw")
+        "image", type=Path, nargs="?", default=Path("image/mkosi.output/pandora-box-test.raw")
     )
     run.add_argument("--workdir", type=Path, default=Path("image/vm/work"))
     run.add_argument(

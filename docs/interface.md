@@ -28,10 +28,9 @@ cleaning, once the files to remove are listed.
 | `error` | The key could not be mounted or read |
 | `service` | Maintenance, signature or image update device: the messages of the kiosk |
 
-A result stays on the screen until the key is removed, and at least
-`display.result_seconds` (30 seconds by default): the key is ejected when the
-scan is over, and may be removed right away. Inserting another key shows its
-scan at once.
+A result (scan, maintenance or update device) stays on the screen until the
+key is removed, then `display.return_seconds` more (5 seconds by default)
+before the waiting screen. Inserting another key shows its scan at once.
 
 ## How it is drawn
 
@@ -59,25 +58,25 @@ image update).
 
 ### Configuration
 
-In `packaging/usb-pasteur.toml`, section `[display]`:
+In `packaging/pandora-box.toml`, section `[display]`:
 
 ```toml
 [display]
 # Theme folder, installed in the image from image/theme/
-theme = "/usr/share/usb-pasteur/theme"
+theme = "/usr/share/pandora-box/theme"
 # Language of the texts: "en", "fr", or a language the theme adds
 language = "fr"
-# Minimum time a result stays on the screen, in seconds
-result_seconds = 30.0
+# Seconds before the waiting screen, once the key is removed
+return_seconds = 5.0
 ```
 
 ### Theme folder
 
 Create `image/theme/` in the repository: the image build copies it to
-`/usr/share/usb-pasteur/theme` and checks it (the build fails on an invalid
+`/usr/share/pandora-box/theme` and checks it (the build fails on an invalid
 theme). The folder holds a `theme.toml` and the files it names. Every key is
 optional: a key of the theme replaces the one of the built-in theme
-(`src/usb_pasteur/ui/theme/theme.toml`, which lists them all), the others are
+(`src/pandora_box/ui/theme/theme.toml`, which lists them all), the others are
 kept.
 
 ```text
@@ -134,17 +133,17 @@ administrator, and are not part of the theme.
 `[images]`: `insert` (animation of the waiting screen, one image per second),
 `busy` (animation while the kiosk works), `clean`, `threat`, `error` (icons of
 the results). PNG (with transparency) or JPEG, at most 4096 pixels. The
-built-in images come from [pandora-box](https://github.com/dbarzin/pandora-box).
+built-in images come from the first version of PandoraBox.
 
 ### Check and preview a theme
 
 Without a kiosk, on the development computer:
 
 ```sh
-usb-pasteur-theme check image/theme
-usb-pasteur-theme preview image/theme /tmp/preview            # every language
-usb-pasteur-theme preview image/theme /tmp/preview --language fr --size 800x480
+pandora-box-theme check image/theme
+pandora-box-theme preview image/theme /tmp/preview            # every language
+pandora-box-theme preview image/theme /tmp/preview --language fr --size 800x480
 ```
 
 `preview` draws every screen, with made-up files, into PNG files.
-`usb-pasteur --check-config` also checks the theme of the configuration.
+`pandora-box --check-config` also checks the theme of the configuration.

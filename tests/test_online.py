@@ -9,11 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.config import Config, parse_config
-from usb_pasteur.kiosk import Kiosk, build_pool
-from usb_pasteur.monitor import NO_DEVICE, Action, DeviceEvent
-from usb_pasteur.online import UpdateError, download
-from usb_pasteur.sigsets import MANIFEST, install, installed_manifest, main, trusted_keys
+from pandora_box.config import Config, parse_config
+from pandora_box.kiosk import Kiosk, build_pool
+from pandora_box.monitor import NO_DEVICE, Action, DeviceEvent
+from pandora_box.online import UpdateError, download
+from pandora_box.sigsets import MANIFEST, install, installed_manifest, main, trusted_keys
 
 from .conftest import DirectoryMounter, ListSource, RecordingDisplay
 from .test_sigsets import make_key, make_set

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.config import (
+from pandora_box.config import (
     Config,
     ConfigError,
     LimitsConfig,
@@ -13,7 +13,7 @@ from usb_pasteur.config import (
     parse_config,
 )
 
-EXAMPLE = Path(__file__).parent.parent / "packaging" / "usb-pasteur.toml"
+EXAMPLE = Path(__file__).parent.parent / "packaging" / "pandora-box.toml"
 
 
 def test_defaults() -> None:
@@ -22,7 +22,7 @@ def test_defaults() -> None:
     assert config.kiosk.interface == "framebuffer"
     assert config.display.theme is None
     assert config.display.language == "en"
-    assert config.device.mount_point == Path("/media/usb-pasteur")
+    assert config.device.mount_point == Path("/media/pandora-box")
     assert config.scan.workers == 0  # "auto"
     assert config.scan.suspicious == "block"
     assert config.scan.on_error == "block"

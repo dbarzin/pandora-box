@@ -11,15 +11,15 @@ from typing import Any
 import jsonschema
 import pytest
 
-from usb_pasteur.config import Config
-from usb_pasteur.device import UsbDevice
-from usb_pasteur.engines import EngineKind, EngineResult, FileInfo, SignatureInfo, Verdict
-from usb_pasteur.kiosk import Kiosk
-from usb_pasteur.monitor import Action, DeviceEvent
-from usb_pasteur.policy import KNOWN_FILE
-from usb_pasteur.report import DeviceUsage, build_report, load_schema, write_report
-from usb_pasteur.results import FileResult, ScanSummary
-from usb_pasteur.workers import EngineInfo, WorkerPool
+from pandora_box.config import Config
+from pandora_box.device import UsbDevice
+from pandora_box.engines import EngineKind, EngineResult, FileInfo, SignatureInfo, Verdict
+from pandora_box.kiosk import Kiosk
+from pandora_box.monitor import Action, DeviceEvent
+from pandora_box.policy import KNOWN_FILE
+from pandora_box.report import DeviceUsage, build_report, load_schema, write_report
+from pandora_box.results import FileResult, ScanSummary
+from pandora_box.workers import EngineInfo, WorkerPool
 
 from .conftest import DirectoryMounter, ListSource, RecordingDisplay
 

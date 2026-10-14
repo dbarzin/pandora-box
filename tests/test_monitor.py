@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from usb_pasteur.monitor import Action, UsbFilesystemFilter
+from pandora_box.monitor import Action, UsbFilesystemFilter
 
 USB_VFAT = {"ID_FS_USAGE": "filesystem", "ID_BUS": "usb", "ID_FS_TYPE": "vfat"}
 

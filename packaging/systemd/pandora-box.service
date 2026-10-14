@@ -1,0 +1,78 @@
+[Unit]
+Description=PandoraBox USB decontamination kiosk
+Documentation=https://github.com/dbarzin/pandora-box
+After=systemd-udevd.service local-fs.target
+# clamd is started by its socket on the first connection
+Wants=clamav-daemon.socket
+After=clamav-daemon.socket
+# The kiosk owns the first console
+Conflicts=getty@tty1.service
+After=getty@tty1.service
+
+[Service]
+# Ready once the engines are loaded (or without signatures, waiting for an
+# update): boot-complete.target of the image waits for it
+Type=notify
+NotifyAccess=main
+# Verifying the signature set and compiling YARA rules take time
+TimeoutStartSec=15min
+ExecStart=/usr/bin/pandora-box
+Restart=always
+RestartSec=2
+
+# The interface is on tty1: the graphical one draws into the framebuffer
+# and puts the console in graphics mode, the curses one draws text
+StandardInput=tty
+StandardOutput=tty
+StandardError=journal
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+Environment=TERM=linux
+
+# Directories created by systemd
+StateDirectory=pandora-box
+StateDirectoryMode=0700
+# Compiled YARA rules (engines.yara.cache_dir)
+CacheDirectory=pandora-box
+CacheDirectoryMode=0700
+LogsDirectory=pandora-box
+LogsDirectoryMode=0750
+
+# Hardening. Mounting devices and starting the sandboxed scan workers
+# (bubblewrap, then setpriv to scan.sandbox_user) require CAP_SYS_ADMIN, the
+# capabilities to change user, and CAP_NET_ADMIN (bubblewrap brings up the
+# loopback interface of the network namespace of the workers). The workers
+# keep none of them.
+CapabilityBoundingSet=CAP_SYS_ADMIN CAP_DAC_OVERRIDE CAP_FOWNER CAP_CHOWN CAP_SETUID CAP_SETGID CAP_SETPCAP CAP_NET_ADMIN
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/media/pandora-box /var/lib/pandora-box-signatures /var/lib/pandora-box-image
+ProtectHome=yes
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictAddressFamilies=AF_UNIX AF_NETLINK
+# The scan workers get their own namespaces, but never a user namespace
+RestrictNamespaces=mnt pid net ipc uts cgroup
+RestrictRealtime=yes
+# No RestrictSUIDSGID: its filter refuses openat2(), which bubblewrap needs.
+# Setuid files cannot be created anyway: read-only root, /var and the devices
+# mounted nosuid.
+LockPersonality=yes
+# No MemoryDenyWriteExecute: YARA-X compiles its rules to native code at run
+# time (wasmtime) and fails with it, and the filter would also apply to the
+# scan workers started by the kiosk. The workers are sandboxed instead.
+SystemCallArchitectures=native
+# Mounting the device needs the mount system calls
+SystemCallFilter=@system-service @mount
+SystemCallErrorNumber=EPERM
+KeyringMode=private
+IPAddressDeny=any
+
+[Install]
+WantedBy=multi-user.target

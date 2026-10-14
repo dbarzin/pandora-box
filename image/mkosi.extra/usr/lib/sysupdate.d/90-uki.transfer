@@ -1,4 +1,4 @@
-# A/B update of the system image (usb_pasteur.imageupdate): the unified
+# A/B update of the system image (pandora_box.imageupdate): the unified
 # kernel image (UKI) of the new version, written last (the entry point of the
 # boot), with 3 boot tries: systemd-boot goes back to the previous version if
 # the new one does not reach boot-complete.target 3 times.
@@ -8,16 +8,16 @@ Verify=no
 
 [Source]
 Type=regular-file
-Path=/var/lib/usb-pasteur-image/files
-MatchPattern=usb-pasteur_@v.efi
+Path=/var/lib/pandora-box-image/files
+MatchPattern=pandora-box_@v.efi
 
 [Target]
 Type=regular-file
 Path=/EFI/Linux
 PathRelativeTo=boot
-MatchPattern=usb-pasteur_@v+@l-@d.efi \
-             usb-pasteur_@v+@l.efi \
-             usb-pasteur_@v.efi
+MatchPattern=pandora-box_@v+@l-@d.efi \
+             pandora-box_@v+@l.efi \
+             pandora-box_@v.efi
 Mode=0644
 TriesLeft=3
 TriesDone=0

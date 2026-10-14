@@ -1,0 +1,8 @@
+/var/log/pandora-box/*.log {
+    monthly
+    rotate 12
+    compress
+    delaycompress
+    missingok
+    notifempty
+}

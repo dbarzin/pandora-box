@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur import maintenance
-from usb_pasteur.config import Config
-from usb_pasteur.device import UsbDevice
-from usb_pasteur.engines.fake import EICAR
-from usb_pasteur.maintenance import FOLDER, REQUEST, MaintenanceError, export, request, verify
-from usb_pasteur.sigsets import main
+from pandora_box import maintenance
+from pandora_box.config import Config
+from pandora_box.device import UsbDevice
+from pandora_box.engines.fake import EICAR
+from pandora_box.maintenance import FOLDER, REQUEST, MaintenanceError, export, request, verify
+from pandora_box.sigsets import main
 
 from .conftest import RecordingDisplay
 from .test_kiosk_signatures import FILES, run
@@ -35,7 +35,7 @@ def harmless(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     log = tmp_path / "kiosk.log"
     log.write_text('{"event": "kiosk_started"}\n')
     monkeypatch.setattr(maintenance, "COMMANDS", (("echo.txt", ("/bin/echo", "hello")),))
-    files = (("usb-pasteur.log", str(log)), ("missing.txt", str(tmp_path / "missing")))
+    files = (("pandora-box.log", str(log)), ("missing.txt", str(tmp_path / "missing")))
     monkeypatch.setattr(maintenance, "FILES", files)
     return log
 
@@ -47,7 +47,7 @@ def test_request_then_export(tmp_path: Path, config: Config, key: Path, harmless
     target, count = export(folder, config)
     assert target.parent == folder and target.name.startswith(f"{config.kiosk.name}-")
     assert (target / "echo.txt").read_text() == "hello\n"
-    assert (target / "usb-pasteur.log").read_text() == harmless.read_text()
+    assert (target / "pandora-box.log").read_text() == harmless.read_text()
     assert "No such file" in (target / "missing.txt").read_text()
     assert "no signature set installed" in (target / "signatures.txt").read_text()
     assert (target / "hardware.txt").exists()
@@ -108,7 +108,7 @@ def test_kiosk_exports_its_logs_and_does_not_scan(
     # Without signatures too: the kiosk can be diagnosed
     run(config, display, {KEY: root}, signatures_error="no signature set", start=False)
     exports = [p for p in (root / FOLDER).iterdir() if p.is_dir() and p.name != "request"]
-    assert len(exports) == 1 and (exports[0] / "usb-pasteur.log").exists()
+    assert len(exports) == 1 and (exports[0] / "pandora-box.log").exists()
     assert f"Logs exported to {FOLDER}/{exports[0].name}." in display.messages
     assert "A maintenance device is not scanned. Remove the device." in display.messages
     assert (root / "eicar.com").exists()
@@ -123,7 +123,7 @@ def test_kiosk_refuses_an_old_request(
     request(folder, key)
     manifest = json.loads((folder / "manifest.json").read_text())
     old = datetime.now(UTC) - timedelta(days=30)
-    from usb_pasteur.sigsets import build, sign
+    from pandora_box.sigsets import build, sign
 
     build(folder, created=old.replace(microsecond=0), content="maintenance", only=[REQUEST])
     sign(folder, key)
@@ -136,7 +136,7 @@ def test_kiosk_refuses_an_old_request(
 def test_one_device_exports_the_logs_and_updates_the_signatures(
     tmp_path: Path, config: Config, display: RecordingDisplay, key: Path, harmless: Path
 ) -> None:
-    from usb_pasteur.sigsets import UPDATE_FOLDER, installed_manifest
+    from pandora_box.sigsets import UPDATE_FOLDER, installed_manifest
 
     root = tmp_path / "device"
     request(root / FOLDER, key)

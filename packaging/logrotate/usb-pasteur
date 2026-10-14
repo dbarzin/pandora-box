@@ -1,8 +1,0 @@
-/var/log/usb-pasteur/*.log {
-    monthly
-    rotate 12
-    compress
-    delaycompress
-    missingok
-    notifempty
-}

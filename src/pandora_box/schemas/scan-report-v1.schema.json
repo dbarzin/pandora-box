@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/dbarzin/pandora-box/schemas/scan-report-v1.schema.json",
+  "title": "PandoraBox scan report",
+  "description": "One report per scanned device. Untrusted strings (file names, device strings, libmagic descriptions) are escaped: undecodable bytes and control characters appear as \\xNN, \\uNNNN or \\UNNNNNNNN, backslashes are doubled. path_b64 holds the exact bytes of each path.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "report_id", "kiosk", "started", "finished", "duration", "device",
+    "configuration", "engines", "files", "verdict", "actions"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "report_id": { "type": "string", "format": "uuid" },
+    "kiosk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "software", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "software": { "const": "pandora-box" },
+        "version": { "type": "string" }
+      }
+    },
+    "started": { "$ref": "#/$defs/timestamp" },
+    "finished": { "$ref": "#/$defs/timestamp" },
+    "duration": { "type": "number", "minimum": 0, "description": "Scan duration in seconds" },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["node", "vendor", "model", "serial", "label", "filesystem", "size", "used"],
+      "properties": {
+        "node": { "type": "string" },
+        "vendor": { "type": "string" },
+        "model": { "type": "string" },
+        "serial": { "type": "string" },
+        "label": { "type": "string" },
+        "filesystem": { "type": "string" },
+        "size": { "type": "integer", "minimum": 0, "description": "Filesystem size in bytes" },
+        "used": { "type": "integer", "minimum": 0, "description": "Used space in bytes" }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "description": "Configuration that applied to this scan",
+      "additionalProperties": false,
+      "required": ["fake_scan", "scan", "limits", "policy"],
+      "properties": {
+        "fake_scan": { "type": "boolean" },
+        "scan": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["workers", "file_timeout", "suspicious", "on_error"],
+          "properties": {
+            "workers": { "type": "integer", "minimum": 1 },
+            "file_timeout": { "type": "number", "exclusiveMinimum": 0 },
+            "suspicious": { "enum": ["block", "warn"] },
+            "on_error": { "enum": ["block", "warn"] }
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["max_file_size", "max_files", "max_depth"],
+          "properties": {
+            "max_file_size": { "type": "integer", "minimum": 1 },
+            "max_files": { "type": "integer", "minimum": 1 },
+            "max_depth": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "policy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["min_malicious_engines", "skip_content_engines_for_known_files"],
+          "properties": {
+            "min_malicious_engines": { "type": "integer", "minimum": 1 },
+            "skip_content_engines_for_known_files": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "engines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "kind", "version", "timeout", "signatures", "extra"],
+        "properties": {
+          "name": { "type": "string" },
+          "kind": { "enum": ["hash", "content"] },
+          "version": { "type": "string" },
+          "timeout": { "type": "number" },
+          "signatures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "version", "date", "path", "source"],
+              "properties": {
+                "name": { "type": "string" },
+                "version": { "type": "string" },
+                "date": { "oneOf": [{ "$ref": "#/$defs/timestamp" }, { "type": "null" }] },
+                "path": { "type": "string" },
+                "source": { "type": "string" }
+              }
+            }
+          },
+          "extra": {
+            "type": "object",
+            "description": "Engine specific information, e.g. YARA rules excluded because they did not compile",
+            "properties": {
+              "rule_count": { "type": "integer" },
+              "excluded_rules": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path", "path_b64", "size", "sha256", "sha1", "md5", "mime", "description", "verdict",
+          "detail", "not_fully_scanned", "duration", "engines"
+        ],
+        "properties": {
+          "path": { "type": "string", "description": "Escaped path relative to the device root" },
+          "path_b64": { "type": "string", "contentEncoding": "base64" },
+          "size": { "type": "integer", "minimum": 0 },
+          "sha256": { "$ref": "#/$defs/optionalHash", "description": "null when the file was not read" },
+          "sha1": { "$ref": "#/$defs/optionalHash" },
+          "md5": { "$ref": "#/$defs/optionalHash" },
+          "mime": { "type": ["string", "null"] },
+          "description": { "type": ["string", "null"] },
+          "verdict": { "$ref": "#/$defs/verdict" },
+          "detail": { "type": "string", "description": "Skip reason, error message or 'known file (hashlookup)'" },
+          "not_fully_scanned": { "type": "boolean" },
+          "duration": { "type": "number", "minimum": 0 },
+          "engines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["engine", "verdict", "detections", "error", "reason", "facts", "duration"],
+              "properties": {
+                "engine": { "type": "string" },
+                "verdict": { "$ref": "#/$defs/verdict" },
+                "detections": { "type": "array", "items": { "type": "string" } },
+                "error": { "type": ["string", "null"] },
+                "reason": { "type": ["string", "null"] },
+                "facts": {
+                  "type": "object",
+                  "description": "Auditable engine facts, e.g. hashlookup {known, fp_rate}, clamav {mode}",
+                  "additionalProperties": { "type": ["string", "boolean", "number"] }
+                },
+                "duration": { "type": "number", "minimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["device", "complete", "incomplete_reasons", "statistics"],
+      "properties": {
+        "device": { "enum": ["clean", "malicious", "suspicious", "not_verified"] },
+        "complete": { "type": "boolean" },
+        "incomplete_reasons": { "type": "array", "items": { "type": "string" } },
+        "statistics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "files", "bytes", "clean", "malicious", "suspicious", "error", "skipped",
+            "not_fully_scanned"
+          ],
+          "properties": {
+            "files": { "type": "integer", "minimum": 0 },
+            "bytes": { "type": "integer", "minimum": 0 },
+            "clean": { "type": "integer", "minimum": 0 },
+            "malicious": { "type": "integer", "minimum": 0 },
+            "suspicious": { "type": "integer", "minimum": 0 },
+            "error": { "type": "integer", "minimum": 0 },
+            "skipped": { "type": "integer", "minimum": 0 },
+            "not_fully_scanned": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "actions": {
+      "type": "object",
+      "description": "Actions taken after the scan, filled in after cleaning",
+      "additionalProperties": false,
+      "required": ["quarantine_folder", "quarantined", "removed", "remove_failed", "cleaned"],
+      "properties": {
+        "quarantine_folder": { "type": ["string", "null"] },
+        "quarantined": { "type": "array", "items": { "type": "string" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "remove_failed": { "type": "array", "items": { "type": "string" } },
+        "cleaned": { "type": ["boolean", "null"], "description": "null: no cleaning attempted" }
+      }
+    }
+  },
+  "$defs": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+    },
+    "verdict": { "enum": ["clean", "suspicious", "malicious", "error", "skipped"] },
+    "optionalHash": { "type": ["string", "null"], "pattern": "^[0-9a-f]+$" }
+  }
+}

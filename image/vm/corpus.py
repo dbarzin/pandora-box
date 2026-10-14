@@ -19,9 +19,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tests"))
 from samples import eicar  # type: ignore[import-not-found]
 
-YARA_MARKER = b"USB-PASTEUR-VM-YARA-MARKER"
+YARA_MARKER = b"PANDORA-BOX-VM-YARA-MARKER"
 YARA_RULE = f"""
-rule UsbPasteur_VM_Marker {{
+rule PandoraBox_VM_Marker {{
     meta: score = 90
     strings: $a = "{YARA_MARKER.decode()}"
     condition: $a
@@ -34,14 +34,14 @@ NEW_SAMPLE = b"pretend malware sample listed by a signature update (VM test)\n"
 # File of the root filesystem of the test image, modified on the disk by the
 # dm-verity test. Its first line must be unique in the image; it fills whole
 # filesystem blocks, so that the modified block holds nothing else.
-VERITY_CANARY_PATH = "/usr/share/usb-pasteur/verity-canary"
-VERITY_CANARY_MARKER = b"USB-PASTEUR-VERITY-CANARY-" + b"5d1c0a7e93f2b864" * 4 + b"\n"
+VERITY_CANARY_PATH = "/usr/share/pandora-box/verity-canary"
+VERITY_CANARY_MARKER = b"PANDORA-BOX-VERITY-CANARY-" + b"5d1c0a7e93f2b864" * 4 + b"\n"
 VERITY_CANARY = (VERITY_CANARY_MARKER * (3 * 4096 // len(VERITY_CANARY_MARKER) + 1))[: 3 * 4096]
 
 # Files of the USB key and the engine expected to detect each of them
 # ("" when the file must be reported clean and stay on the key)
 KEY: dict[str, tuple[bytes, str]] = {
-    "readme.txt": (b"hello from the USB-Pasteur VM test\n", ""),
+    "readme.txt": (b"hello from the PandoraBox VM test\n", ""),
     "known.txt": (KNOWN_FILE, ""),
     "docs/eicar.com": (eicar(), "clamav"),
     "docs/marker.bin": (b"xx " + YARA_MARKER + b" xx\n", "yara"),
@@ -52,7 +52,7 @@ KEY: dict[str, tuple[bytes, str]] = {
 # PDF with JavaScript run at opening: suspicious (engines.heuristics)
 ACTIVE_PDF = (
     b"%PDF-1.7\n1 0 obj << /Type /Catalog /OpenAction 2 0 R >> endobj\n"
-    b"2 0 obj << /S /JavaScript /JS (app.alert('USB-Pasteur VM test')) >> endobj\n%%EOF\n"
+    b"2 0 obj << /S /JavaScript /JS (app.alert('PandoraBox VM test')) >> endobj\n%%EOF\n"
 )
 
 
@@ -106,7 +106,7 @@ def write_key(folder: Path) -> None:
 MALWAREBAZAAR_DB = "malwarebazaar/malwarebazaar.sha256.bin"
 HASHLOOKUP_BLOOM = "hashlookup/hashlookup-full.bloom"
 YARA_RULES = "yara/vm-test/rules.yar"
-CLAMAV_DB = "clamav/usb-pasteur-test.hdb"
+CLAMAV_DB = "clamav/pandora-box-test.hdb"
 
 
 def write_signatures(folder: Path, malwarebazaar: tuple[bytes, ...] = ()) -> None:
@@ -114,8 +114,8 @@ def write_signatures(folder: Path, malwarebazaar: tuple[bytes, ...] = ()) -> Non
 
     malwarebazaar: more samples to detect (signature update test).
     """
-    from usb_pasteur.bloom import write_filter
-    from usb_pasteur.hashdb import write_database
+    from pandora_box.bloom import write_filter
+    from pandora_box.hashdb import write_database
 
     for name in (MALWAREBAZAAR_DB, HASHLOOKUP_BLOOM, YARA_RULES, CLAMAV_DB):
         (folder / name).parent.mkdir(parents=True, exist_ok=True)
@@ -125,7 +125,7 @@ def write_signatures(folder: Path, malwarebazaar: tuple[bytes, ...] = ()) -> Non
     (folder / YARA_RULES).write_text(YARA_RULE)
     sample = eicar()
     (folder / CLAMAV_DB).write_text(
-        f"{hashlib.md5(sample).hexdigest()}:{len(sample)}:UsbPasteur.Test.EICAR\n"
+        f"{hashlib.md5(sample).hexdigest()}:{len(sample)}:PandoraBox.Test.EICAR\n"
     )
 
 

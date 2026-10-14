@@ -1,4 +1,4 @@
-#!/usr/lib/usb-pasteur/bin/python3
+#!/usr/lib/pandora-box/bin/python3
 """Print the texts of the kiosk screen.
 
 The graphical interface logs the texts it draws (display_screen events, at
@@ -8,7 +8,7 @@ the DEBUG level of the test profile); the curses one is read from tty1.
 import json
 import sys
 
-LOG = "/var/log/usb-pasteur/usb-pasteur.log"
+LOG = "/var/log/pandora-box/pandora-box.log"
 
 lines = None
 try:

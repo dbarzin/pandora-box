@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.engines import FakeEngine, Verdict
-from usb_pasteur.filetype import FileTypeDetector
-from usb_pasteur.hashing import hash_fd
-from usb_pasteur.inventory import (
+from pandora_box.engines import FakeEngine, Verdict
+from pandora_box.filetype import FileTypeDetector
+from pandora_box.hashing import hash_fd
+from pandora_box.inventory import (
     SPECIAL_FILE,
     SYMLINK,
     TOO_BIG,
@@ -20,7 +20,7 @@ from usb_pasteur.inventory import (
     open_entry,
     take_inventory,
 )
-from usb_pasteur.pipeline import scan_entry
+from pandora_box.pipeline import scan_entry
 
 
 def inventory(

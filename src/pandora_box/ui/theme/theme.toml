@@ -1,0 +1,116 @@
+# Built-in theme of the graphical kiosk interface.
+#
+# A theme folder (display.theme) holds a theme.toml with the same keys and
+# its own files: every key it sets replaces the built-in one, the others are
+# kept. Files are relative to the folder of their theme.toml. Check a theme
+# and see its screens with: pandora-box-theme preview <folder> <output>
+
+# Logo of the organization, in the header (PNG or JPEG); "" for none
+logo = ""
+# TrueType fonts; "" for DejaVu Sans (Debian package fonts-dejavu-core)
+font = ""
+font_bold = ""
+
+[colors]
+header = "#8b0019"
+header_text = "#ffffff"
+background = "#ffffff"
+text = "#1e1e1e"
+# Secondary text: help, versions, file details
+muted = "#5f5f5f"
+clean = "#2e8b3e"
+threat = "#c8102e"
+warning = "#b35c00"
+progress = "#8b0019"
+progress_background = "#e4e4e4"
+
+[images]
+# Animation of the waiting screen, one image per second
+insert = ["insert1.jpg", "insert2.jpg", "insert3.jpg", "insert4.jpg", "insert5.jpg"]
+# Animation while the kiosk works
+busy = [
+    "busy1.png", "busy2.png", "busy3.png", "busy4.png", "busy5.png",
+    "busy6.png", "busy7.png", "busy8.png", "busy9.png",
+]
+clean = "clean.png"
+threat = "threat.png"
+error = "error.png"
+
+# Texts by language (display.language). Placeholders between braces are
+# replaced: {done}, {total}, {count}, {size}, {used}.
+
+[texts.en]
+title = "USB decontamination kiosk"
+footer = ""
+insert = "Please insert a USB key"
+insert_help = "This kiosk scans USB keys for viruses before they are used on a workstation. Scans are anonymous: no personal data and no file content is collected."
+unavailable = "Kiosk out of service"
+unavailable_help = "The antivirus signatures are not valid. Please contact the IT department."
+preparing = "Reading the USB key..."
+scanning = "Scan in progress, please wait"
+scanning_help = "Do not remove the key. The scan may take several minutes."
+scan_progress = "{done} / {total} files scanned"
+scan_threats = "Threats found: {count}"
+device_usage = "{used} used of {size}"
+threats = "Threat detected on the USB key"
+threats_help = "These dangerous files will be removed from the key:"
+threats_warning = "Without cleaning, this key must not be used."
+touch_to_clean = "Touch the screen to clean the key"
+cleaning = "Cleaning in progress, do not remove the key"
+clean = "No threat found"
+clean_help = "This key can be used. You can remove it."
+warning = "Use this key with caution"
+warning_help = "These files are suspicious or could not be fully scanned:"
+cleaned = "USB key cleaned"
+cleaned_help = "Dangerous files removed: {count}. You can remove the key."
+not_cleaned = "Cleaning incomplete"
+not_cleaned_help = "Do not use this key. Please contact the IT department."
+not_verified = "USB key NOT verified"
+not_verified_help = "Some files could not be scanned: do not use this key."
+error = "An error occurred"
+error_help = "Please remove the key. If the problem persists, contact the IT department."
+service = "Kiosk maintenance"
+more_files = "... and {count} more files"
+verdict_clean = "clean"
+verdict_malicious = "dangerous"
+verdict_suspicious = "suspicious"
+verdict_error = "not scanned"
+verdict_skipped = "not scanned"
+
+[texts.fr]
+title = "Borne de décontamination USB"
+footer = ""
+insert = "Veuillez insérer une clé USB"
+insert_help = "Cette borne recherche les virus sur les clés USB avant leur utilisation sur un poste de travail. Les analyses sont anonymes : aucune donnée personnelle ni contenu de fichier n'est collecté."
+unavailable = "Borne hors service"
+unavailable_help = "Les signatures antivirus ne sont pas valides. Veuillez contacter le service informatique."
+preparing = "Lecture de la clé USB..."
+scanning = "Analyse en cours, veuillez patienter"
+scanning_help = "Ne retirez pas la clé. L'analyse peut prendre plusieurs minutes."
+scan_progress = "{done} / {total} fichiers analysés"
+scan_threats = "Menaces détectées : {count}"
+device_usage = "{used} utilisés sur {size}"
+threats = "Menace détectée sur la clé USB"
+threats_help = "Ces fichiers dangereux seront supprimés de la clé :"
+threats_warning = "Sans désinfection, cette clé ne doit pas être utilisée."
+touch_to_clean = "Touchez l'écran pour désinfecter la clé"
+cleaning = "Désinfection en cours, ne retirez pas la clé"
+clean = "Aucune menace détectée"
+clean_help = "Cette clé peut être utilisée. Vous pouvez la retirer."
+warning = "Clé à utiliser avec prudence"
+warning_help = "Ces fichiers sont suspects ou n'ont pas pu être entièrement analysés :"
+cleaned = "Clé USB désinfectée"
+cleaned_help = "Fichiers dangereux supprimés : {count}. Vous pouvez retirer la clé."
+not_cleaned = "Désinfection incomplète"
+not_cleaned_help = "N'utilisez pas cette clé. Veuillez contacter le service informatique."
+not_verified = "Clé USB NON vérifiée"
+not_verified_help = "Certains fichiers n'ont pas pu être analysés : n'utilisez pas cette clé."
+error = "Une erreur s'est produite"
+error_help = "Veuillez retirer la clé. Si le problème persiste, contactez le service informatique."
+service = "Maintenance de la borne"
+more_files = "... et {count} autres fichiers"
+verdict_clean = "sain"
+verdict_malicious = "dangereux"
+verdict_suspicious = "suspect"
+verdict_error = "non analysé"
+verdict_skipped = "non analysé"

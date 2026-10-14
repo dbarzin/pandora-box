@@ -161,7 +161,7 @@ def fill_in_machine(machine: Machine, image: Path, fs_type: str) -> None:
     machine.insert_key(image)
     try:
         node = usb_disk(machine)
-        target = "/run/usb-pasteur-test-key"
+        target = "/run/pandora-box-test-key"
         machine.shell.run(
             f"mkdir -p {target} && mount -t {FILLED_IN_MACHINE[fs_type]} {node} {target}"
         )

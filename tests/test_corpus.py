@@ -13,11 +13,11 @@ from typing import Any
 
 import pytest
 
-from usb_pasteur.config import LimitsConfig, load_config
-from usb_pasteur.engines import Verdict
-from usb_pasteur.kiosk import build_pool
-from usb_pasteur.scanner import Scanner
-from usb_pasteur.workers import WorkerPool
+from pandora_box.config import LimitsConfig, load_config
+from pandora_box.engines import Verdict
+from pandora_box.kiosk import build_pool
+from pandora_box.scanner import Scanner
+from pandora_box.workers import WorkerPool
 
 from .samples import eicar
 
@@ -101,7 +101,7 @@ def test_corpus_with_fake_engine(tmp_path: Path, fake_pool: WorkerPool) -> None:
     check_corpus(fake_pool, tmp_path / "device")
 
 
-CORPUS_CONFIG = os.environ.get("USB_PASTEUR_CORPUS_CONFIG")
+CORPUS_CONFIG = os.environ.get("PANDORA_BOX_CORPUS_CONFIG")
 
 
 @pytest.fixture
@@ -112,6 +112,6 @@ def real_pool() -> Iterator[WorkerPool]:
 
 
 @pytest.mark.integration
-@pytest.mark.skipif(not CORPUS_CONFIG, reason="USB_PASTEUR_CORPUS_CONFIG not set")
+@pytest.mark.skipif(not CORPUS_CONFIG, reason="PANDORA_BOX_CORPUS_CONFIG not set")
 def test_corpus_with_real_engines(tmp_path: Path, real_pool: WorkerPool) -> None:
     check_corpus(real_pool, tmp_path / "device")

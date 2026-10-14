@@ -1,5 +1,5 @@
 # Publication of signature sets (docs/signatures.md): freshclam and clamscan
-# for the ClamAV databases, and usb-pasteur with its engines to check a set
+# for the ClamAV databases, and pandora-box with its engines to check a set
 # before it is signed. Run with publish/publish.sh.
 FROM debian:trixie-slim
 
@@ -16,4 +16,4 @@ COPY pyproject.toml README.md LICENSE /src/
 COPY src /src/src
 RUN /venv/bin/pip install --no-cache-dir --no-deps /src
 
-ENTRYPOINT ["/venv/bin/usb-pasteur-signatures", "publish"]
+ENTRYPOINT ["/venv/bin/pandora-box-signatures", "publish"]

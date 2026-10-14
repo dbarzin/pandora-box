@@ -1,4 +1,4 @@
 # The root filesystem (read-only, EROFS) is found and mounted by
 # systemd-gpt-auto-generator. Variable data is on its own partition, grown to
 # fill the disk at boot (systemd-repart, then x-systemd.growfs).
-PARTLABEL=usb-pasteur-data /var ext4 defaults,nosuid,nodev,x-systemd.growfs 0 2
+PARTLABEL=pandora-box-data /var ext4 defaults,nosuid,nodev,x-systemd.growfs 0 2

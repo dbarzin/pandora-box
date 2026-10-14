@@ -1,0 +1,11 @@
+[Unit]
+Description=PandoraBox online signature update, every 6 hours
+Documentation=https://github.com/dbarzin/pandora-box/blob/main/docs/signatures.md
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=6h
+RandomizedDelaySec=30min
+
+[Install]
+WantedBy=timers.target

@@ -17,7 +17,16 @@ venv/
 htmlcov/
 
 # Local development configuration
-/usb-pasteur.toml
+/pandora-box.toml
 
 # Development signatures (scripts/fetch-dev-signatures.py)
 /dev-signatures/
+
+# Documentation built by mkdocs
+/site/
+
+# Local notes
+/NOTES.md
+
+# Image update artifacts
+/update/

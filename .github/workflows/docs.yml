@@ -1,0 +1,51 @@
+name: Deploy docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+      # Included in docs/configuration.md
+      - 'packaging/pandora-box.toml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+      - 'packaging/pandora-box.toml'
+  workflow_dispatch:
+
+concurrency:
+  group: gh-pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install MkDocs
+        run: pip install -r requirements-docs.txt
+
+      # A broken link or a missing page fails the build
+      - name: Build docs
+        run: mkdocs build --strict --clean
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          ghp-import --no-jekyll --push --force site

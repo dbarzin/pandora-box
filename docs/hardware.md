@@ -43,7 +43,7 @@ Intel VMD, eMMC).
 
 A 3D-printed desk enclosure, one part, about 191 x 184 x 86 mm: the screen
 in the window of its tilted front face, ventilation slots on its rounded
-back. The model and its views are in [3D/](../3D/), under the CERN Open
+back. The model and its views are in [3D/](https://github.com/dbarzin/pandora-box/tree/main/3D), under the CERN Open
 Hardware Licence v2 - Strongly Reciprocal (CERN-OHL-S v2).
 
 ## BIOS configuration
@@ -59,7 +59,7 @@ the version; the goal of each setting matters more than its exact name.
 | Security → Supervisor Password | set, kept by the operator | nobody changes the boot order, Secure Boot or the settings below |
 | Security → Power-On Password | none | the kiosk starts by itself after a power failure |
 | Security → Secure Boot → Secure Boot | Enabled | the firmware only starts the signed boot loader of the image |
-| Security → Secure Boot → Secure Boot Mode | Custom, then **Reset to Setup Mode** (or Clear All Secure Boot Keys) | at its first boot, the image enrolls its own certificate (`loader/keys/auto`): the computer then only starts USB-Pasteur images |
+| Security → Secure Boot → Secure Boot Mode | Custom, then **Reset to Setup Mode** (or Clear All Secure Boot Keys) | at its first boot, the image enrolls its own certificate (`loader/keys/auto`): the computer then only starts PandoraBox images |
 | Security → Device Guard / Intel TXT | default | not used |
 | Security → Chassis Intrusion Detection | Enabled, if the enclosure has the switch | an opened kiosk is reported at the next start |
 
@@ -105,7 +105,7 @@ The SSD is written once, from another computer (in a USB enclosure):
 ```sh
 lsblk -o NAME,SIZE,MODEL,TRAN          # the disk of the SSD, e.g. /dev/sdX
 docker run --rm --device /dev/sdX -v "$PWD/image/mkosi.output:/o:ro" \
-    usb-pasteur-builder dd if=/o/usb-pasteur.raw of=/dev/sdX bs=4M conv=fsync status=progress
+    pandora-box-builder dd if=/o/pandora-box.raw of=/dev/sdX bs=4M conv=fsync status=progress
 ```
 
 Then the kiosk is updated in place, with image update devices or online

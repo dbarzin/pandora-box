@@ -89,15 +89,15 @@ pillow==12.3.0 \
     --hash=sha256:fdafc9cce40277e0f7a0feabce0ee50dd2fa1800f3b38015e51296b5e814048d \
     --hash=sha256:fe3cca2e4e8a592be0f269a1ca4835c25199d9f3ce815c8491048f785b0a0198 \
     --hash=sha256:ffd0c5368496f41b0944be820fcb7a838aa6e623d250b01acf2643939c3f99d7
-    # via usb-pasteur (pyproject.toml)
+    # via pandora-box (pyproject.toml)
 python-magic==0.4.27 \
     --hash=sha256:c1ba14b08e4a5f5c31a302b7721239695b2f0f058d125bd5ce1ee36b9d9d3c3b \
     --hash=sha256:c212960ad306f700aa0d01e5d7a325d20548ff97eb9920dcd29513174f0294d3
-    # via usb-pasteur (pyproject.toml)
+    # via pandora-box (pyproject.toml)
 pyudev==0.24.5 \
     --hash=sha256:4e7faaec419b81a902d057568101819f448972c0cf448bb9c22203e4fc6a8eb9 \
     --hash=sha256:a9c62d04a83472fb05ad5e014ef85933e5cf2fef193caf8b77bb7a9e8ded4812
-    # via usb-pasteur (pyproject.toml)
+    # via pandora-box (pyproject.toml)
 yara-x==1.21.0 \
     --hash=sha256:04be37c92bbbcba4065a4cf0f0029c0b0bf3e7c68f3c35b4cf523300e534cf58 \
     --hash=sha256:1c6e15cf61500bc27960099872586d41f3cfdd8597e4bb8d2f0361b921b118d9 \
@@ -109,4 +109,4 @@ yara-x==1.21.0 \
     --hash=sha256:c5a8bcce08ece1e57d116cac63e671fe88d28f0dff58ee1d1055ca611d0eb0a8 \
     --hash=sha256:cc1ed7760521aa80ba5a4ae4703441e7146d88ad09733d751a3b6e277bf0ef69 \
     --hash=sha256:db8565ba7ec71746349ec92d2662a70d90cbc580a6623d633ae2468af432144c
-    # via usb-pasteur (pyproject.toml)
+    # via pandora-box (pyproject.toml)

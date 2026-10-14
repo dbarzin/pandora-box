@@ -7,15 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.config import Config, parse_config
-from usb_pasteur.device import Mounter, UsbDevice
-from usb_pasteur.engines import EngineSpec, FakeEngine
-from usb_pasteur.engines.fake import EICAR
-from usb_pasteur.monitor import DeviceEvent
-from usb_pasteur.pipeline import PipelineOptions
-from usb_pasteur.results import FileResult
-from usb_pasteur.ui.base import Screen
-from usb_pasteur.workers import WorkerPool
+from pandora_box.config import Config, parse_config
+from pandora_box.device import Mounter, UsbDevice
+from pandora_box.engines import EngineSpec, FakeEngine
+from pandora_box.engines.fake import EICAR
+from pandora_box.monitor import DeviceEvent
+from pandora_box.pipeline import PipelineOptions
+from pandora_box.results import FileResult
+from pandora_box.ui.base import Screen
+from pandora_box.workers import WorkerPool
 
 
 @dataclass

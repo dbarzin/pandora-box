@@ -14,8 +14,8 @@ if [ $# -lt 1 ] || [ $# -gt 2 ]; then
 fi
 device=$(realpath "$1")
 cd "$(dirname "$0")/.."
-docker build -q -t usb-pasteur-builder image >/dev/null
+docker build -q -t pandora-box-builder image >/dev/null
 exec docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:/src" -v "$device:/device" -w /src \
-    -e PYTHONPATH=/src/src -e PYTHONDONTWRITEBYTECODE=1 usb-pasteur-builder \
-    python3 -m usb_pasteur.sigsets maintenance /device/usb-pasteur-maintenance \
+    -e PYTHONPATH=/src/src -e PYTHONDONTWRITEBYTECODE=1 pandora-box-builder \
+    python3 -m pandora_box.sigsets maintenance /device/pandora-box-maintenance \
     --key image/update.key --kiosk "${2:-}"

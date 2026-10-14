@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur import imageupdate, sigsets
-from usb_pasteur.config import Config
-from usb_pasteur.device import UsbDevice
-from usb_pasteur.engines.fake import EICAR
-from usb_pasteur.imageupdate import FILES, running_version, slot_partitions, stage
-from usb_pasteur.kiosk import Kiosk, build_pool
-from usb_pasteur.monitor import NO_DEVICE, Action, DeviceEvent
+from pandora_box import imageupdate, sigsets
+from pandora_box.config import Config
+from pandora_box.device import UsbDevice
+from pandora_box.engines.fake import EICAR
+from pandora_box.imageupdate import FILES, running_version, slot_partitions, stage
+from pandora_box.kiosk import Kiosk, build_pool
+from pandora_box.monitor import NO_DEVICE, Action, DeviceEvent
 
 from .conftest import DirectoryMounter, ListSource, RecordingDisplay
 from .test_sigsets import make_key
@@ -36,8 +36,8 @@ def make_update(
     files = folder / FILES
     files.mkdir(parents=True)
     for kind in kinds:
-        (files / f"usb-pasteur_{version}_{UUIDS[kind]}.{kind}.raw.xz").write_bytes(kind.encode())
-    (files / f"usb-pasteur_{version}.efi").write_bytes(b"MZ uki")
+        (files / f"pandora-box_{version}_{UUIDS[kind]}.{kind}.raw.xz").write_bytes(kind.encode())
+    (files / f"pandora-box_{version}.efi").write_bytes(b"MZ uki")
     sigsets.build(folder, version, content=sigsets.CONTENT_IMAGE)
     sigsets.sign(folder, key)
     return folder
@@ -70,13 +70,13 @@ def test_incomplete_update_is_refused(tmp_path: Path, key: Path) -> None:
 def test_unexpected_file_is_refused(tmp_path: Path, key: Path) -> None:
     update = tmp_path / "update"
     (update / FILES).mkdir(parents=True)
-    (update / FILES / "usb-pasteur_3.efi").write_bytes(b"another version")
+    (update / FILES / "pandora-box_3.efi").write_bytes(b"another version")
     make_update(tmp_path / "unused", 2, key)
     for path in (tmp_path / "unused" / FILES).iterdir():
         path.rename(update / FILES / path.name)
     sigsets.build(update, 2, content=sigsets.CONTENT_IMAGE)
     sigsets.sign(update, key)
-    with pytest.raises(sigsets.SignatureSetError, match=r"unexpected file.*usb-pasteur_3\.efi"):
+    with pytest.raises(sigsets.SignatureSetError, match=r"unexpected file.*pandora-box_3\.efi"):
         stage(update, [key.with_suffix(".pem")], tmp_path / "staging", running=1)
 
 
@@ -96,7 +96,7 @@ def test_contents_are_not_interchangeable(tmp_path: Path, key: Path) -> None:
 
 def test_running_version(tmp_path: Path) -> None:
     os_release = tmp_path / "os-release"
-    os_release.write_text('ID=debian\nIMAGE_ID=usb-pasteur\nIMAGE_VERSION="7"\n')
+    os_release.write_text('ID=debian\nIMAGE_ID=pandora-box\nIMAGE_VERSION="7"\n')
     assert running_version(os_release) == 7
     os_release.write_text("ID=debian\n")
     assert running_version(os_release) is None
@@ -110,9 +110,9 @@ def test_slot_partitions(tmp_path: Path) -> None:
     table = "label: gpt\n" + "".join(
         f'size=1MiB, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid={uuid}, name="{name}"\n'
         for name, uuid in (
-            ("usb-pasteur_4", UUIDS["root"]),
-            ("usb-pasteur_4_verity", UUIDS["verity"]),
-            ("usb-pasteur_4_veritysig", UUIDS["verity-sig"]),
+            ("pandora-box_4", UUIDS["root"]),
+            ("pandora-box_4_verity", UUIDS["verity"]),
+            ("pandora-box_4_veritysig", UUIDS["verity-sig"]),
             ("_empty", "11111111-2222-3333-4444-555555555555"),
         )
     )
@@ -173,7 +173,7 @@ def test_kiosk_refuses_an_image_signed_by_another_key(
 
 
 def online_config(tmp_path: Path, url: str) -> Config:
-    from usb_pasteur.config import parse_config
+    from pandora_box.config import parse_config
 
     return parse_config(
         {

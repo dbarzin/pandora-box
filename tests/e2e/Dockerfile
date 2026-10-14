@@ -10,7 +10,7 @@ RUN apt-get update \
         dosfstools exfatprogs e2fsprogs mount util-linux \
         bubblewrap libseccomp2 \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --no-create-home --shell /usr/sbin/nologin usb-pasteur-scan
+    && useradd --system --no-create-home --shell /usr/sbin/nologin pandora-box-scan
 
 WORKDIR /src
 COPY pyproject.toml README.md LICENSE ./

@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.engines import EngineResult, FileInfo, Verdict, heuristics
-from usb_pasteur.engines.heuristics import HeuristicsEngine, disguised, pdf_names
+from pandora_box.engines import EngineResult, FileInfo, Verdict, heuristics
+from pandora_box.engines.heuristics import HeuristicsEngine, disguised, pdf_names
 
 PDF_HEAD = b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\n"
 

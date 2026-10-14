@@ -38,8 +38,8 @@
 -a always,exit -F arch=b32 -S clock_settime,settimeofday,adjtimex,stime -k time
 
 ## Signature sets and image updates
--w /var/lib/usb-pasteur-signatures -p wa -k signatures
--w /var/lib/usb-pasteur-image -p wa -k image-update
+-w /var/lib/pandora-box-signatures -p wa -k signatures
+-w /var/lib/pandora-box-image -p wa -k image-update
 
 ## Locked until the next boot
 -e 2

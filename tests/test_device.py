@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from usb_pasteur.device import (
+from pandora_box.device import (
     DeviceError,
     Mounter,
     SystemMountWatcher,

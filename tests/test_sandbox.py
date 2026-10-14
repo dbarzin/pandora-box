@@ -7,16 +7,16 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.config import parse_config
-from usb_pasteur.device import mount_options
-from usb_pasteur.kiosk import build_sandbox
-from usb_pasteur.sandbox import Sandbox, SandboxError
+from pandora_box.config import parse_config
+from pandora_box.device import mount_options
+from pandora_box.kiosk import build_sandbox
+from pandora_box.sandbox import Sandbox, SandboxError
 
 
 @pytest.fixture
 def scan_user(monkeypatch: pytest.MonkeyPatch) -> None:
     def getpwnam(name: str) -> pwd.struct_passwd:
-        if name != "usb-pasteur-scan":
+        if name != "pandora-box-scan":
             raise KeyError(name)
         return pwd.struct_passwd((name, "x", 990, 990, "", "/", "/usr/sbin/nologin"))
 
@@ -24,9 +24,9 @@ def scan_user(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_wrap(scan_user: None) -> None:
-    yara = Path("/var/lib/usb-pasteur-signatures/current/yara")
-    sandbox = Sandbox("usb-pasteur-scan", (yara,), (Path("/cache"),))
-    argv = sandbox.wrap(["python3", "-m", "usb_pasteur.worker", "3"])
+    yara = Path("/var/lib/pandora-box-signatures/current/yara")
+    sandbox = Sandbox("pandora-box-scan", (yara,), (Path("/cache"),))
+    argv = sandbox.wrap(["python3", "-m", "pandora_box.worker", "3"])
     assert argv[0] == "bwrap"
     for option in ("--unshare-net", "--unshare-pid", "--unshare-ipc", "--die-with-parent"):
         assert option in argv
@@ -34,7 +34,7 @@ def test_wrap(scan_user: None) -> None:
     assert "--unshare-user" not in argv
     assert "--unshare-all" not in argv
     text = " ".join(argv)
-    assert "--ro-bind-try /var/lib/usb-pasteur-signatures/current/yara " in text
+    assert "--ro-bind-try /var/lib/pandora-box-signatures/current/yara " in text
     assert "--bind /cache /cache" in text
     assert "/media" not in text
     setpriv = argv.index("setpriv")
@@ -49,14 +49,14 @@ def test_wrap(scan_user: None) -> None:
         "--",
         "python3",
         "-m",
-        "usb_pasteur.worker",
+        "pandora_box.worker",
         "3",
     ]
 
 
 def test_unknown_user() -> None:
     with pytest.raises(SandboxError, match="no user"):
-        Sandbox("no-such-user-usb-pasteur").ids()
+        Sandbox("no-such-user-pandora-box").ids()
 
 
 def test_root_user_is_refused() -> None:
@@ -96,7 +96,7 @@ def test_mount_options_readable_by_the_workers() -> None:
 
 SECCOMP_CHECK = """
 import os, socket, threading
-from usb_pasteur.seccomp import apply_filter
+from pandora_box.seccomp import apply_filter
 apply_filter()
 results = []
 t = threading.Thread(target=lambda: results.append("thread"))
@@ -119,7 +119,7 @@ print(" ".join(results))
 
 def test_seccomp_filter() -> None:
     try:
-        from usb_pasteur.seccomp import SeccompError, apply_filter  # noqa: F401
+        from pandora_box.seccomp import SeccompError, apply_filter  # noqa: F401
     except ImportError:
         pytest.skip("no seccomp module")
     result = subprocess.run(

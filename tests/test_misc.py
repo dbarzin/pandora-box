@@ -9,12 +9,12 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.filetype import FileTypeDetector, magic_version
-from usb_pasteur.hashing import hash_fd
-from usb_pasteur.lock import AlreadyRunningError, InstanceLock
-from usb_pasteur.logs import get_logger, log_event, setup_logging
-from usb_pasteur.statemachine import State, StateMachine
-from usb_pasteur.text import escape, human_size, path_b64, printable
+from pandora_box.filetype import FileTypeDetector, magic_version
+from pandora_box.hashing import hash_fd
+from pandora_box.lock import AlreadyRunningError, InstanceLock
+from pandora_box.logs import get_logger, log_event, setup_logging
+from pandora_box.statemachine import State, StateMachine
+from pandora_box.text import escape, human_size, path_b64, printable
 
 
 def test_human_size() -> None:
@@ -50,20 +50,20 @@ def test_unknown_state_stops() -> None:
 
 
 def test_lock() -> None:
-    first = InstanceLock("usb-pasteur-test")
+    first = InstanceLock("pandora-box-test")
     first.acquire()
     try:
         with pytest.raises(AlreadyRunningError):
-            InstanceLock("usb-pasteur-test").acquire()
+            InstanceLock("pandora-box-test").acquire()
     finally:
         first.release()
-    second = InstanceLock("usb-pasteur-test")
+    second = InstanceLock("pandora-box-test")
     second.acquire()
     second.release()
 
 
 def test_json_logs(tmp_path: Path) -> None:
-    file = tmp_path / "logs" / "usb-pasteur.log"
+    file = tmp_path / "logs" / "pandora-box.log"
     setup_logging("kiosk-01", "INFO", file)
     log_event(get_logger("test"), "file_scanned", path="bad-\udcff", size=3)
     log_event(get_logger("test"), "debug_only", logging.DEBUG)

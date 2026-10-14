@@ -7,9 +7,9 @@ from typing import Any
 
 import pytest
 
-from usb_pasteur.engines import EngineKind, EngineResult, FileInfo, Verdict
-from usb_pasteur.inventory import Entry
-from usb_pasteur.protocol import (
+from pandora_box.engines import EngineKind, EngineResult, FileInfo, Verdict
+from pandora_box.inventory import Entry
+from pandora_box.protocol import (
     MAX_MESSAGE_SIZE,
     EngineInfo,
     ProtocolError,
@@ -20,10 +20,10 @@ from usb_pasteur.protocol import (
     engine_info_message,
     result_message,
 )
-from usb_pasteur.results import FileResult
+from pandora_box.results import FileResult
 
 ENTRY = Entry("docs/a.txt", 3, 1, 2)
-ROOT = Path("/media/usb-pasteur")
+ROOT = Path("/media/pandora-box")
 
 
 def worker_result() -> FileResult:

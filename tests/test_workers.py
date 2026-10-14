@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.engines import EngineError, EngineKind, EngineSpec, FakeEngine, Verdict
-from usb_pasteur.inventory import take_inventory
-from usb_pasteur.pipeline import PipelineOptions
-from usb_pasteur.results import FileResult
-from usb_pasteur.workers import WorkerPool, auto_workers
+from pandora_box.engines import EngineError, EngineKind, EngineSpec, FakeEngine, Verdict
+from pandora_box.inventory import take_inventory
+from pandora_box.pipeline import PipelineOptions
+from pandora_box.results import FileResult
+from pandora_box.workers import WorkerPool, auto_workers
 
 from .conftest import FAKE, started_pool
 from .engines import CompromisedEngine, FailingLoadEngine, MisbehavingEngine, ProbeHashEngine

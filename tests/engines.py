@@ -10,7 +10,7 @@ import sys
 import time
 from pathlib import Path
 
-from usb_pasteur.engines import (
+from pandora_box.engines import (
     Engine,
     EngineError,
     EngineKind,

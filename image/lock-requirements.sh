@@ -4,10 +4,10 @@
 set -eu
 
 cd "$(dirname "$0")"
-docker build -q -t usb-pasteur-builder . >/dev/null
-docker run --rm -v "$PWD/..:/src:ro" usb-pasteur-builder sh -c '
+docker build -q -t pandora-box-builder . >/dev/null
+docker run --rm -v "$PWD/..:/src:ro" pandora-box-builder sh -c '
     python3 -m venv /tmp/venv && /tmp/venv/bin/pip install -q pip-tools
-    cd /tmp && cp /src/pyproject.toml /src/README.md /src/LICENSE . && mkdir -p src/usb_pasteur
+    cd /tmp && cp /src/pyproject.toml /src/README.md /src/LICENSE . && mkdir -p src/pandora_box
     /tmp/venv/bin/pip-compile -q --generate-hashes --strip-extras --allow-unsafe \
         --no-header -o - pyproject.toml' > requirements.txt.new
 {

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build the USB-Pasteur image with mkosi, in a Debian 13 container.
+# Build the PandoraBox image with mkosi, in a Debian 13 container.
 #   image/build.sh                 production image
 #   image/build.sh --profile test  test image (test signatures, root shell on hvc0)
 # Other arguments are passed to mkosi. An existing image is replaced. The
@@ -17,7 +17,7 @@ case " $* " in
 *" --image-version="*) ;;
 *) set -- --image-version="$(date -u +%Y%m%d%H%M%S)" "$@" ;;
 esac
-docker build -q -t usb-pasteur-builder . >/dev/null
+docker build -q -t pandora-box-builder . >/dev/null
 mkdir -p mkosi.output
 # Privileged: mkosi creates namespaces and mounts to build the image. Its
 # workspace and caches (packages, incremental build) are in a volume:
@@ -25,9 +25,9 @@ mkdir -p mkosi.output
 # back to the calling user.
 exec docker run --rm --privileged \
     -v "$PWD/..:/src" -w /src/image \
-    -v usb-pasteur-mkosi:/var/tmp \
-    -e HOST_IDS="$(id -u):$(id -g)" -e KEY_NAME="USB-Pasteur development key ($(id -un)@$(hostname))" \
-    usb-pasteur-builder sh -c '
+    -v pandora-box-mkosi:/var/tmp \
+    -e HOST_IDS="$(id -u):$(id -g)" -e KEY_NAME="PandoraBox development key ($(id -un)@$(hostname))" \
+    pandora-box-builder sh -c '
         mkdir -p /var/tmp/cache/images /var/tmp/cache/packages
         if [ ! -e mkosi.key ] && [ ! -e mkosi.crt ]; then
             mkosi --genkey-common-name="$KEY_NAME" --genkey-valid-days=3650 genkey

@@ -3,48 +3,46 @@
 # update, and the matching configuration.
 set -eu
 
-CORPUS="$SRCDIR/usb-pasteur/image/vm/corpus.py"
-PYTHON=/usr/lib/usb-pasteur/bin/python3
+CORPUS="$SRCDIR/pandora-box/image/vm/corpus.py"
+PYTHON=/usr/lib/pandora-box/bin/python3
 
 # Signature set detecting the corpus of the test key, signed with the
-# development update key, then installed in /var/lib/usb-pasteur-signatures
+# development update key, then installed in /var/lib/pandora-box-signatures
 SET=$(mktemp -d)
 "$PYTHON" "$CORPUS" signatures "$SET"
-usb-pasteur-signatures build "$SET" --serial 1 --key "$SRCDIR/usb-pasteur/image/update.key"
-usb-pasteur-signatures install "$SET"
+pandora-box-signatures build "$SET" --serial 1 --key "$SRCDIR/pandora-box/image/update.key"
+pandora-box-signatures install "$SET"
 rm -r "$SET"
 
 # USBGuard reads its rule files only when root alone can
 chmod 0600 /etc/usbguard/rules.d/50-vm-test.conf
 
 # Canary of the dm-verity test
-"$PYTHON" "$CORPUS" canary /usr/share/usb-pasteur/verity-canary
+"$PYTHON" "$CORPUS" canary /usr/share/pandora-box/verity-canary
 
-cat > /etc/usb-pasteur/usb-pasteur.toml <<CONFIG
+cat > /etc/pandora-box/pandora-box.toml <<CONFIG
 # Test profile configuration: the test signature set (image/vm/corpus.py),
 # at the default paths but the YARA rules
 [kiosk]
 name = "vm-test"
 
 [engines.yara]
-rules = [{ name = "vm-test", path = "/var/lib/usb-pasteur-signatures/current/yara/vm-test/rules.yar" }]
+rules = [{ name = "vm-test", path = "/var/lib/pandora-box-signatures/current/yara/vm-test/rules.yar" }]
 
 [logging]
 level = "DEBUG"
 
-# The texts of the screen are checked in English; a shorter result display:
-# the test inserts the next key soon after the removal
+# The texts of the screen are checked in English
 [display]
-theme = "/usr/share/usb-pasteur/theme"
+theme = "/usr/share/pandora-box/theme"
 language = "en"
-result_seconds = 10.0
 
 # Sources published by the virtual machine test (image/vm/run_tests.py) on
 # the host of the QEMU user network; ClamAV is kept from the installed set
 [updates]
 enabled = true
 sources = ["yara-forge", "malwarebazaar", "hashlookup"]
-image_url = "http://10.0.2.2:8080/usb-pasteur-image/"
+image_url = "http://10.0.2.2:8080/pandora-box-image/"
 
 [updates.mirrors]
 yara-forge = "http://10.0.2.2:8080/sources/yara-forge-rules-core.zip"
@@ -54,5 +52,5 @@ CONFIG
 
 # The abuse.ch Auth-Key the test server expects
 install -d -m 0700 /etc/credstore
-printf 'vm-test-auth-key\n' >/etc/credstore/usb-pasteur.abusech-auth-key
-chmod 0600 /etc/credstore/usb-pasteur.abusech-auth-key
+printf 'vm-test-auth-key\n' >/etc/credstore/pandora-box.abusech-auth-key
+chmod 0600 /etc/credstore/pandora-box.abusech-auth-key

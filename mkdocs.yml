@@ -1,0 +1,80 @@
+# Project information
+site_name: PandoraBox
+site_description: Open source USB decontamination kiosk
+site_url: https://dbarzin.github.io/pandora-box/
+
+# Repository
+repo_url: https://github.com/dbarzin/pandora-box
+edit_uri: edit/main/docs
+
+# Copyright
+copyright: Copyright <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a>.
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.indexes
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - content.action.edit
+    - content.action.view
+  palette:
+    - scheme: default
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+extra_css:
+  - css/overrides.css
+
+extra:
+  generator: false
+
+plugins:
+  - search
+
+markdown_extensions:
+  - attr_list
+  - admonition
+  # GitHub alerts (> [!WARNING]) rendered as admonitions: the pages read
+  # the same on GitHub and on the documentation site
+  - github-callouts
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.highlight
+  # The reference configuration is included from packaging/
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - GETTING STARTED:
+      - Introduction: index.md
+      - -- Hardware: hardware.md
+      - -- Image and installation: image.md
+  - USING THE KIOSK:
+      - -- Interface: interface.md
+      - -- Configuration: configuration.md
+  - DETECTION:
+      - -- Detection engines: engines.md
+      - -- Signature updates: signatures.md
+  - DEVELOPMENT:
+      - -- Development: development.md

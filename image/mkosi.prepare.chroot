@@ -4,7 +4,7 @@
 set -eu
 
 if [ "$1" = final ]; then
-    python3 -m venv /usr/lib/usb-pasteur
-    /usr/lib/usb-pasteur/bin/pip install --no-cache-dir --require-hashes --only-binary :all: \
-        -r "$SRCDIR/usb-pasteur/image/requirements.txt"
+    python3 -m venv /usr/lib/pandora-box
+    /usr/lib/pandora-box/bin/pip install --no-cache-dir --require-hashes --only-binary :all: \
+        -r "$SRCDIR/pandora-box/image/requirements.txt"
 fi

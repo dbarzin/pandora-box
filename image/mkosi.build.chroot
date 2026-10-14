@@ -1,7 +1,7 @@
 #!/bin/sh
-# Build the usb-pasteur wheel from the repository, without network.
+# Build the pandora-box wheel from the repository, without network.
 set -eu
 
-mkdir -p "$DESTDIR/usr/share/usb-pasteur/wheels"
+mkdir -p "$DESTDIR/usr/share/pandora-box/wheels"
 python3 -m pip wheel --no-deps --no-build-isolation --no-index \
-    -w "$DESTDIR/usr/share/usb-pasteur/wheels" "$SRCDIR/usb-pasteur"
+    -w "$DESTDIR/usr/share/pandora-box/wheels" "$SRCDIR/pandora-box"

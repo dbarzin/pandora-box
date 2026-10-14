@@ -5,5 +5,5 @@
 set -eu
 
 cd "$(dirname "$0")/../.."
-docker build -f tests/e2e/Dockerfile -t usb-pasteur-e2e .
-docker run --rm --privileged usb-pasteur-e2e "$@"
+docker build -f tests/e2e/Dockerfile -t pandora-box-e2e .
+docker run --rm --privileged pandora-box-e2e "$@"

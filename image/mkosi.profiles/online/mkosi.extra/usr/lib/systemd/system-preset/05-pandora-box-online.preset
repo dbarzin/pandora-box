@@ -1,0 +1,10 @@
+# Image profile "online": read before 10-pandora-box.preset, which disables
+# the network
+enable systemd-networkd.service
+enable systemd-networkd.socket
+enable systemd-networkd-wait-online.service
+enable systemd-resolved.service
+enable pandora-box-update.timer
+# freshclam is run by the update service, as its user, through the firewall
+disable clamav-freshclam.service
+disable clamav-freshclam-once.timer

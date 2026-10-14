@@ -1,4 +1,4 @@
-"""End-to-end test of a USB-Pasteur image in a QEMU/KVM virtual machine.
+"""End-to-end test of a PandoraBox image in a QEMU/KVM virtual machine.
 
 Boots the test image (image/build.sh --profile test) with Secure Boot and the
 image signing certificate enrolled, checks its integrity protections, then
@@ -34,7 +34,7 @@ from machine import SIGNING_CERTIFICATE, Machine, MachineError, make_key, read_k
 
 # The kiosk code builds and signs the signature sets of the update test
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-from usb_pasteur import sigsets
+from pandora_box import sigsets
 
 UPDATE_KEY = Path("image/update.key")
 # Signed image updates to the versions 2 to 4 (image/build-test.sh)
@@ -52,11 +52,11 @@ SOURCES = "sources"
 # The abuse.ch Auth-Key of the test profile (/etc/credstore)
 AUTH_KEY = "vm-test-auth-key"
 
-LOG = "/var/log/usb-pasteur/usb-pasteur.log"
+LOG = "/var/log/pandora-box/pandora-box.log"
 # Discoverable Partitions Specification: root partition of x86-64
 ROOT_TYPE = "4F68BCE3-E8CD-4DB1-96E7-FBCAF984B709"
 SECURE_BOOT_VARIABLE = "/sys/firmware/efi/efivars/SecureBoot-8be4df61-93ca-11d2-aa0d-00e098032b8c"
-REPORTS = "/var/lib/usb-pasteur/reports"
+REPORTS = "/var/lib/pandora-box/reports"
 # Keys pressed after a reset: the firmware and the boot loader start in it
 BOOT_KEYS_DURATION = 15.0
 
@@ -181,9 +181,7 @@ def check_boot(vm: Machine, timeout: float) -> None:
     # The versions of the kiosk, of the system and of the signatures
     system = image_versions()[0]
     built = f"{system[:4]}-{system[4:6]}-{system[6:8]} {system[8:10]}:{system[10:12]} UTC"
-    check(
-        f"USB-Pasteur {system} of {built}" in screen, f"no image version on the screen:\n{screen}"
-    )
+    check(f"PandoraBox {system} of {built}" in screen, f"no image version on the screen:\n{screen}")
     check("Signatures: set 1 of " in screen, f"no signature set on the screen:\n{screen}")
     check_drawn(vm)
     check(count_events(vm, "signatures_undated") == 1, "undated ClamAV database not logged")
@@ -292,7 +290,7 @@ def check_filesystems(vm: Machine) -> None:
     step("check the filesystems")
     fs_type, options = vm.shell.run("findmnt -n -o FSTYPE,OPTIONS /").split()
     check(fs_type == "erofs" and "ro" in options.split(","), f"root: {fs_type} {options}")
-    for path in ("/etc/usb-pasteur/test", "/usr/test", "/media/test"):
+    for path in ("/etc/pandora-box/test", "/usr/test", "/media/test"):
         check(not vm.shell.succeeds(f"touch {path}"), f"{path} is writable")
     fs_type, options = vm.shell.run("findmnt -n -o FSTYPE,OPTIONS /var").split()
     check(fs_type == "ext4" and "rw" in options.split(","), f"/var: {fs_type} {options}")
@@ -372,8 +370,8 @@ def check_sandbox(vm: Machine) -> None:
     step("scan workers are sandboxed")
     # The Python processes of the workers (their bubblewrap parents run as root)
     pids = vm.shell.run(
-        "for p in $(pgrep -f usb_pasteur.worker); do "
-        '[ "$(stat -c %U /proc/$p)" = usb-pasteur-scan ] && echo $p; done; true'
+        "for p in $(pgrep -f pandora_box.worker); do "
+        '[ "$(stat -c %U /proc/$p)" = pandora-box-scan ] && echo $p; done; true'
     ).split()
     # One engine per worker: scan.workers ("auto": as many as the CPUs and the
     # memory allow) for ClamAV and for YARA, one for each hash engine
@@ -397,12 +395,12 @@ def check_sandbox(vm: Machine) -> None:
             vm.shell.run(f"readlink /proc/{pid}/ns/net").strip() != init_net,
             f"worker {pid}: in the network namespace of the system",
         )
-        for path in ("media", "var/lib/usb-pasteur", "var/log", "etc/usb-pasteur", "home"):
+        for path in ("media", "var/lib/pandora-box", "var/log", "etc/pandora-box", "home"):
             check(
                 not vm.shell.succeeds(f"test -e /proc/{pid}/root/{path}"),
                 f"worker {pid} sees /{path}",
             )
-    print(f"{len(pids)} workers: user usb-pasteur-scan, no capabilities, no_new_privs, seccomp,")
+    print(f"{len(pids)} workers: user pandora-box-scan, no capabilities, no_new_privs, seccomp,")
     print("no network, no device, no kiosk data in their file system")
 
 
@@ -440,17 +438,17 @@ def check_hardening(vm: Machine) -> None:
     # Overview of all the units: "NAME EXPOSURE PREDICATE HAPPY"
     exposure = vm.shell.run(
         "systemd-analyze security --no-pager"
-        " | grep -E '^(usb-pasteur|clamav-daemon|usbguard)\\.service' || true"
+        " | grep -E '^(pandora-box|clamav-daemon|usbguard)\\.service' || true"
     )
     print("sysctl, kernel options, lockdown, firewall, no login console: OK")
     units = [" ".join(line.split()[:2]) for line in exposure.splitlines()]
     # A oneshot service is not in the overview once it has run
     update = (
-        vm.shell.run("systemd-analyze security --no-pager usb-pasteur-update.service | tail -n 1")
+        vm.shell.run("systemd-analyze security --no-pager pandora-box-update.service | tail -n 1")
         .split(": ")[-1]
         .split()
     )
-    units.append(f"usb-pasteur-update.service {update[0] if update else '?'}")
+    units.append(f"pandora-box-update.service {update[0] if update else '?'}")
     print("systemd exposure (0 to 10):", ", ".join(units))
 
 
@@ -598,7 +596,7 @@ def check_signature_update(vm: Machine, workdir: Path) -> None:
     content = signature_set(workdir, "update-old", 1, UPDATE_KEY)
     old = insert_update(vm, workdir, content, "signatures_not_newer")
     check("not newer than the installed 2" in old["reason"], f"older set: {old}")
-    current = vm.shell.run("readlink /var/lib/usb-pasteur-signatures/current").strip()
+    current = vm.shell.run("readlink /var/lib/pandora-box-signatures/current").strip()
     check(current == "sets/2", f"installed set: {current}")
     print("refused: modified set, set signed by another key, older set")
 
@@ -641,7 +639,7 @@ def publish_sources(folder: Path, malwarebazaar: tuple[bytes, ...]) -> None:
     import io
     import zipfile
 
-    from usb_pasteur.bloom import write_filter
+    from pandora_box.bloom import write_filter
 
     folder.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(folder / "yara-forge-rules-core.zip", "w") as z:
@@ -663,7 +661,7 @@ def check_online_update(vm: Machine, workdir: Path) -> int:
         samples = (corpus.MALWAREBAZAAR_SAMPLE, corpus.NEW_SAMPLE, b"published online")
         publish_sources(publisher.root / SOURCES, samples)
         before = count_events(vm, "engines_reloaded")
-        output = vm.shell.run("systemctl start usb-pasteur-update.service", timeout=600)
+        output = vm.shell.run("systemctl start pandora-box-update.service", timeout=600)
         changed = wait_event(vm, "signatures_changed")
         serial = int(changed["serial"])
         wait_next_event(vm, "engines_reloaded", before)
@@ -672,18 +670,18 @@ def check_online_update(vm: Machine, workdir: Path) -> int:
         expected = ["hashlookup-full.bloom", "malwarebazaar-full-sha256.zip",
                     "yara-forge-rules-core.zip"]  # fmt: skip
         check(files == expected, f"downloaded: {files}")
-        current = vm.shell.run("readlink /var/lib/usb-pasteur-signatures/current").strip()
+        current = vm.shell.run("readlink /var/lib/pandora-box-signatures/current").strip()
         check(current == f"sets/{serial}", f"installed set: {current}, {output}")
         # Signed with the key of the kiosk; ClamAV kept from the installed set
         check(
-            vm.shell.succeeds("test -f /var/lib/usb-pasteur-signatures/local-key/local.pem"),
+            vm.shell.succeeds("test -f /var/lib/pandora-box-signatures/local-key/local.pem"),
             "no key of the kiosk",
         )
-        mode = vm.shell.run("stat -c %a /var/lib/usb-pasteur-signatures/local-key/local.key")
+        mode = vm.shell.run("stat -c %a /var/lib/pandora-box-signatures/local-key/local.key")
         check(mode.strip() == "600", f"key of the kiosk: mode {mode}")
         check(
             vm.shell.succeeds(
-                f"test -f /var/lib/usb-pasteur-signatures/current/{corpus.CLAMAV_DB}"
+                f"test -f /var/lib/pandora-box-signatures/current/{corpus.CLAMAV_DB}"
             ),
             "ClamAV database not kept",
         )
@@ -691,10 +689,10 @@ def check_online_update(vm: Machine, workdir: Path) -> int:
 
         # Unchanged sources (HTTP 304, Last-Modified): no new set
         publisher.requests.clear()
-        vm.shell.run("systemctl start usb-pasteur-update.service", timeout=600)
+        vm.shell.run("systemctl start pandora-box-update.service", timeout=600)
         check(count_events(vm, "signatures_changed") == 1, "a new set for unchanged sources")
         check(
-            vm.shell.run("readlink /var/lib/usb-pasteur-signatures/current").strip()
+            vm.shell.run("readlink /var/lib/pandora-box-signatures/current").strip()
             == f"sets/{serial}",
             "the set changed",
         )
@@ -707,15 +705,15 @@ def check_online_update(vm: Machine, workdir: Path) -> int:
         )
         check(not vm.shell.succeeds(connect), "the kiosk (root) can open a connection")
         check(
-            vm.shell.succeeds(f"setpriv --reuid=usb-pasteur-update --init-groups {connect}"),
+            vm.shell.succeeds(f"setpriv --reuid=pandora-box-update --init-groups {connect}"),
             "the update service user cannot open a connection",
         )
         print("firewall: only the update service user can open a connection")
         # Only the update service reads the credential
         check(
             not vm.shell.succeeds(
-                "setpriv --reuid=usb-pasteur-update --init-groups "
-                "cat /etc/credstore/usb-pasteur.abusech-auth-key"
+                "setpriv --reuid=pandora-box-update --init-groups "
+                "cat /etc/credstore/pandora-box.abusech-auth-key"
             ),
             "the update user reads /etc/credstore",
         )
@@ -738,7 +736,7 @@ def image_state(vm: Machine) -> tuple[str, list[str], list[str]]:
 def insert_image_update(vm: Machine, workdir: Path, update: Path, timeout: float) -> None:
     """Insert a key holding an image update; wait until the machine restarts."""
     content = workdir / f"image-{update.name}"
-    shutil.copytree(update, content / "usb-pasteur-image")
+    shutil.copytree(update, content / "pandora-box-image")
     image = workdir / f"image-{update.name}.img"
     make_key(image, content, 1024 * 1024 * 1024)
     before = count_events(vm, "image_update_installed")
@@ -773,15 +771,15 @@ def check_image_update(vm: Machine, workdir: Path, timeout: float) -> None:
     step("A/B image update")
     v1, v2, v3, v4 = image_versions()
     version, labels, ukis = image_state(vm)
-    check(version == v1 and f"usb-pasteur_{v1}" in labels, f"running: {version}, {labels}")
+    check(version == v1 and f"pandora-box_{v1}" in labels, f"running: {version}, {labels}")
     reports = count_reports(vm)
 
     # Update 2: written to the free slot, booted, then kept (boot assessment)
     insert_image_update(vm, workdir, IMAGE_UPDATES / "2", timeout)
     version, labels, ukis = wait_kept(vm, v2)
-    check(version == v2 and f"usb-pasteur_{v2}" in labels, f"after update: {version}, {labels}")
+    check(version == v2 and f"pandora-box_{v2}" in labels, f"after update: {version}, {labels}")
     # The longest label (36 characters) of a timestamp version
-    signature = f"/dev/disk/by-partlabel/usb-pasteur_{v2}_veritysig"
+    signature = f"/dev/disk/by-partlabel/pandora-box_{v2}_veritysig"
     check(vm.shell.succeeds(f"test -e {signature}"), f"no partition {signature}")
     check(count_reports(vm) == reports, "scan reports lost by the image update")
     print(f"version {v2} installed in the free slot, booted and kept: {', '.join(ukis)}")
@@ -791,27 +789,27 @@ def check_image_update(vm: Machine, workdir: Path, timeout: float) -> None:
     restarts = count_events(vm, "restarting")
     publisher = Publisher(workdir / "www-image")
     try:
-        shutil.copytree(IMAGE_UPDATES / "3", publisher.root / "usb-pasteur-image")
-        vm.shell.send("systemctl start usb-pasteur-update.service")
+        shutil.copytree(IMAGE_UPDATES / "3", publisher.root / "pandora-box-image")
+        vm.shell.send("systemctl start pandora-box-update.service")
         vm.monitor.wait_event("RESET", timeout=900)
     finally:
         publisher.stop()
-    downloaded = [p for p in publisher.requests if "/usb-pasteur-image/files/" in p]
+    downloaded = [p for p in publisher.requests if "/pandora-box-image/files/" in p]
     check(len(downloaded) == 4, f"files downloaded: {downloaded}")
     vm.shell.reset()
     vm.shell.login(timeout)
     restarted = wait_next_event(vm, "restarting", restarts)
     check(restarted["image_version"] == v3, f"restart: {restarted}")
     version, labels, ukis = wait_kept(vm, v3)
-    check(version == v3 and f"usb-pasteur_{v3}" in labels, f"after online update: {version}")
+    check(version == v3 and f"pandora-box_{v3}" in labels, f"after online update: {version}")
     print(f"version {v3} downloaded, installed, the idle kiosk restarted, kept: {', '.join(ukis)}")
 
     # Update 4 does not boot (its root filesystem is modified): after 3
     # tries, systemd-boot goes back to version 3
     insert_image_update(vm, workdir, corrupted_update(workdir, 4, int(v4)), timeout)
     version, labels, ukis = image_state(vm)
-    check(version == v3 and f"usb-pasteur_{v3}" in labels, f"after a bad update: {version}")
-    check(f"usb-pasteur_{v4}+0-3.efi" in ukis, f"version {v4} not marked bad: {ukis}")
+    check(version == v3 and f"pandora-box_{v3}" in labels, f"after a bad update: {version}")
+    check(f"pandora-box_{v4}+0-3.efi" in ukis, f"version {v4} not marked bad: {ukis}")
     print(f"version {v4} failed 3 boots, back to version {v3}: {', '.join(ukis)}")
 
 
@@ -820,7 +818,7 @@ def wait_kept(vm: Machine, version: str) -> tuple[str, list[str], list[str]]:
     deadline = time.monotonic() + 120
     while True:
         state = image_state(vm)
-        if f"usb-pasteur_{version}.efi" in state[2]:
+        if f"pandora-box_{version}.efi" in state[2]:
             return state
         check(time.monotonic() < deadline, f"version {version} not marked good: {state}")
         time.sleep(2)
@@ -968,14 +966,14 @@ def check_filesystem_keys(vm: Machine, workdir: Path) -> None:
     # exfat and NTFS are filled by the kernel of the machine, the kiosk stopped
     started = count_events(vm, "kiosk_started")
     log = KioskLog(vm)
-    vm.shell.run("systemctl stop usb-pasteur", timeout=120)
+    vm.shell.run("systemctl stop pandora-box", timeout=120)
     # Stopped cleanly: the kiosk ran its cleanup (unmount), exit status 0
     log.wait("kiosk_stopped", timeout=10)
-    result = vm.shell.run("systemctl show -P Result usb-pasteur").strip()
+    result = vm.shell.run("systemctl show -P Result pandora-box").strip()
     check(result == "success", f"kiosk stop: {result}")
     for fs_type in keys.FILLED_IN_MACHINE:
         keys.fill_in_machine(vm, images[fs_type], fs_type)
-    vm.shell.run("systemctl start usb-pasteur", timeout=300)
+    vm.shell.run("systemctl start pandora-box", timeout=300)
     wait_next_event(vm, "kiosk_started", started, timeout=300)
     wait_screen(vm, "Please insert a USB key")
     for name, image in images.items():
@@ -1019,7 +1017,7 @@ def check_refused_keys(vm: Machine, workdir: Path) -> None:
 
 def check_maintenance(vm: Machine, workdir: Path) -> None:
     step("maintenance device: the kiosk exports its logs")
-    from usb_pasteur import maintenance
+    from pandora_box import maintenance
 
     content = workdir / "maintenance"
     maintenance.request(content / maintenance.FOLDER, UPDATE_KEY)
@@ -1033,7 +1031,7 @@ def check_maintenance(vm: Machine, workdir: Path) -> None:
     log.wait("device_removed")
     files = read_key(image)
     folder = f"{maintenance.FOLDER}/{exported['folder']}"
-    for name in ("journal.txt", "kernel.txt", "usb-pasteur.log", "usb-devices.txt",
+    for name in ("journal.txt", "kernel.txt", "pandora-box.log", "usb-devices.txt",
                  "hardware.txt", "signatures.txt", "services.txt"):  # fmt: skip
         check(f"{folder}/{name}" in files, f"{name} not exported: {files}")
     check(not any("credstore" in f or f.endswith(".key") for f in files), f"secrets: {files}")
@@ -1098,7 +1096,7 @@ def saved_log(vm: Machine, workdir: Path) -> Iterator[None]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument(
-        "--image", type=Path, default=Path("image/mkosi.output/usb-pasteur-test.raw")
+        "--image", type=Path, default=Path("image/mkosi.output/pandora-box-test.raw")
     )
     parser.add_argument("--boot-timeout", type=float, default=300.0)
     parser.add_argument("--workdir", type=Path, help="keep the logs and key image in this folder")

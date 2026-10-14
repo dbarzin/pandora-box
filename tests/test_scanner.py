@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.config import LimitsConfig
-from usb_pasteur.engines import EngineSpec, Verdict
-from usb_pasteur.scanner import FileResult, Scanner
-from usb_pasteur.workers import WorkerPool
+from pandora_box.config import LimitsConfig
+from pandora_box.engines import EngineSpec, Verdict
+from pandora_box.scanner import FileResult, Scanner
+from pandora_box.workers import WorkerPool
 
 from .conftest import started_pool
 from .engines import MisbehavingEngine

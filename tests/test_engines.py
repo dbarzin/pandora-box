@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.engines import EngineResult, EngineSpec, FakeEngine, FileInfo, Verdict, aggregate
-from usb_pasteur.engines.fake import EICAR
+from pandora_box.engines import EngineResult, EngineSpec, FakeEngine, FileInfo, Verdict, aggregate
+from pandora_box.engines.fake import EICAR
 
 
 @contextmanager

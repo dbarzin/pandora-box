@@ -1,5 +1,5 @@
 #!/bin/sh
-# Run a USB-Pasteur image in a QEMU/KVM virtual machine, in the build container.
+# Run a PandoraBox image in a QEMU/KVM virtual machine, in the build container.
 #   image/vm.sh test [--workdir DIR]          automated end-to-end test of the test image
 #   image/vm.sh run [IMAGE] [--usb DEVICE]    interactive machine (default: the test image)
 #   image/vm.sh usb                           USB storage devices of this computer
@@ -42,7 +42,7 @@ test | run) ;;
     ;;
 esac
 
-docker build -q -t usb-pasteur-builder image >/dev/null
+docker build -q -t pandora-box-builder image >/dev/null
 # Run as the calling user, so that the files written in the repository
 # (work folder) belong to them
 user="--user $(id -u):$(id -g) -e PYTHONDONTWRITEBYTECODE=1"
@@ -55,7 +55,7 @@ fi
 if [ "$command" = test ]; then
     # shellcheck disable=SC2086
     exec docker run --rm $user $kvm -v "$PWD:/src" -w /src \
-        usb-pasteur-builder python3 image/vm/run_tests.py "$@"
+        pandora-box-builder python3 image/vm/run_tests.py "$@"
 fi
 
 passthrough=""
@@ -65,7 +65,7 @@ done
 if [ -z "$passthrough" ]; then
     # shellcheck disable=SC2086
     exec docker run --rm -it $user $kvm -v "$PWD:/src" -w /src -p 127.0.0.1:5900:5900 \
-        usb-pasteur-builder python3 image/vm/machine.py run "$@"
+        pandora-box-builder python3 image/vm/machine.py run "$@"
 fi
 
 # USB passthrough: QEMU opens the host USB devices (root, all devices) and
@@ -78,7 +78,7 @@ echo "Unmount it first, and disable the automatic mounting of USB devices."
 exec docker run --rm -it --privileged --network host $kvm \
     -v /dev/bus/usb:/dev/bus/usb -v /run/udev:/run/udev:ro \
     -v "$PWD:/src" -w /src -e PYTHONDONTWRITEBYTECODE=1 -e HOST_IDS="$(id -u):$(id -g)" \
-    usb-pasteur-builder sh -c '
+    pandora-box-builder sh -c '
         status=0
         python3 image/vm/machine.py run --vnc-listen 127.0.0.1 "$@" || status=$?
         chown -R "$HOST_IDS" image/vm/work

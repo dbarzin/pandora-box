@@ -8,10 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.config import YaraConfig, YaraRuleSet, parse_config
-from usb_pasteur.engines import EngineError, EngineResult, FileInfo, Verdict
-from usb_pasteur.engines.registry import engine_specs
-from usb_pasteur.engines.yara import YaraEngine, externals
+from pandora_box.config import YaraConfig, YaraRuleSet, parse_config
+from pandora_box.engines import EngineError, EngineResult, FileInfo, Verdict
+from pandora_box.engines.registry import engine_specs
+from pandora_box.engines.yara import YaraEngine, externals
 
 RULES = """
 rule Test_Malicious {
@@ -281,11 +281,11 @@ def test_spec_from_config(rules_dir: Path) -> None:
     assert isinstance(engine, YaraEngine) and engine.rule_count == 6
 
 
-YARA_RULES = os.environ.get("USB_PASTEUR_YARA_RULES")
+YARA_RULES = os.environ.get("PANDORA_BOX_YARA_RULES")
 
 
 @pytest.mark.integration
-@pytest.mark.skipif(not YARA_RULES, reason="USB_PASTEUR_YARA_RULES not set")
+@pytest.mark.skipif(not YARA_RULES, reason="PANDORA_BOX_YARA_RULES not set")
 def test_real_rules(tmp_path: Path) -> None:
     """Compile real rule sets (e.g. YARA Forge) and scan harmless content."""
     rule_sets = tuple(

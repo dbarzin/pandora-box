@@ -1,22 +1,22 @@
 # Security Policy
 
-USB-Pasteur is a USB decontamination kiosk designed for sensitive environments. We take security issues seriously and appreciate responsible disclosure.
+PandoraBox is a USB decontamination kiosk designed for sensitive environments. We take security issues seriously and appreciate responsible disclosure.
 
 ## Supported versions
 
-USB-Pasteur is under active development and has not yet reached a stable release. Security fixes are applied to the `main` branch and to the latest published image.
+PandoraBox is under active development and has not yet reached a stable release. Security fixes are applied to the `main` branch and to the latest published image.
 
 | Version | Supported |
 |---|---|
 | `main` / latest release | Yes |
 | Older releases | No |
-| pandora-box (predecessor) | No |
+| PandoraBox v1 (based on Pandora) | No |
 
 ## Reporting a vulnerability
 
 **Please do not report security vulnerabilities through public GitHub issues, discussions or pull requests.**
 
-Report them privately using GitHub's [private vulnerability reporting](https://github.com/dbarzin/usb-pasteur/security/advisories/new) (Security tab → "Report a vulnerability").
+Report them privately using GitHub's [private vulnerability reporting](https://github.com/dbarzin/pandora-box/security/advisories/new) (Security tab → "Report a vulnerability").
 
 Please include as much of the following as possible:
 
@@ -40,15 +40,15 @@ Please include as much of the following as possible:
 
 In scope:
 
-- the `usb_pasteur` orchestrator and its detection engine plugins,
+- the `pandora_box` orchestrator and its detection engine plugins,
 - the hardened system image (build configuration, services, sandboxing, USBGuard, mount options),
 - the signature update channel (online and offline) and its signature verification,
 - the kiosk and administrator interfaces.
 
 Out of scope:
 
-- vulnerabilities in upstream projects (ClamAV, YARA-X, Debian packages, etc.) — please report them upstream; let us know if USB-Pasteur needs to react,
-- malware that no integrated engine detects, unless it results from a USB-Pasteur defect (e.g. files silently skipped, wrong verdict aggregation),
+- vulnerabilities in upstream projects (ClamAV, YARA-X, Debian packages, etc.) — please report them upstream; let us know if PandoraBox needs to react,
+- malware that no integrated engine detects, unless it results from a PandoraBox defect (e.g. files silently skipped, wrong verdict aggregation),
 - attacks requiring physical access beyond the exposed scanning USB ports (opening the enclosure, BIOS access on a deployment that ignores the hardening guide),
 - denial of service from a deliberately oversized device, when the configured limits behave as documented.
 

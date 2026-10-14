@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.sigsets import (
+from pandora_box.sigsets import (
     MANIFEST,
     SIGNATURE,
     NotNewerError,

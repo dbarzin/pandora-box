@@ -11,22 +11,22 @@ from pathlib import Path
 import pytest
 from PIL import Image
 
-from usb_pasteur.cli import main
-from usb_pasteur.config import ConfigError, DisplayConfig, parse_config
-from usb_pasteur.engines import EngineResult, Verdict
-from usb_pasteur.results import FileResult
-from usb_pasteur.ui.base import Screen, video_mode
-from usb_pasteur.ui.framebuffer import (
+from pandora_box.cli import main
+from pandora_box.config import ConfigError, DisplayConfig, parse_config
+from pandora_box.engines import EngineResult, Verdict
+from pandora_box.results import FileResult
+from pandora_box.ui.base import Screen, video_mode
+from pandora_box.ui.framebuffer import (
     Framebuffer,
     FramebufferDisplay,
     FramebufferError,
     Geometry,
     raw_mode,
 )
-from usb_pasteur.ui.preview import main as theme_main
-from usb_pasteur.ui.preview import sample_states
-from usb_pasteur.ui.screens import Renderer, ViewState
-from usb_pasteur.ui.theme import ThemeError, load_theme, theme_languages
+from pandora_box.ui.preview import main as theme_main
+from pandora_box.ui.preview import sample_states
+from pandora_box.ui.screens import Renderer, ViewState
+from pandora_box.ui.theme import ThemeError, load_theme, theme_languages
 
 # -- configuration -----------------------------------------------------------
 
@@ -36,15 +36,16 @@ def test_display_config() -> None:
         {
             "kiosk": {"interface": "framebuffer"},
             "display": {
-                "theme": "/usr/share/usb-pasteur/theme",
+                "theme": "/usr/share/pandora-box/theme",
                 "language": "fr",
-                "result_seconds": 10,
+                "return_seconds": 10,
             },
         }
     )
-    assert config.display.theme == Path("/usr/share/usb-pasteur/theme")
+    assert config.display.theme == Path("/usr/share/pandora-box/theme")
     assert config.display.language == "fr"
-    assert config.display.result_seconds == 10.0
+    assert config.display.return_seconds == 10.0
+    assert parse_config({}).display.return_seconds == 5.0
     # An empty theme is the built-in theme
     assert parse_config({"display": {"theme": ""}}).display.theme is None
 
@@ -54,7 +55,8 @@ def test_display_config() -> None:
     [
         ({"theme": "relative/theme"}, "absolute path"),
         ({"language": "french"}, "language code"),
-        ({"result_seconds": 0}, "positive"),
+        ({"return_seconds": 0}, "positive"),
+        ({"result_seconds": 30}, "unknown key"),
         ({"colors": {}}, "unknown key"),
     ],
 )
@@ -213,7 +215,7 @@ def test_preview(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_check_config_checks_the_theme(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     theme = make_theme(tmp_path / "theme", '[colors]\nheader = "red"\n')
-    path = tmp_path / "usb-pasteur.toml"
+    path = tmp_path / "pandora-box.toml"
     path.write_text(f'[kiosk]\nfake_scan = true\n[display]\ntheme = "{theme}"\n')
     assert main(["--config", str(path), "--check-config"]) == 2
     assert "theme: colors.header" in capsys.readouterr().err
@@ -290,8 +292,8 @@ def wait_for(condition: object, timeout: float = 5.0) -> None:
         time.sleep(0.02)
 
 
-def make_display(fb_file: Path, slave: int, result_seconds: float = 30.0) -> FramebufferDisplay:
-    config = DisplayConfig(framebuffer=fb_file, result_seconds=result_seconds)
+def make_display(fb_file: Path, slave: int, return_seconds: float = 5.0) -> FramebufferDisplay:
+    config = DisplayConfig(framebuffer=fb_file, return_seconds=return_seconds)
     return FramebufferDisplay(
         config, load_theme(None, "en"), Framebuffer(fb_file, GEOMETRY), console_fd=slave
     )
@@ -319,7 +321,7 @@ def test_display_drawn_again_after_a_clear(
 ) -> None:
     # The graphics driver clears the framebuffer behind the kiosk (mode set
     # at boot): the screen does not change, it must still be drawn again
-    monkeypatch.setattr("usb_pasteur.ui.framebuffer._FULL_REDRAW", 0.2)
+    monkeypatch.setattr("pandora_box.ui.framebuffer._FULL_REDRAW", 0.2)
     display = make_display(fb_file, pty[1])
     display.start()
     try:
@@ -334,14 +336,19 @@ def test_display_drawn_again_after_a_clear(
 
 
 def test_result_stays_on_the_screen(fb_file: Path, pty: tuple[int, int]) -> None:
-    display = make_display(fb_file, pty[1], result_seconds=0.3)
+    display = make_display(fb_file, pty[1], return_seconds=0.5)
     display.start()
     try:
         display.show(Screen.CLEANED, [scanned("virus.exe")])
-        # The device is ejected, then removed right away: the result stays
+        # The result stays while the device is in, however long
+        time.sleep(0.8)
+        assert current(display) is Screen.CLEANED
+        # Removed: the waiting screen comes back return_seconds after
+        removed = time.monotonic()
         display.show(Screen.READY)
         assert current(display) is Screen.CLEANED
         wait_for(lambda: current(display) is Screen.READY)
+        assert time.monotonic() - removed >= 0.45
         # A new device does not wait
         display.show(Screen.CLEAN)
         display.show(Screen.READY)

@@ -13,9 +13,9 @@ from typing import IO
 
 import pytest
 
-from usb_pasteur import sigsets
-from usb_pasteur.bloom import write_filter
-from usb_pasteur.publish import (
+from pandora_box import sigsets
+from pandora_box.bloom import write_filter
+from pandora_box.publish import (
     HASHLOOKUP,
     HASHLOOKUP_BLOOM,
     MALWAREBAZAAR,

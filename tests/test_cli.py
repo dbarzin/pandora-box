@@ -6,15 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.cli import apply_overrides, main, parse_args, stop_on_sigterm
-from usb_pasteur.config import parse_config
+from pandora_box.cli import apply_overrides, main, parse_args, stop_on_sigterm
+from pandora_box.config import parse_config
 
 # Sandboxed scan workers need root (see test_sandbox_needs_root)
 NO_SANDBOX = "[scan]\nsandbox = false\n"
 
 
 def write(tmp_path: Path, content: str) -> Path:
-    path = tmp_path / "usb-pasteur.toml"
+    path = tmp_path / "pandora-box.toml"
     path.write_text(content)
     return path
 

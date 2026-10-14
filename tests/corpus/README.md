@@ -4,7 +4,7 @@
 expected from the scan. `tests/test_corpus.py` checks every sample:
 
 - with the fake engine, in every test run;
-- with real engines when `USB_PASTEUR_CORPUS_CONFIG` names a configuration
+- with real engines when `PANDORA_BOX_CORPUS_CONFIG` names a configuration
   file whose engines are installed (`pytest -m integration`).
 
 ## Adding a sample

@@ -1,0 +1,53 @@
+[Unit]
+Description=PandoraBox online updates (signatures and image)
+Documentation=https://github.com/dbarzin/pandora-box/blob/main/docs/signatures.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# 1. Build a signature set from the sources (updates.sources) when they
+#    changed, or download the published set (updates.url) when it is newer,
+#    and the image update (updates.image_url), as the only user allowed out
+#    by the firewall, without privileges. One failing ("-") does not stop
+#    the other.
+User=pandora-box-update
+Group=pandora-box-update
+StateDirectory=pandora-box-update
+StateDirectoryMode=0700
+# The abuse.ch Auth-Key (MalwareBazaar), from /etc/credstore of the image:
+# only this service reads it
+ImportCredential=pandora-box.*
+ExecStart=-/usr/bin/pandora-box-signatures download --staging /var/lib/pandora-box-update/staging
+ExecStart=-/usr/bin/pandora-box-image download --staging /var/lib/pandora-box-update/image
+# 2. Verify and install them, as root ("+": without the sandbox below). The
+#    kiosk loads a new signature set, or restarts on a new image version, when
+#    it is idle.
+ExecStartPost=+/usr/bin/pandora-box-signatures install /var/lib/pandora-box-update/staging --staged
+ExecStartPost=+/usr/bin/pandora-box-image install /var/lib/pandora-box-update/image
+TimeoutStartSec=2h
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+# No MemoryDenyWriteExecute: the YARA rules are compiled to native code, to
+# check that the kiosk can load them
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+UMask=0077

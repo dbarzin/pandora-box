@@ -3,7 +3,7 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
-name = "usb-pasteur"
+name = "pandora-box"
 version = "0.1.0.dev0"
 description = "Open source USB decontamination kiosk to detect and remove malware from USB storage devices"
 readme = "README.md"
@@ -43,21 +43,21 @@ dev = [
 ]
 
 [project.scripts]
-usb-pasteur = "usb_pasteur.cli:main"
-usb-pasteur-signatures = "usb_pasteur.sigsets:main"
-usb-pasteur-image = "usb_pasteur.imageupdate:main"
-usb-pasteur-theme = "usb_pasteur.ui.preview:main"
+pandora-box = "pandora_box.cli:main"
+pandora-box-signatures = "pandora_box.sigsets:main"
+pandora-box-image = "pandora_box.imageupdate:main"
+pandora-box-theme = "pandora_box.ui.preview:main"
 
 [project.urls]
-Homepage = "https://github.com/dbarzin/usb-pasteur"
-Issues = "https://github.com/dbarzin/usb-pasteur/issues"
-Security = "https://github.com/dbarzin/usb-pasteur/security/policy"
+Homepage = "https://github.com/dbarzin/pandora-box"
+Issues = "https://github.com/dbarzin/pandora-box/issues"
+Security = "https://github.com/dbarzin/pandora-box/security/policy"
 
 [tool.hatch.build.targets.sdist]
 exclude = ["/3D", "/.github"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/usb_pasteur"]
+packages = ["src/pandora_box"]
 
 [tool.ruff]
 target-version = "py311"
@@ -81,6 +81,7 @@ select = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "S324", "S603", "S607"]  # asserts, test hashes and commands
 "image/vm/**" = ["S101", "S324", "S603", "S607"]
+"src/pandora_box/ui/curses_display.py" = ["E501"]  # the PandoraBox logo
 
 [tool.mypy]
 python_version = "3.11"

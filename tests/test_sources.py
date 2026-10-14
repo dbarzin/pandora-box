@@ -7,10 +7,10 @@ from pathlib import Path
 
 import pytest
 
-from usb_pasteur.config import Config, parse_config
-from usb_pasteur.kiosk import check_signatures
-from usb_pasteur.online import build_from_sources, download
-from usb_pasteur.publish import (
+from pandora_box.config import Config, parse_config
+from pandora_box.kiosk import check_signatures
+from pandora_box.online import build_from_sources, download
+from pandora_box.publish import (
     MALWAREBAZAAR,
     MALWAREBAZAAR_DB,
     YARA_FORGE,
@@ -18,7 +18,7 @@ from usb_pasteur.publish import (
     PublishError,
     keep_files,
 )
-from usb_pasteur.sigsets import (
+from pandora_box.sigsets import (
     MANIFEST,
     SIGNATURE,
     current_set,
@@ -43,7 +43,7 @@ SAMPLE = "a" * 64
 
 
 def write_config(tmp_path: Path, sources: str = SOURCES) -> Path:
-    path = tmp_path / "usb-pasteur.toml"
+    path = tmp_path / "pandora-box.toml"
     path.write_text(
         f"""
 [kiosk]
@@ -179,7 +179,7 @@ def test_download_dispatches_to_the_sources(
 ) -> None:
     calls = []
     monkeypatch.setattr(
-        "usb_pasteur.online.build_from_sources",
+        "pandora_box.online.build_from_sources",
         lambda config, staging, log: calls.append(staging),
     )
     download(load(kiosk), tmp_path / "update" / "staging", log=lambda _: None)
@@ -207,7 +207,7 @@ def test_keep_files_only_keeps_the_other_sources(tmp_path: Path, kiosk: Path) ->
 
 
 def test_mirror_over_http_needs_to_be_configured(tmp_path: Path) -> None:
-    from usb_pasteur.publish import Downloader
+    from pandora_box.publish import Downloader
 
     with pytest.raises(PublishError, match="not an HTTPS URL"):
         Downloader(tmp_path).open("http://mirror/x", {})
