@@ -6,12 +6,16 @@ detection engines, shows the dangerous files it found, and removes them when
 the user touches the screen. It is a complete rewrite of the first version of
 PandoraBox, without dependency on Pandora (CIRCL).
 
-> [!WARNING]
-> **PandoraBox is under active development and is not production-ready.**
-> There is no release yet, no release signing key and no external security
-> audit. Until the first release, do not rely on it to check USB devices.
+## Sample screenshots
 
-![The kiosk lists the dangerous files before removing them](images/interface-threats.png)
+### ⏳ **Waiting for a key, scan in progress**
+
+[<img src="images/interface-ready.png" width="400">](images/interface-ready.png) [<img src="images/interface-scanning.png" width="400">](images/interface-scanning.png)
+
+### ☣️ **Threats found, key cleaned**
+
+[<img src="images/interface-threats.png" width="400">](images/interface-threats.png) [<img src="images/interface-cleaned.png" width="400">](images/interface-cleaned.png)
+
 
 ## Objective
 
@@ -26,21 +30,6 @@ administration. It runs on a refurbished small computer with a touch screen,
 and works without network.
 
 ## How it works
-
-```mermaid
-flowchart LR
-    A[USB key inserted] --> B[Mounted read-only]
-    B --> C[Inventory of the files]
-    C --> D[Scan by the engines<br/>in sandboxed workers]
-    D --> E{Verdict}
-    E -- clean --> F[Key can be used]
-    E -- threats --> G[Files listed<br/>on the screen]
-    G -- touch --> H[Quarantine,<br/>then removal]
-    E -- not fully scanned --> I[Key NOT verified]
-    F --> J[Report, eject]
-    H --> J
-    I --> J
-```
 
 - **Several engines**: known malicious hashes (MalwareBazaar), known files
   (CIRCL Hashlookup), ClamAV, YARA-X rules (YARA Forge) and structure
