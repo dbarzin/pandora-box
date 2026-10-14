@@ -1,6 +1,6 @@
 # Introduction
 
-![Pandora-Box](images/pandora-box.png){ width="400" }
+![Pandora-Box](images/pandora-box.png){ width="300" .no-border }
 
 **PandoraBox** is an open source USB decontamination kiosk, a "sheep-dip
 station": a user inserts a USB key, the kiosk scans every file with several
