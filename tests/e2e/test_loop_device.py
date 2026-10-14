@@ -283,6 +283,7 @@ def test_real_engines(fs_type: str, clamd: Path, tmp_path: Path) -> None:
         "hashlookup",
         "clamav",
         "yara",
+        "heuristics",
     ]
     clamav = next(e for e in report["engines"] if e["name"] == "clamav")
     assert clamav["version"].startswith("ClamAV ")
@@ -306,6 +307,7 @@ def test_real_engines(fs_type: str, clamd: Path, tmp_path: Path) -> None:
         "hashlookup": "clean",
         "clamav": "skipped",
         "yara": "skipped",
+        "heuristics": "skipped",
     }
     assert report["verdict"]["device"] == "malicious"
     assert report["actions"]["cleaned"] is True
