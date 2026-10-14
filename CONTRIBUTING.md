@@ -14,7 +14,7 @@ Be respectful, constructive and patient. Harassment or discriminatory behavior w
 
 ## Reporting bugs and requesting features
 
-- Search the [existing issues](https://github.com/dbarzin/pandora-box/issues) first to avoid duplicates.
+- Search the [existing issues](https://github.com/sourcentis/pandora-box/issues) first to avoid duplicates.
 - For a bug, include:
   - the PandoraBox version or commit,
   - the hardware (model, USB ports, display) or the development environment,

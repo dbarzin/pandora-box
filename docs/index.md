@@ -79,6 +79,6 @@ and works without network.
 | [Development](development.md) | Run the kiosk from the sources, tests |
 
 The progress of the project is followed in the
-[roadmap](https://github.com/dbarzin/pandora-box/blob/main/ROADMAP.md).
+[roadmap](https://github.com/sourcentis/pandora-box/blob/main/ROADMAP.md).
 PandoraBox is free software, licensed under the
-[GNU General Public License v3.0](https://github.com/dbarzin/pandora-box/blob/main/LICENSE).
+[GNU General Public License v3.0](https://github.com/sourcentis/pandora-box/blob/main/LICENSE).

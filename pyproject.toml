@@ -50,9 +50,9 @@ pandora-box-theme = "pandora_box.ui.preview:main"
 pandora-box-siem = "pandora_box.siem:main"
 
 [project.urls]
-Homepage = "https://github.com/dbarzin/pandora-box"
-Issues = "https://github.com/dbarzin/pandora-box/issues"
-Security = "https://github.com/dbarzin/pandora-box/security/policy"
+Homepage = "https://github.com/sourcentis/pandora-box"
+Issues = "https://github.com/sourcentis/pandora-box/issues"
+Security = "https://github.com/sourcentis/pandora-box/security/policy"
 
 [tool.hatch.build.targets.sdist]
 exclude = ["/3D", "/.github"]

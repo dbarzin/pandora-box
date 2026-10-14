@@ -1,6 +1,6 @@
 # PandoraBox Roadmap
 
-This roadmap follows the development of **PandoraBox** phase by phase: goals, tasks done and to do, decisions. For an overview of the project, see the [README](README.md); for the documentation, see the [documentation site](https://dbarzin.github.io/pandora-box/).
+This roadmap follows the development of **PandoraBox** phase by phase: goals, tasks done and to do, decisions. For an overview of the project, see the [README](README.md); for the documentation, see the [documentation site](https://sourcentis.github.io/pandora-box/).
 
 ## Vision
 
@@ -76,7 +76,7 @@ Deployment files are in `packaging/`: example configuration, systemd service, tm
 
 The detection engines, their data files and the verdict policy are described in [docs/engines.md](docs/engines.md). Every engine is enabled by default: the kiosk refuses to start when an enabled engine cannot load its signatures, or when no content engine (ClamAV or YARA-X) is enabled.
 
-Development setup, configuration and tests: see the [development guide](https://dbarzin.github.io/pandora-box/development/).
+Development setup, configuration and tests: see the [development guide](https://sourcentis.github.io/pandora-box/development/).
 
 ## Phase 1 — Scanning engine (MVP)
 

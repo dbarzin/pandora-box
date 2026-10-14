@@ -43,7 +43,7 @@ If your system Python is 3.11 or later (Debian 12 and 13, Ubuntu 24.04):
 
 ```sh
 sudo apt install python3-venv python3-full
-git clone https://github.com/dbarzin/pandora-box.git
+git clone https://github.com/sourcentis/pandora-box.git
 cd pandora-box
 python3 -m venv .venv
 source .venv/bin/activate
@@ -55,7 +55,7 @@ If your system Python is older (Ubuntu 22.04 ships Python 3.10), use [uv](https:
 
 ```sh
 curl -LsSf https://astral.sh/uv/install.sh | sh
-git clone https://github.com/dbarzin/pandora-box.git
+git clone https://github.com/sourcentis/pandora-box.git
 cd pandora-box
 uv venv --python 3.11
 source .venv/bin/activate

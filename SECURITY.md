@@ -16,7 +16,7 @@ PandoraBox is under active development and has not yet reached a stable release.
 
 **Please do not report security vulnerabilities through public GitHub issues, discussions or pull requests.**
 
-Report them privately using GitHub's [private vulnerability reporting](https://github.com/dbarzin/pandora-box/security/advisories/new) (Security tab → "Report a vulnerability").
+Report them privately using GitHub's [private vulnerability reporting](https://github.com/sourcentis/pandora-box/security/advisories/new) (Security tab → "Report a vulnerability").
 
 Please include as much of the following as possible:
 

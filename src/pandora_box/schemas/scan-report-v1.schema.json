@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/dbarzin/pandora-box/schemas/scan-report-v1.schema.json",
+  "$id": "https://github.com/sourcentis/pandora-box/schemas/scan-report-v1.schema.json",
   "title": "PandoraBox scan report",
   "description": "One report per scanned device. Untrusted strings (file names, device strings, libmagic descriptions) are escaped: undecodable bytes and control characters appear as \\xNN, \\uNNNN or \\UNNNNNNNN, backslashes are doubled. path_b64 holds the exact bytes of each path.",
   "type": "object",

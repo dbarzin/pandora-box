@@ -1,6 +1,6 @@
 [Unit]
 Description=PandoraBox log export to a SIEM
-Documentation=https://github.com/dbarzin/pandora-box/blob/main/docs/siem.md
+Documentation=https://github.com/sourcentis/pandora-box/blob/main/docs/siem.md
 Wants=network-online.target
 After=network-online.target
 

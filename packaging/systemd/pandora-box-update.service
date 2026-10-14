@@ -1,6 +1,6 @@
 [Unit]
 Description=PandoraBox online updates (signatures and image)
-Documentation=https://github.com/dbarzin/pandora-box/blob/main/docs/signatures.md
+Documentation=https://github.com/sourcentis/pandora-box/blob/main/docs/signatures.md
 Wants=network-online.target
 After=network-online.target
 

@@ -1,10 +1,10 @@
 # PandoraBox
 
-[![CI](https://img.shields.io/github/actions/workflow/status/dbarzin/pandora-box/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/dbarzin/pandora-box/actions/workflows/ci.yml)
-![License](https://img.shields.io/github/license/dbarzin/pandora-box.svg?style=flat-square)
+[![CI](https://img.shields.io/github/actions/workflow/status/sourcentis/pandora-box/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/sourcentis/pandora-box/actions/workflows/ci.yml)
+![License](https://img.shields.io/github/license/sourcentis/pandora-box.svg?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square)
-![Contributors](https://img.shields.io/github/contributors/dbarzin/pandora-box.svg?style=flat-square)
-![Stars](https://img.shields.io/github/stars/dbarzin/pandora-box?style=flat-square)
+![Contributors](https://img.shields.io/github/contributors/sourcentis/pandora-box.svg?style=flat-square)
+![Stars](https://img.shields.io/github/stars/sourcentis/pandora-box?style=flat-square)
 
 ### Introduction
 
@@ -14,7 +14,7 @@ USB keys remain a common way into information systems that are otherwise well pr
 
 PandoraBox aims to be a **free, auditable and hardened** alternative to commercial kiosks, for sensitive environments such as healthcare, industry and public administration. It is a complete rewrite of the first version of PandoraBox, without dependency on Pandora (CIRCL).
 
-📚 [Explore the Documentation](https://dbarzin.github.io/pandora-box/) |
+📚 [Explore the Documentation](https://sourcentis.github.io/pandora-box/) |
 🗺️ [Read the Roadmap](ROADMAP.md) |
 🔍 [View the Sources](src/pandora_box/)
 
@@ -52,22 +52,22 @@ PandoraBox aims to be a **free, auditable and hardened** alternative to commerci
 - **Screen:** Waveshare 7-inch HDMI LCD (C), capacitive touch screen, 1024x600
 - **Enclosure:** 3D-printed, in the [3D](3D/) folder (CERN-OHL-S v2)
 
-See the [hardware guide](https://dbarzin.github.io/pandora-box/hardware/), and the [installation guide](https://dbarzin.github.io/pandora-box/install/) for the BIOS settings.
+See the [hardware guide](https://sourcentis.github.io/pandora-box/hardware/), and the [installation guide](https://sourcentis.github.io/pandora-box/install/) for the BIOS settings.
 
 ## 📦 **Installation**
 
 PandoraBox is distributed as a complete system image, built with Docker only:
 
 ```bash
-git clone https://github.com/dbarzin/pandora-box.git
+git clone https://github.com/sourcentis/pandora-box.git
 cd pandora-box
 image/build.sh                                  # build the image
 image/build-test.sh && image/vm.sh test         # optional: test it in a virtual machine
 ```
 
-Then write `image/mkosi.output/pandora-box.raw` to the disk of the kiosk, enroll the Secure Boot key and install a signature set from a USB key. Every step is described in the documentation: [building the image](https://dbarzin.github.io/pandora-box/build/), [testing with QEMU](https://dbarzin.github.io/pandora-box/vm/), [initial installation](https://dbarzin.github.io/pandora-box/install/), and the maintenance: [signatures](https://dbarzin.github.io/pandora-box/signatures/), [system updates](https://dbarzin.github.io/pandora-box/update/), [logs](https://dbarzin.github.io/pandora-box/logs/).
+Then write `image/mkosi.output/pandora-box.raw` to the disk of the kiosk, enroll the Secure Boot key and install a signature set from a USB key. Every step is described in the documentation: [building the image](https://sourcentis.github.io/pandora-box/build/), [testing with QEMU](https://sourcentis.github.io/pandora-box/vm/), [initial installation](https://sourcentis.github.io/pandora-box/install/), and the maintenance: [signatures](https://sourcentis.github.io/pandora-box/signatures/), [system updates](https://sourcentis.github.io/pandora-box/update/), [logs](https://sourcentis.github.io/pandora-box/logs/).
 
-To work on the code, see the [development guide](https://dbarzin.github.io/pandora-box/development/).
+To work on the code, see the [development guide](https://sourcentis.github.io/pandora-box/development/).
 
 ## 📜 **Roadmap**
 

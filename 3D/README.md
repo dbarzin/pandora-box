@@ -55,7 +55,7 @@ EXPRESS OR IMPLIED WARRANTY, INCLUDING OF MERCHANTABILITY, SATISFACTORY
 QUALITY AND FITNESS FOR A PARTICULAR PURPOSE. Please see the CERN-OHL-S v2
 for applicable conditions.
 
-Source location: https://github.com/dbarzin/pandora-box/tree/main/3D
+Source location: https://github.com/sourcentis/pandora-box/tree/main/3D
 
 As per CERN-OHL-S v2 section 4, should you produce hardware based on this
 source, you must where practicable maintain the Source Location visible on

@@ -38,7 +38,7 @@ pandora-box --config pandora-box.toml --check-config
 ## Reference
 
 The configuration of the image,
-[`packaging/pandora-box.toml`](https://github.com/dbarzin/pandora-box/blob/main/packaging/pandora-box.toml),
+[`packaging/pandora-box.toml`](https://github.com/sourcentis/pandora-box/blob/main/packaging/pandora-box.toml),
 with every key, its default value and its meaning:
 
 ```toml

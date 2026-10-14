@@ -349,7 +349,7 @@ of the official `daily` database).
 ## Scan report
 
 Every scan writes a JSON report in `report.folder`, described by
-[`src/pandora_box/schemas/scan-report-v1.schema.json`](https://github.com/dbarzin/pandora-box/blob/main/src/pandora_box/schemas/scan-report-v1.schema.json):
+[`src/pandora_box/schemas/scan-report-v1.schema.json`](https://github.com/sourcentis/pandora-box/blob/main/src/pandora_box/schemas/scan-report-v1.schema.json):
 device, configuration, engines and signature versions, every file with its
 hashes, type, verdict and per-engine results, the device verdict and the
 actions taken. The quarantine manifest references it.

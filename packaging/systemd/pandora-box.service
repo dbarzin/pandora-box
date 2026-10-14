@@ -1,6 +1,6 @@
 [Unit]
 Description=PandoraBox USB decontamination kiosk
-Documentation=https://github.com/dbarzin/pandora-box
+Documentation=https://github.com/sourcentis/pandora-box
 After=systemd-udevd.service local-fs.target
 # clamd is started by its socket on the first connection
 Wants=clamav-daemon.socket

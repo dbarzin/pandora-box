@@ -1,10 +1,10 @@
 # Project information
 site_name: PandoraBox
 site_description: Open source USB decontamination kiosk
-site_url: https://dbarzin.github.io/pandora-box/
+site_url: https://sourcentis.github.io/pandora-box/
 
 # Repository
-repo_url: https://github.com/dbarzin/pandora-box
+repo_url: https://github.com/sourcentis/pandora-box
 edit_uri: edit/main/docs
 
 # Copyright

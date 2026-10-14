@@ -9,7 +9,7 @@ OVMF): the build computer only needs Docker.
 > The image and the signature sets are signed with development keys only.
 > The production image has no signature set: the kiosk scans nothing until a
 > signature update device is inserted (see [Signatures](signatures.md)).
-> See the phase 2 tasks in the [roadmap](https://github.com/dbarzin/pandora-box/blob/main/ROADMAP.md#phase-2--minimal-hardened-image).
+> See the phase 2 tasks in the [roadmap](https://github.com/sourcentis/pandora-box/blob/main/ROADMAP.md#phase-2--minimal-hardened-image).
 
 ## In short
 

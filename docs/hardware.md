@@ -43,7 +43,7 @@ Intel VMD, eMMC).
 
 A 3D-printed desk enclosure, one part, about 191 x 184 x 86 mm: the screen
 in the window of its tilted front face, ventilation slots on its rounded
-back. The model and its views are in [3D/](https://github.com/dbarzin/pandora-box/tree/main/3D), under the CERN Open
+back. The model and its views are in [3D/](https://github.com/sourcentis/pandora-box/tree/main/3D), under the CERN Open
 Hardware Licence v2 - Strongly Reciprocal (CERN-OHL-S v2).
 
 ## Installation
