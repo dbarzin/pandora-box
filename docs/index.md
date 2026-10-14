@@ -1,20 +1,12 @@
 # Introduction
 
+![Pandora-Box](images/pandora-box.png){ width="400" }
+
 **PandoraBox** is an open source USB decontamination kiosk, a "sheep-dip
 station": a user inserts a USB key, the kiosk scans every file with several
 detection engines, shows the dangerous files it found, and removes them when
 the user touches the screen. It is a complete rewrite of the first version of
 PandoraBox, without dependency on Pandora (CIRCL).
-
-## Sample screenshots
-
-### ⏳ **Waiting for a key, scan in progress**
-
-[<img src="images/interface-ready.png" width="400">](images/interface-ready.png) [<img src="images/interface-scanning.png" width="400">](images/interface-scanning.png)
-
-### ☣️ **Threats found, key cleaned**
-
-[<img src="images/interface-threats.png" width="400">](images/interface-threats.png) [<img src="images/interface-cleaned.png" width="400">](images/interface-cleaned.png)
 
 
 ## Objective
