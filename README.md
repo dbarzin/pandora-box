@@ -6,6 +6,8 @@
 ![Contributors](https://img.shields.io/github/contributors/sourcentis/pandora-box.svg?style=flat-square)
 ![Stars](https://img.shields.io/github/stars/sourcentis/pandora-box?style=flat-square)
 
+**English** | [Français](README.fr.md)
+
 ### Introduction
 
 USB keys remain a common way into information systems that are otherwise well protected: shared between organizations, plugged into unmanaged computers, carried into isolated networks. A decontamination kiosk, or "sheep-dip station", checks them before they reach a workstation.
