@@ -70,9 +70,10 @@ A kiosk works offline by default. An image built with the **profile
 itself, **from their sources**: ClamAV (freshclam), YARA Forge, MalwareBazaar
 and Hashlookup, the sources of `pandora-box-signatures publish`. The profile
 brings DHCP on the wired network (IPv4), DNS (systemd-resolved, without LLMNR
-or mDNS), freshclam, the `pandora-box-update` timer (every 6 hours, 5 minutes
-after boot), and a firewall that only lets out the update service (TCP),
-the log export to a SIEM ([siem.md](siem.md)), DHCP and DNS. Nothing comes in but the answers to these connections. It
+or mDNS), NTP (systemd-timesyncd, [image.md](image.md#time)), freshclam, the
+`pandora-box-update` timer (every 6 hours, 5 minutes after boot), and a
+firewall that only lets out the update service (TCP), the log export to a
+SIEM ([siem.md](siem.md)), DHCP, DNS and NTP. Nothing comes in but the answers to these connections. It
 enables the `[updates]` section of the configuration with every source:
 
 ```toml

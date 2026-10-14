@@ -379,9 +379,9 @@ After a change of the dependencies in `pyproject.toml`, regenerate it with
 
 `--profile online` adds online signature updates from their sources (see
 [signatures.md](signatures.md#online-updates)): systemd-networkd (DHCP on the
-wired network), systemd-resolved, freshclam, the `pandora-box-update` timer
-and a firewall that only lets the update service and the log export to a
-SIEM out (see [siem.md](siem.md))
+wired network), systemd-resolved, systemd-timesyncd, freshclam, the
+`pandora-box-update` timer and a firewall that only lets the update service,
+the log export to a SIEM (see [siem.md](siem.md)) and NTP out
 (`image/mkosi.profiles/online/`). Its `postinst.chroot` enables `[updates]`
 in the configuration of the kiosk, and installs the credentials of
 `image/credentials.toml` (outside git) in `/etc/credstore`: an image built
@@ -392,6 +392,28 @@ network configuration at all.
 cp image/credentials.toml.example image/credentials.toml   # then the abuse.ch Auth-Key
 image/build.sh --profile online
 ```
+
+### Time
+
+The clock of the kiosk dates its logs and scan reports, and decides whether
+the certificates of the update servers and of the SIEM are valid. An online
+kiosk synchronizes it with **systemd-timesyncd**, from the NTP servers of
+`NTP=` in
+`image/mkosi.profiles/online/mkosi.extra/usr/lib/systemd/timesyncd.conf.d/50-pandora-box.conf`
+(empty by default), else those the DHCP server gives, else the Debian pool
+(`FallbackNTP=`). To use the servers of the organization, set them there
+before building the image:
+
+```ini
+[Time]
+NTP=ntp1.example.org ntp2.example.org
+```
+
+Only systemd-timesyncd may send NTP requests (UDP 123) through the firewall;
+`timedatectl timesync-status` shows the server in use. NTP is not
+authenticated (timesyncd has no NTS): someone in the path of the requests
+can shift the clock, so prefer NTP servers of the local network. Without the
+profile, the kiosk keeps the time of its hardware clock (UTC).
 
 ## Test profile
 
@@ -454,7 +476,8 @@ the virtio console:
     set, a set signed with another key and an older set are refused; a newer
     set published on an HTTP server by the test is downloaded by the update
     service (only its changed file), installed and loaded by the idle kiosk,
-    and only the update service user can open a network connection; the
+    and only the update service user can open a network connection
+    (systemd-timesyncd alone sends NTP requests); the
     log entries of the kiosk are sent to a syslog receiver of the test
     (`[siem]`), by the SIEM export user, who cannot read the reports; an
     emulated USB keyboard and network adapter are blocked by USBGuard (no

@@ -1,4 +1,4 @@
-# Wired network of an online kiosk: IPv4 address and DNS servers by DHCP
+# Wired network of an online kiosk: IPv4 address, DNS and NTP servers by DHCP
 [Match]
 Type=ether
 Kind=!*
@@ -9,3 +9,7 @@ IPv6AcceptRA=no
 LinkLocalAddressing=no
 LLMNR=no
 MulticastDNS=no
+
+[DHCPv4]
+# The NTP servers of the network, used by systemd-timesyncd
+UseNTP=yes

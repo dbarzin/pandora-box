@@ -712,6 +712,19 @@ def check_online_update(vm: Machine, workdir: Path) -> int:
             "the update service user cannot open a connection",
         )
         print("firewall: only the update service user can open a connection")
+        # Time: systemd-timesyncd, the only one allowed to send NTP requests
+        timesyncd = vm.shell.run("systemctl is-active systemd-timesyncd").strip()
+        check(timesyncd == "active", f"systemd-timesyncd: {timesyncd}")
+        ntp = (
+            "python3 -c 'import socket; socket.socket(socket.AF_INET, socket.SOCK_DGRAM)"
+            '.sendto(b"x", ("10.0.2.2", 123))\''
+        )
+        check(not vm.shell.succeeds(ntp), "the kiosk (root) can send an NTP request")
+        check(
+            vm.shell.succeeds(f"setpriv --reuid=systemd-timesync --init-groups {ntp}"),
+            "systemd-timesyncd cannot send an NTP request",
+        )
+        print("time: systemd-timesyncd active, alone allowed to send NTP requests")
         # Only the update service reads the credential
         check(
             not vm.shell.succeeds(

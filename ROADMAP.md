@@ -179,6 +179,7 @@ See [docs/signatures.md](docs/signatures.md).
 - [x] Online updates through a dedicated channel: image profile `online`, update service as the only user allowed out by the firewall, HTTP(S) and proxy, only the changed files downloaded, new set loaded when the kiosk is idle
 - [x] Online updates from the sources themselves (freshclam, YARA Forge, MalwareBazaar, Hashlookup): the abuse.ch Auth-Key is a systemd credential of the image (`image/credentials.toml`, outside git), the set is signed with a key generated on the kiosk
 - [ ] Release signing key of the project, its storage (hardware token) and the publication schedule
+- [x] Time synchronization of online kiosks: systemd-timesyncd, NTP servers of the organization or from DHCP, only timesyncd allowed to send NTP requests by the firewall
 
 ### Testing in a virtual machine
 

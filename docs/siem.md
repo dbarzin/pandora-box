@@ -63,8 +63,8 @@ one per datagram over UDP. This suits receivers of JSON lines (Logstash
 message.
 
 Every entry holds `timestamp`, `level`, `kiosk` and `event`, then the fields
-of the event. The timestamps come from the clock of the kiosk: the image
-does not synchronize it over the network yet.
+of the event. The timestamps come from the clock of the kiosk, synchronized
+by NTP in the profile `online` ([image.md](image.md#time)).
 
 ## Transport
 
