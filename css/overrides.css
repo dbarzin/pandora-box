@@ -8,3 +8,8 @@
     max-width: 100%;
     border: 1px solid var(--md-default-fg-color--lightest);
 }
+
+/* Images without a border, e.g. the product picture */
+.md-typeset img.no-border {
+    border: none;
+}
