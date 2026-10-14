@@ -2,11 +2,6 @@
 
 This roadmap follows the development of **PandoraBox** phase by phase: goals, tasks done and to do, decisions. For an overview of the project, see the [README](README.md); for the documentation, see the [documentation site](https://dbarzin.github.io/pandora-box/).
 
-> [!WARNING]
-> **PandoraBox is under active development and is not production-ready.**
-> The scanning engine (phase 1) and the hardened image (phase 2) work, the kiosk interface (phase 3) is in progress, but there is no release yet, no release signing key and no external security audit.
-> **Do not rely on it to check USB devices.** Until the first release, use a supported commercial or open source solution.
-
 ## Vision
 
 Provide a **free, auditable and hardened** USB decontamination kiosk, a credible alternative to commercial solutions, suited to sensitive environments (healthcare, industry, public administration).
@@ -97,6 +92,7 @@ Goal: replace Pandora with an equivalent or better local pipeline.
 - [x] Parallel scan in supervised worker processes, timeout per file and per engine
 - [x] Verdict aggregation with a configurable policy (one positive engine is enough, etc.); `scan.suspicious` and `scan.on_error` policies (`block` / `warn`)
 - [x] Limits: maximum file size, number of files, directory depth
+- [x] Keys with several partitions: every filesystem scanned in turn, one verdict, report and confirmation for the key; an encrypted or unknown partition makes the key not verified
 - [x] JSON scan report (device, files, verdicts, engines, signature versions) with a JSON Schema
 - [x] Test set: EICAR, harmless samples, known false positives (`tests/corpus/`)
 
