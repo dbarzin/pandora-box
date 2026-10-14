@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 import os
 import stat
@@ -23,6 +24,7 @@ from pandora_box.quarantine import Quarantine
 from pandora_box.report import (
     Actions,
     DeviceUsage,
+    PartitionUsage,
     ScanReport,
     build_report,
     set_actions,
@@ -365,6 +367,8 @@ class Kiosk:
             vendor=d.vendor,
             model=d.model,
             serial=d.serial,
+            partitions=[[v.node, v.fs_type, v.label] for v in d.partitions],
+            unscannable=[list(u) for u in d.unscannable],
         )
         self.display.show_device(d)
         self.display.show(Screen.SCANNING)
@@ -374,6 +378,10 @@ class Kiosk:
     def on_inserted(self) -> State:
         if self.device is None:
             return State.WAIT
+        if self.device.multiple:
+            # A key with several partitions is scanned, partition after
+            # partition: it is never a maintenance or update device
+            return self._refuse_scan() or State.SCAN
         try:
             self.mounter.mount(self.device, read_only=True)
         except DeviceError as ex:
@@ -413,13 +421,17 @@ class Kiosk:
             self.display.message(not_scanned)
             self._release()
             return State.WAIT
-        if self.signatures_error is not None:
-            log_event(logger, "scan_refused", logging.WARNING, reason=self.signatures_error)
-            self.display.show(Screen.UNAVAILABLE)
-            self.display.message("Cannot scan: no valid signatures. Remove the device.")
-            self._release()
-            return State.WAIT
-        return State.SCAN
+        return self._refuse_scan() or State.SCAN
+
+    def _refuse_scan(self) -> State | None:
+        """Without valid signatures, the device is not scanned."""
+        if self.signatures_error is None:
+            return None
+        log_event(logger, "scan_refused", logging.WARNING, reason=self.signatures_error)
+        self.display.show(Screen.UNAVAILABLE)
+        self.display.message("Cannot scan: no valid signatures. Remove the device.")
+        self._release()
+        return State.WAIT
 
     def _export_logs(self, device: UsbDevice) -> None:
         """Write the logs of the kiosk to a maintenance device (signed request)."""
@@ -542,29 +554,39 @@ class Kiosk:
         self._show_ready()
 
     def on_scan(self) -> State:
-        root = self.mounter.mount_point
-        try:
-            st = os.statvfs(root)
-        except OSError as ex:
-            log_event(logger, "statvfs_failed", logging.ERROR, error=str(ex))
-            self.display.message(f"Cannot read device: {ex}")
-            return State.ERROR
-        size = st.f_frsize * st.f_blocks
-        used = max(1, st.f_frsize * (st.f_blocks - st.f_bfree))
+        if self.device is None:
+            return State.WAIT
+        key = self.device
+        volumes = key.volumes
+        summary = ScanSummary()
+        usage = DeviceUsage()
         started = datetime.now(UTC)
         # Signature versions as they are at the start of the scan
         engines = self.scanner.pool.engine_info()
-        self.display.show_usage(size, used)
-        log_event(logger, "scan_started", size=size, used=used)
+        for node, reason in key.unscannable:
+            name = Path(node).name
+            log_event(logger, "partition_not_scanned", logging.WARNING, node=node, reason=reason)
+            self.display.message(f"Partition {name} NOT scanned: {reason}")
+            summary.incomplete_reasons.append(f"partition {name}: {reason}, not scanned")
+            usage.partitions.append(PartitionUsage(node, "", "", 0, 0, reason))
         self.display.message("Scanning...")
         self.display.progress(0)
-
-        def on_progress(result: FileResult, done: int, total: int) -> None:
-            self.display.message(f"[{done}/{total}] {describe(result)}")
-            self.display.file_scanned(result, done, total)
-            self.display.progress(min(99, done * 100 // max(1, total)))
-
-        self.summary = self.scanner.scan_tree(root, on_progress)
+        scanned = 0
+        for index, volume in enumerate(volumes):
+            error = self._scan_volume(volume, index, len(volumes), summary, usage)
+            if error is None:
+                scanned += 1
+            elif not key.multiple:
+                return State.ERROR
+            else:
+                summary.incomplete_reasons.append(f"partition {volume.name}: {error}, not scanned")
+                usage.partitions.append(
+                    PartitionUsage(volume.node, volume.fs_type, volume.label, 0, 0, error)
+                )
+        if not scanned:
+            self.display.message("Cannot read any partition of the device")
+            return State.ERROR
+        self.summary = summary
         self.display.progress(100)
         s = self.summary
         self.display.message(
@@ -579,7 +601,7 @@ class Kiosk:
         self.report = build_report(
             self.config,
             self.device,
-            DeviceUsage(size, used),
+            usage,
             engines,
             s,
             started,
@@ -592,7 +614,7 @@ class Kiosk:
             try:
                 self.actions.quarantine_folder = self.quarantine.store(
                     self.to_remove,
-                    root,
+                    self._volume_root,
                     self.report.report_id,
                     self.report.path,
                 )
@@ -602,6 +624,85 @@ class Kiosk:
                 log_event(logger, "quarantine_failed", logging.ERROR, error=str(ex))
             self._save_report()
         return State.CLEAN
+
+    def _scan_volume(
+        self,
+        volume: UsbDevice,
+        index: int,
+        count: int,
+        summary: ScanSummary,
+        usage: DeviceUsage,
+    ) -> str | None:
+        """Mount and scan a filesystem of the key; return why it was not scanned.
+
+        Its results are added to summary and usage.
+        """
+        multiple = self.device is not None and self.device.multiple
+        try:
+            root = self._mount(volume)
+        except DeviceError as ex:
+            log_event(logger, "mount_failed", logging.ERROR, node=volume.node, error=str(ex))
+            self.display.message(f"Cannot mount device: {ex}")
+            return f"cannot mount: {ex}"
+        try:
+            st = os.statvfs(root)
+        except OSError as ex:
+            log_event(logger, "statvfs_failed", logging.ERROR, error=str(ex))
+            self.display.message(f"Cannot read device: {ex}")
+            return f"cannot read: {ex.strerror}"
+        size = st.f_frsize * st.f_blocks
+        used = max(1, st.f_frsize * (st.f_blocks - st.f_bfree))
+        usage.size += size
+        usage.used += used
+        self.display.show_usage(usage.size, usage.used)
+        if multiple:
+            usage.partitions.append(
+                PartitionUsage(volume.node, volume.fs_type, volume.label, size, used, "")
+            )
+            label = f", {volume.label}" if volume.label else ""
+            self.display.message(f"Partition {volume.name} ({volume.fs_type}{label})")
+        log_event(logger, "scan_started", size=size, used=used, node=volume.node)
+
+        def on_progress(result: FileResult, done: int, total: int) -> None:
+            if multiple:
+                result = dataclasses.replace(result, volume=volume.name)
+            self.display.message(f"[{done}/{total}] {describe(result)}")
+            self.display.file_scanned(result, done, total)
+            percent = (index * 100 + done * 100 // max(1, total)) // count
+            self.display.progress(min(99, percent))
+
+        part = self.scanner.scan_tree(root, on_progress)
+        if multiple:
+            part.files = [dataclasses.replace(f, volume=volume.name) for f in part.files]
+            part.incomplete_reasons = [
+                f"partition {volume.name}: {r}" for r in part.incomplete_reasons
+            ]
+        summary.files += part.files
+        summary.incomplete_reasons += part.incomplete_reasons
+        summary.duration += part.duration
+        return None
+
+    def _mount(self, volume: UsbDevice, read_only: bool = True) -> Path:
+        """Mount a filesystem of the key, unless it is mounted read-only already."""
+        mounted = self.mounter.device == volume and self.mounter.is_mounted()
+        if not (read_only and mounted):
+            self.mounter.unmount()
+            self.mounter.mount(volume, read_only=read_only)
+        return self.mounter.mount_point
+
+    def _volume_root(self, result: FileResult) -> Path:
+        """Root of the mounted filesystem of a file (quarantine)."""
+        try:
+            return self._mount(self._volume_of(result))
+        except DeviceError as ex:
+            raise OSError(str(ex)) from ex
+
+    def _volume_of(self, result: FileResult) -> UsbDevice:
+        volumes = () if self.device is None else self.device.volumes
+        for volume in volumes:
+            if not result.volume or volume.name == result.volume:
+                return volume
+        raise DeviceError(f"no partition {result.volume}")
 
     def on_clean(self) -> State:
         if self.summary is None:
@@ -643,21 +744,28 @@ class Kiosk:
             self.display.message("Device removed before cleaning: NOT CLEANED")
             self._release()
             return State.WAIT
-        try:
-            # Read-write only to remove the infected files
-            self.mounter.mount(device, read_only=False)
-        except DeviceError as ex:
-            log_event(logger, "mount_rw_failed", logging.ERROR, error=str(ex))
-            self.display.message(f"Cannot clean device: {ex}")
-            return State.ERROR
-        log_event(logger, "device_mounted_rw", node=device.node)
         self.display.show(Screen.CLEANING)
-
-        for result in infected:
-            if self._remove(result):
-                self.actions.removed.append(result)
-            else:
-                self.actions.remove_failed.append(result)
+        for volume in device.volumes:
+            files = [r for r in infected if self._volume_of(r) == volume]
+            if not files:
+                continue
+            try:
+                # Read-write only to remove the infected files
+                self._mount(volume, read_only=False)
+            except DeviceError as ex:
+                log_event(logger, "mount_rw_failed", logging.ERROR, node=volume.node, error=str(ex))
+                self.display.message(f"Cannot clean device: {ex}")
+                if not device.multiple:
+                    return State.ERROR
+                self.actions.remove_failed += files
+                continue
+            log_event(logger, "device_mounted_rw", node=volume.node)
+            for result in files:
+                if self._remove(result):
+                    self.actions.removed.append(result)
+                else:
+                    self.actions.remove_failed.append(result)
+            self._unmount()
         removed = len(self.actions.removed)
         self.actions.cleaned = removed == len(infected)
         self._save_report()
@@ -740,7 +848,7 @@ class Kiosk:
     def _list(self, title: str, results: list[FileResult]) -> None:
         self.display.message(title)
         for result in results[:_MAX_LISTED]:
-            self.display.message(result.rel_path)
+            self.display.message(result.display_path)
         if len(results) > _MAX_LISTED:
             self.display.message("...")
 
@@ -752,7 +860,7 @@ class Kiosk:
         """
         root = self.mounter.mount_point
         path = root / result.rel_path
-        name = escape(result.rel_path)
+        name = escape(result.display_path)
         # Never follow a link out of the device
         if not Path(os.path.realpath(path)).is_relative_to(os.path.realpath(root)):
             log_event(logger, "remove_refused", logging.ERROR, path=name, reason="outside")
@@ -767,15 +875,15 @@ class Kiosk:
                 log_event(
                     logger, "remove_refused", logging.ERROR, path=name, reason="content changed"
                 )
-                self.display.message(f"Not removed, changed since the scan: {result.rel_path}")
+                self.display.message(f"Not removed, changed since the scan: {result.display_path}")
                 return False
             path.unlink()
         except OSError as ex:
             log_event(logger, "remove_failed", logging.ERROR, path=name, error=ex.strerror)
-            self.display.message(f"Could not remove {result.rel_path}: {ex.strerror}")
+            self.display.message(f"Could not remove {result.display_path}: {ex.strerror}")
             return False
         log_event(logger, "file_removed", path=name)
-        self.display.message(f"{result.rel_path} removed")
+        self.display.message(f"{result.display_path} removed")
         return True
 
     def _release(self) -> None:

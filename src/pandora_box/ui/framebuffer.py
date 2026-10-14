@@ -350,7 +350,7 @@ class FramebufferDisplay:
             done=done,
             total=total,
             threats=state.threats + threat,
-            current=result.rel_path,
+            current=result.display_path,
             recent=(result, *state.recent)[:RECENT_FILES],
         )
 

@@ -286,6 +286,33 @@ then **clean**. The kiosk then applies:
 Files that could not be scanned are listed but **never removed**: they are not
 known to be malicious.
 
+### Keys with several partitions
+
+A key is scanned as a whole: all its partitions make one insertion, one
+verdict, one report and one confirmation. The kiosk mounts each filesystem
+in turn, read-only, and scans it; to clean the key, it mounts read-write only
+the partitions that hold the files to remove, then ejects the key once.
+
+- A key with a single filesystem, with or without a partition table, is
+  scanned as before.
+- A partition that cannot be scanned is a reason of a **not verified**
+  device (`scan.on_error`), as a computer may still read it: an encrypted
+  partition (LUKS, BitLocker), a partition without a filesystem the kiosk
+  recognizes, a filesystem that is not allowed (`device.allowed_filesystems`)
+  or that cannot be mounted. Its other partitions are still scanned and
+  cleaned. When none can be mounted, the kiosk shows an error.
+- Partitions that hold no files are ignored: MBR extended partitions (the
+  container of the logical ones), GPT BIOS boot and Microsoft reserved
+  partitions.
+- On the screen and in the report, a file is named after its partition
+  (`sdb2/docs/report.pdf`). The report lists the partitions
+  (`device.partitions`: filesystem, size, scanned or why not), and each file
+  gives its `partition`, its `path` being relative to the root of that
+  partition. The quarantine manifest gives the `partition` of each file too.
+- A maintenance, signature or image update device has a single filesystem:
+  the folders of such a device are not looked for on a key with several
+  partitions, which is scanned.
+
 ### Limits
 
 | Setting | Default | Beyond it |

@@ -1080,6 +1080,59 @@ def check_filesystem_keys(vm: Machine, workdir: Path) -> None:
         scan_and_clean(vm, name, image)
 
 
+def check_partitioned_keys(vm: Machine, workdir: Path) -> None:
+    """Keys with several partitions: one insertion, one verdict for the key."""
+    step("keys with several partitions")
+    image = workdir / "two-partitions.img"
+    keys.two_partitions_key(image)
+    before = count_events(vm, "device_inserted")
+    log = KioskLog(vm)
+    vm.insert_key(image)
+    inserted = log.wait("device_inserted")
+    filesystems = [fs for _, fs, _ in inserted["partitions"]]
+    check(filesystems == ["vfat", "ext4"], f"partitions of the key: {inserted}")
+    infected = log.wait("infected_files")
+    expected = sorted(path for path, (_, engine) in corpus.KEY.items() if engine)
+    check(infected["count"] == len(expected), f"infected files: {infected['count']}")
+    log.wait("device_ejected", action=vm.press_key, timeout=60)
+    cleaned = log.wait("device_cleaned")
+    check(cleaned["removed"] == len(expected), f"removed files: {cleaned['removed']}")
+    vm.remove_key()
+    log.wait("device_removed")
+    # One insertion for the key, not one per partition
+    inserted_count = count_events(vm, "device_inserted") - before
+    check(inserted_count == 1, f"{inserted_count} insertions for one key")
+
+    vm.insert_key(image)
+    verdict = log.wait("device_verdict")
+    check(verdict["verdict"] == "clean", f"verdict after cleaning: {verdict}")
+    report = last_report(vm)
+    partitions = [(p["filesystem"], p["scanned"]) for p in report["device"]["partitions"]]
+    check(partitions == [("vfat", True), ("ext4", True)], f"report partitions: {partitions}")
+    # Files of each partition, by partition number
+    files = sorted((f["partition"][-1], f["path"]) for f in report["files"])
+    clean = [("1", path) for path, (_, engine) in sorted(corpus.KEY.items()) if not engine]
+    second = ("2", keys.SECOND_PARTITION_FILE[0])
+    check(files == sorted([*clean, second]), f"files after cleaning: {files}")
+    log.wait("device_ejected")
+    vm.remove_key()
+    log.wait("device_removed")
+    print(f"vfat and ext4 partitions: {len(expected)} infected files removed, then clean")
+
+    # A partition without filesystem may hold anything: the key is not verified
+    image = workdir / "unknown-partition.img"
+    keys.unknown_partition_key(image)
+    vm.insert_key(image)
+    verdict = log.wait("device_verdict")
+    check(verdict["verdict"] == "not_verified", f"partition without filesystem: {verdict}")
+    wait_screen(vm, "USB key NOT verified")
+    reasons = last_report(vm)["verdict"]["incomplete_reasons"]
+    check(len(reasons) == 1 and "unknown content" in reasons[0], f"reasons: {reasons}")
+    vm.remove_key()
+    log.wait("device_removed")
+    print(f"partition without filesystem: not verified ({reasons[0]})")
+
+
 def check_refused_keys(vm: Machine, workdir: Path) -> None:
     step("unsupported and corrupted filesystems")
     for name, build, error in (
@@ -1229,6 +1282,7 @@ def main(argv: list[str] | None = None) -> int:
                 check_clean_key(vm, key)
                 check_maintenance(vm, workdir)
                 check_filesystem_keys(vm, workdir)
+                check_partitioned_keys(vm, workdir)
                 check_refused_keys(vm, workdir)
                 check_structure_key(vm, workdir)
                 check_signature_update(vm, workdir)

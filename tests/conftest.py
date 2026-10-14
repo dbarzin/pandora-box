@@ -40,7 +40,7 @@ class RecordingDisplay:
         self.messages.append(text)
 
     def show(self, screen: Screen, files: Sequence[FileResult] = ()) -> None:
-        self.screens.append((screen, [f.rel_path for f in files]))
+        self.screens.append((screen, [f.display_path for f in files]))
 
     def show_info(self, lines: Sequence[str]) -> None:
         self.info = list(lines)

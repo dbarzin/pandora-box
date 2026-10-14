@@ -21,6 +21,14 @@ class FileResult:
     rel_path: str = ""
     # The file was not fully scanned (a limit was exceeded)
     incomplete: bool = False
+    # Partition of a key with several ones (its kernel name, "sdb2"); rel_path
+    # is relative to its root
+    volume: str = ""
+
+    @property
+    def display_path(self) -> str:
+        """The path shown to the user: with its partition on a multi-partition key."""
+        return f"{self.volume}/{self.rel_path}" if self.volume else self.rel_path
 
     @property
     def unscanned(self) -> bool:

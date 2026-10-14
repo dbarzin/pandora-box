@@ -37,7 +37,28 @@
         "label": { "type": "string" },
         "filesystem": { "type": "string" },
         "size": { "type": "integer", "minimum": 0, "description": "Filesystem size in bytes" },
-        "used": { "type": "integer", "minimum": 0, "description": "Used space in bytes" }
+        "used": { "type": "integer", "minimum": 0, "description": "Used space in bytes" },
+        "partitions": {
+          "type": "array",
+          "description": "Partitions of a key with several ones (absent for a key with one filesystem)",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "node", "name", "filesystem", "label", "size", "used", "scanned", "not_scanned"
+            ],
+            "properties": {
+              "node": { "type": "string" },
+              "name": { "type": "string", "description": "Kernel name, the partition of the files" },
+              "filesystem": { "type": "string" },
+              "label": { "type": "string" },
+              "size": { "type": "integer", "minimum": 0 },
+              "used": { "type": "integer", "minimum": 0 },
+              "scanned": { "type": "boolean" },
+              "not_scanned": { "type": ["string", "null"], "description": "Why it was not scanned" }
+            }
+          }
+        }
       }
     },
     "configuration": {
@@ -127,6 +148,10 @@
         ],
         "properties": {
           "path": { "type": "string", "description": "Escaped path relative to the device root" },
+          "partition": {
+            "type": "string",
+            "description": "Partition of the file on a key with several ones: path is relative to its root"
+          },
           "path_b64": { "type": "string", "contentEncoding": "base64" },
           "size": { "type": "integer", "minimum": 0 },
           "sha256": { "$ref": "#/$defs/optionalHash", "description": "null when the file was not read" },

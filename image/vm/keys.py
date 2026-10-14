@@ -83,6 +83,60 @@ def partitioned_key(path: Path) -> None:
                 target.write(chunk)
 
 
+# Clean file of the second partition of the keys with several partitions
+SECOND_PARTITION_FILE = ("notes.txt", b"second partition\n")
+
+
+def _with_partitions(path: Path, partitions: list[tuple[str, Path | None]]) -> None:
+    """An MBR partition table with partitions of equal size: their type and
+    content (a filesystem image, or None for an empty partition)."""
+    size = (KEY_SIZE - PARTITION_START) // len(partitions) // (1024 * 1024) * 1024 * 1024
+    _blank(path)
+    table = "".join(
+        f"start={(PARTITION_START + i * size) // 512}, size={size // 512}, type={kind}\n"
+        for i, (kind, _) in enumerate(partitions)
+    )
+    subprocess.run(
+        ["sfdisk", "-q", str(path)], input=table, text=True, check=True, capture_output=True
+    )
+    for i, (_, content) in enumerate(partitions):
+        if content is None:
+            continue
+        with content.open("rb") as source, path.open("r+b") as target:
+            target.seek(PARTITION_START + i * size)
+            while chunk := source.read(1024 * 1024):
+                target.write(chunk)
+
+
+def two_partitions_key(path: Path) -> None:
+    """The corpus on a vfat partition, a clean file on an ext4 partition."""
+    size = (KEY_SIZE - PARTITION_START) // 2 // (1024 * 1024) * 1024 * 1024
+    with tempfile.TemporaryDirectory() as tmp:
+        first = Path(tmp) / "first.img"
+        make_key(first, size=size)
+        folder = Path(tmp) / "second"
+        folder.mkdir()
+        name, content = SECOND_PARTITION_FILE
+        (folder / name).write_bytes(content)
+        second = Path(tmp) / "second.img"
+        _blank(second, size)
+        _run("mkfs.ext4", "-q", "-F", "-L", "SECOND", "-d", str(folder), str(second))
+        _with_partitions(path, [("c", first), ("83", second)])
+
+
+def unknown_partition_key(path: Path) -> None:
+    """A clean vfat partition and a partition without a filesystem."""
+    size = (KEY_SIZE - PARTITION_START) // 2 // (1024 * 1024) * 1024 * 1024
+    with tempfile.TemporaryDirectory() as tmp:
+        folder = Path(tmp) / "first"
+        folder.mkdir()
+        name, content = SECOND_PARTITION_FILE
+        (folder / name).write_bytes(content)
+        first = Path(tmp) / "first.img"
+        make_key(first, folder, size=size)
+        _with_partitions(path, [("c", first), ("83", None)])
+
+
 def unsupported_key(path: Path) -> None:
     """The corpus on EROFS: the kernel of the kiosk mounts it (its root
     filesystem), but it is not an allowed filesystem."""

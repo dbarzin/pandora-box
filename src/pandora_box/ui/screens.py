@@ -361,7 +361,7 @@ class Renderer:
             label_width = canvas.text_width(label, detail_font) + self.px(16)
             color = self.color(_VERDICT_COLORS[result.verdict])
             canvas.text((right, y + self.px(2)), label, detail_font, color, anchor="ra")
-            name = result.rel_path or result.path.name
+            name = result.display_path or result.path.name
             path = canvas.fit_path(printable(name), name_font, right - left - label_width)
             canvas.text((left, y), path, name_font, self.color("text"))
             if not recent:

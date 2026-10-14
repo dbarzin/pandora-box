@@ -49,10 +49,25 @@ class ScanReport:
         return str(self.data["report_id"])
 
 
+@dataclass(frozen=True)
+class PartitionUsage:
+    """A partition of a key with several ones: scanned, or why not."""
+
+    node: str
+    fs_type: str
+    label: str
+    size: int
+    used: int
+    # Why it was not scanned; "" when it was
+    not_scanned: str = ""
+
+
 @dataclass
 class DeviceUsage:
     size: int = 0
     used: int = 0
+    # Several partitions: each of them
+    partitions: list[PartitionUsage] = field(default_factory=list)
 
 
 @dataclass
@@ -76,7 +91,7 @@ def build_report(
     workers: int,
 ) -> ScanReport:
     """workers: files scanned at the same time (scan.workers once resolved)."""
-    files = sorted(summary.files, key=lambda f: f.rel_path)
+    files = sorted(summary.files, key=lambda f: (f.volume, f.rel_path))
     by_verdict: dict[str, int] = {}
     for f in files:
         by_verdict[f.verdict.value] = by_verdict.get(f.verdict.value, 0) + 1
@@ -139,7 +154,7 @@ def _iso(value: datetime) -> str:
 
 def _device(device: UsbDevice | None, usage: DeviceUsage) -> dict[str, Any]:
     d = device or UsbDevice(node="")
-    return {
+    data: dict[str, Any] = {
         "node": escape(d.node),
         "vendor": escape(d.vendor),
         "model": escape(d.model),
@@ -149,6 +164,21 @@ def _device(device: UsbDevice | None, usage: DeviceUsage) -> dict[str, Any]:
         "size": usage.size,
         "used": usage.used,
     }
+    if usage.partitions:
+        data["partitions"] = [
+            {
+                "node": escape(p.node),
+                "name": escape(Path(p.node).name),
+                "filesystem": escape(p.fs_type),
+                "label": escape(p.label),
+                "size": p.size,
+                "used": p.used,
+                "scanned": not p.not_scanned,
+                "not_scanned": escape(p.not_scanned) if p.not_scanned else None,
+            }
+            for p in sorted(usage.partitions, key=lambda p: p.node)
+        ]
+    return data
 
 
 def _configuration(config: Config, workers: int) -> dict[str, Any]:
@@ -197,7 +227,7 @@ def _signature(signature: SignatureInfo) -> dict[str, Any]:
 
 def _file(result: FileResult) -> dict[str, Any]:
     info = result.info
-    return {
+    data: dict[str, Any] = {
         "path": escape(result.rel_path),
         "path_b64": path_b64(result.rel_path),
         "size": result.size,
@@ -213,6 +243,10 @@ def _file(result: FileResult) -> dict[str, Any]:
         "duration": round(result.duration, 3),
         "engines": [_engine_result(r) for r in result.results],
     }
+    if result.volume:
+        # Several partitions: the path is relative to the root of this one
+        data["partition"] = escape(result.volume)
+    return data
 
 
 def _engine_result(result: EngineResult) -> dict[str, Any]:
@@ -229,7 +263,7 @@ def _engine_result(result: EngineResult) -> dict[str, Any]:
 
 def _actions(actions: Actions) -> dict[str, Any]:
     def paths(results: list[FileResult]) -> list[str]:
-        return [escape(r.rel_path) for r in results]
+        return [escape(r.display_path) for r in results]
 
     return {
         "quarantine_folder": str(actions.quarantine_folder) if actions.quarantine_folder else None,

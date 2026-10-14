@@ -47,7 +47,9 @@ flowchart LR
   heuristics (programs disguised as documents, PDF with JavaScript). See
   [Detection engines](engines.md).
 - **Fail closed**: a file that could not be fully scanned (encrypted archive,
-  limit exceeded, engine error) is never reported as clean.
+  limit exceeded, engine error) is never reported as clean. Every partition
+  of a key is scanned; a partition that cannot be (encrypted, unknown
+  filesystem) makes the key not verified.
 - **Nothing is removed without the user**: the dangerous files are listed on
   the screen, copied to the quarantine of the kiosk, then removed from the key
   only after a touch of the screen.

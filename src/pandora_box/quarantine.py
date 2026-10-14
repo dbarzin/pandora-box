@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from pathlib import Path
 
@@ -26,12 +26,14 @@ class Quarantine:
     def store(
         self,
         infected: Sequence[FileResult],
-        root: Path,
+        root: Path | Callable[[FileResult], Path],
         report_id: str | None = None,
         report_path: Path | None = None,
     ) -> Path | None:
         """Copy infected files into a new timestamped folder with a manifest.
 
+        root: the mount point of the files, or a function that mounts the
+        filesystem of a file (a key with several partitions) and returns it.
         Files are renamed to a sequence number so that untrusted names never
         become paths on the kiosk; the original path is kept in manifest.json,
         which also references the scan report.
@@ -41,7 +43,8 @@ class Quarantine:
         target = self.folder / datetime.now().strftime("%Y%m%d-%H%M%S-%f")
         target.mkdir(mode=0o700, parents=True)
         files = []
-        for index, result in enumerate(infected, start=1):
+        # The files of a partition together: it is mounted once
+        for index, result in enumerate(sorted(infected, key=lambda r: r.volume), start=1):
             name = f"{index:05d}.bin"
             entry: dict[str, object] = {
                 "file": name,
@@ -51,8 +54,11 @@ class Quarantine:
                 "verdict": result.verdict.value,
                 "detections": {r.engine: r.detail for r in result.results if r.detections},
             }
+            if result.volume:
+                entry["partition"] = escape(result.volume)
             try:
-                entry["sha256"] = _copy(result.path, target / name)
+                base = root(result) if callable(root) else root
+                entry["sha256"] = _copy(base / result.rel_path, target / name)
             except OSError as ex:
                 entry["error"] = ex.strerror
                 log_event(

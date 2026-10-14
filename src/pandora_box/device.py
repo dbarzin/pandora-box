@@ -33,12 +33,35 @@ class DeviceError(Exception):
 
 @dataclass(frozen=True)
 class UsbDevice:
+    """A USB key: one filesystem, or the disk of a key with several partitions."""
+
     node: str
     fs_type: str = ""
     label: str = ""
     model: str = ""
     serial: str = ""
     vendor: str = ""
+    # Filesystems of a key with several partitions, in their order; empty:
+    # the key is the filesystem of node
+    partitions: tuple[UsbDevice, ...] = ()
+    # Partitions that cannot be scanned (encrypted, unknown content): node and
+    # reason
+    unscannable: tuple[tuple[str, str], ...] = ()
+
+    @property
+    def volumes(self) -> tuple[UsbDevice, ...]:
+        """The filesystems to scan."""
+        return self.partitions or (self,)
+
+    @property
+    def multiple(self) -> bool:
+        """Several partitions: each file belongs to one of them."""
+        return bool(self.partitions or self.unscannable)
+
+    @property
+    def name(self) -> str:
+        """Kernel name of the node: sdb1."""
+        return Path(self.node).name
 
     @classmethod
     def from_udev(cls, properties: Mapping[str, Any], node: str) -> UsbDevice:

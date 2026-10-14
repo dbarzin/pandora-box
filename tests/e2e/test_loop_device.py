@@ -328,3 +328,51 @@ def test_real_clamd_modes(mode: str, clamd: Path, tmp_path: Path) -> None:
             os.close(fd)
         assert result.verdict is verdict, result
         assert result.facts["mode"] == mode
+
+
+def test_key_with_several_partitions(tmp_path: Path) -> None:
+    """Each filesystem mounted and scanned in turn, cleaned where infected.
+
+    A container has a static /dev, without the nodes of the partitions of a
+    loop device: each partition is a loop device of its own here. The
+    detection of the partitions by udev is tested in the virtual machine.
+    """
+    mount_point = tmp_path / "media"
+    mount_point.mkdir()
+    config = parse_config(
+        {
+            "kiosk": {"name": "e2e", "fake_scan": True, "interface": "console"},
+            # A loop device cannot be ejected
+            "device": {"mount_point": str(mount_point), "eject": False},
+            "quarantine": {"folder": str(tmp_path / "quarantine")},
+            "report": {"folder": str(tmp_path / "reports")},
+            "logging": {"file": str(tmp_path / "pandora-box.log")},
+        }
+    )
+    (tmp_path / "p1").mkdir()
+    (tmp_path / "p2").mkdir()
+    display = RecordingDisplay()
+    with (
+        make_key(tmp_path / "p1", "vfat", {"boot/loader.conf": b"timeout 0"}) as first,
+        make_key(
+            tmp_path / "p2", "ext4", {"readme.txt": b"hello", "docs/eicar.com": EICAR}
+        ) as second,
+        build_pool(config) as pool,
+    ):
+        key = UsbDevice(node=first.node, fs_type="vfat,ext4", partitions=(first, second))
+        Kiosk(config, display, ListSource([DeviceEvent(Action.ADD, key)]), pool,
+              make_mounter(config)).run()  # fmt: skip
+        assert not os.path.ismount(mount_point)
+        assert key_files(first.node, tmp_path / "p1") == ["boot/loader.conf"]
+        assert key_files(second.node, tmp_path / "p2") == ["readme.txt"]
+
+    assert "Device cleaned! You can remove the device." in display.messages
+    [report_path] = list((tmp_path / "reports").glob("*.json"))
+    report = json.loads(report_path.read_text())
+    jsonschema.validate(report, load_schema())
+    assert [(p["filesystem"], p["scanned"]) for p in report["device"]["partitions"]] == [
+        ("vfat", True),
+        ("ext4", True),
+    ]
+    name = Path(second.node).name
+    assert report["actions"]["removed"] == [f"{name}/docs/eicar.com"]
