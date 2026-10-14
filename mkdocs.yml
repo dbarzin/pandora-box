@@ -73,6 +73,7 @@ nav:
   - USING THE KIOSK:
       - -- Interface: interface.md
       - -- Configuration: configuration.md
+      - -- Log export to a SIEM: siem.md
   - DETECTION:
       - -- Detection engines: engines.md
       - -- Signature updates: signatures.md

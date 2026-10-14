@@ -225,7 +225,7 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 
 ## Phase 5 — Fleet management and traceability
 
-- [ ] Log export as syslog / JSON to a SIEM (Wazuh, etc.)
+- [x] Log export as syslog / JSON to a SIEM (Wazuh, etc.): `pandora-box-siem` service of the image profile `online`, syslog RFC 5424 or JSON over TLS, TCP or UDP, the log file as queue ([docs/siem.md](docs/siem.md))
 - [ ] Printed or exported scan receipt for the user
 - [ ] Optional central server: kiosk inventory, reports, signature status
 - [ ] Centralized distribution of signed updates

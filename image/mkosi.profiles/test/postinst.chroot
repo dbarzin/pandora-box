@@ -48,6 +48,13 @@ image_url = "http://10.0.2.2:8080/pandora-box-image/"
 yara-forge = "http://10.0.2.2:8080/sources/yara-forge-rules-core.zip"
 malwarebazaar = "http://10.0.2.2:8080/sources/malwarebazaar-full-sha256.zip"
 hashlookup = "http://10.0.2.2:8080/sources/hashlookup-full.bloom"
+
+# SIEM of the virtual machine test, on the host of the QEMU user network
+[siem]
+enabled = true
+host = "10.0.2.2"
+transport = "tcp"
+port = 5514
 CONFIG
 
 # The abuse.ch Auth-Key the test server expects

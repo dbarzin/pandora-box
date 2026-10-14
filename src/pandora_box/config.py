@@ -18,6 +18,9 @@ ERROR_POLICIES = ("block", "warn")
 SUPPORTED_FILESYSTEMS = ("vfat", "exfat", "ntfs", "ext4")
 CLAMD_MODES = ("auto", "fildes", "instream")
 COMPILE_ERROR_POLICIES = ("fail", "skip_rule")
+SIEM_TRANSPORTS = ("tls", "tcp", "udp")
+SIEM_FORMATS = ("syslog", "json")
+SIEM_FACILITIES = ("user", *(f"local{i}" for i in range(8)))
 
 # Signed signature sets installed on the kiosk (pandora_box.sigsets): the
 # engines read the files of the current one
@@ -223,6 +226,31 @@ class UpdatesConfig:
     image_from_devices: bool = True
 
 
+@dataclass(frozen=True)
+class SiemConfig:
+    # Export of the logs to a SIEM (pandora-box-siem.service, image profile
+    # "online"): off by default, a kiosk works offline
+    enabled: bool = False
+    host: str = ""
+    # 0: 6514 for tls, 514 for tcp and udp
+    port: int = 0
+    transport: str = "tls"
+    # Certificate authorities of the SIEM (PEM), for tls; None for the
+    # authorities of the system
+    ca: Path | None = None
+    # "syslog": RFC 5424, the JSON entry as message; "json": the JSON entry
+    format: str = "syslog"
+    facility: str = "local0"
+    # Timeout of the connection and of each send, in seconds
+    timeout: float = 10.0
+
+    @property
+    def server_port(self) -> int:
+        if self.port:
+            return self.port
+        return 6514 if self.transport == "tls" else 514
+
+
 _LANGUAGE = re.compile(r"^[a-z]{2}$")
 
 
@@ -254,6 +282,7 @@ class Config:
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     updates: UpdatesConfig = field(default_factory=UpdatesConfig)
     display: DisplayConfig = field(default_factory=DisplayConfig)
+    siem: SiemConfig = field(default_factory=SiemConfig)
 
 
 def load_config(path: Path) -> Config:
@@ -404,6 +433,9 @@ def parse_config(data: dict[str, Any]) -> Config:
         file=log_file,
         level=_choice(log, "logging", "level", LOG_LEVELS, "INFO"),
     )
+    siem_cfg = _parse_siem(data.get("siem", {}))
+    if siem_cfg.enabled and logging_cfg.file is None:
+        raise ConfigError("siem: the logs are exported from the log file, logging.file is required")
 
     return Config(
         kiosk=kiosk_cfg,
@@ -418,7 +450,34 @@ def parse_config(data: dict[str, Any]) -> Config:
         logging=logging_cfg,
         updates=_parse_updates(data.get("updates", {})),
         display=_parse_display(data.get("display", {})),
+        siem=siem_cfg,
     )
+
+
+def _parse_siem(siem: dict[str, Any]) -> SiemConfig:
+    _reject_unknown(siem, {f.name for f in fields(SiemConfig)}, "siem")
+    ca = None
+    if siem.get("ca", "") != "":
+        ca = _path(siem, "siem", "ca", Path())
+    config = SiemConfig(
+        enabled=_get(siem, "siem", "enabled", bool, False),
+        host=_get(siem, "siem", "host", str, ""),
+        port=_get(siem, "siem", "port", int, 0),
+        transport=_choice(siem, "siem", "transport", SIEM_TRANSPORTS, SiemConfig.transport),
+        ca=ca,
+        format=_choice(siem, "siem", "format", SIEM_FORMATS, SiemConfig.format),
+        facility=_choice(siem, "siem", "facility", SIEM_FACILITIES, SiemConfig.facility),
+        timeout=_positive(siem, "siem", "timeout", SiemConfig.timeout),
+    )
+    if not 0 <= config.port <= 65535:
+        raise ConfigError("siem.port must be between 1 and 65535 (0: the default port)")
+    if config.host != config.host.strip() or any(c.isspace() for c in config.host):
+        raise ConfigError("siem.host must be a host name or an IP address")
+    if config.enabled and not config.host:
+        raise ConfigError("siem.host is required when the SIEM export is enabled")
+    if config.ca is not None and config.transport != "tls":
+        raise ConfigError('siem.ca is only used with transport = "tls"')
+    return config
 
 
 def _parse_display(display: dict[str, Any]) -> DisplayConfig:

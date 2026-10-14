@@ -32,6 +32,7 @@ pandora-box --config pandora-box.toml --check-config
 | `[engines.*]` | Each detection engine: see [Detection engines](engines.md) |
 | `[signatures]` | Signature sets and their verification: see [Signature updates](signatures.md) |
 | `[updates]` | Online signature and image updates |
+| `[siem]` | Log export to a SIEM: see [Log export to a SIEM](siem.md) |
 | `[report]`, `[quarantine]`, `[logging]` | Folders of the scan reports, of the quarantine, log file and level |
 
 ## Reference

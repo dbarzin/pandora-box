@@ -229,6 +229,30 @@ timeout = 300.0
 # folder at its root, then restart (A/B updates, docs/image.md)
 image_from_devices = true
 
+[siem]
+# Export of the logs to a SIEM (docs/siem.md): off by default, a kiosk works
+# offline. It also needs the image profile "online" (network, firewall, and
+# the pandora-box-siem service). Every entry of the log file is sent, also
+# those logged while the SIEM could not be reached.
+enabled = false
+# Host name or IP address of the SIEM
+host = ""
+# "tls" (certificate verified), "tcp" or "udp"
+transport = "tls"
+# Port of the SIEM; 0: 6514 for tls, 514 for tcp and udp
+port = 0
+# Certificate authorities of the SIEM certificate (PEM file), for tls; ""
+# for those of the system. In the image: image/siem-ca.pem, installed as
+# /usr/share/pandora-box/siem-ca.pem
+ca = ""
+# "syslog": RFC 5424 message, the JSON entry as message (octet counting over
+# tcp and tls); "json": the JSON entry alone (one per line over tcp and tls)
+format = "syslog"
+# Syslog facility: "user" or "local0" to "local7"
+facility = "local0"
+# Timeout of the connection and of each send, in seconds
+timeout = 10.0
+
 [report]
 # JSON scan reports, one per scanned device
 folder = "/var/lib/pandora-box/reports"

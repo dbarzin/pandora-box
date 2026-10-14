@@ -30,6 +30,10 @@ TTYReset=yes
 TTYVHangup=yes
 Environment=TERM=linux
 
+# The log folder and the files the kiosk creates belong to this group: the
+# SIEM export (pandora-box-siem.service) reads the log file through it
+Group=pandora-box-log
+
 # Directories created by systemd
 StateDirectory=pandora-box
 StateDirectoryMode=0700

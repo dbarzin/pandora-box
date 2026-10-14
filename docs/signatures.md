@@ -72,7 +72,7 @@ and Hashlookup, the sources of `pandora-box-signatures publish`. The profile
 brings DHCP on the wired network (IPv4), DNS (systemd-resolved, without LLMNR
 or mDNS), freshclam, the `pandora-box-update` timer (every 6 hours, 5 minutes
 after boot), and a firewall that only lets out the update service (TCP),
-DHCP and DNS. Nothing comes in but the answers to these connections. It
+the log export to a SIEM ([siem.md](siem.md)), DHCP and DNS. Nothing comes in but the answers to these connections. It
 enables the `[updates]` section of the configuration with every source:
 
 ```toml
@@ -104,7 +104,7 @@ image or the disk of the kiosk can read them.
 `pandora-box-update.service` runs in two steps
 (`src/pandora_box/online.py`):
 
-1. as the `pandora-box-update` user, the only one the firewall lets out,
+1. as the `pandora-box-update` user, which the firewall lets out,
    without privileges and in a systemd sandbox, it downloads the sources
    (with an HTTP cache, `/var/lib/pandora-box-update/staging-sources`: an
    unchanged source is not downloaded again; freshclam downloads the daily

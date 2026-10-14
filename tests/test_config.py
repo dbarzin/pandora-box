@@ -51,6 +51,7 @@ def test_example_file_matches_defaults() -> None:
     assert config.report == defaults.report
     assert config.quarantine == defaults.quarantine
     assert config.logging == defaults.logging
+    assert config.siem == defaults.siem
     assert config.kiosk.fake_scan is False
 
 

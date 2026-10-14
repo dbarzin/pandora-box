@@ -18,6 +18,7 @@ import functools
 import hashlib
 import json
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -51,6 +52,8 @@ PUBLISH_PORT = 8080
 SOURCES = "sources"
 # The abuse.ch Auth-Key of the test profile (/etc/credstore)
 AUTH_KEY = "vm-test-auth-key"
+# SIEM of the test profile: syslog over TCP to 10.0.2.2:5514 in the machine
+SIEM_PORT = 5514
 
 LOG = "/var/log/pandora-box/pandora-box.log"
 # Discoverable Partitions Specification: root partition of x86-64
@@ -438,7 +441,7 @@ def check_hardening(vm: Machine) -> None:
     # Overview of all the units: "NAME EXPOSURE PREDICATE HAPPY"
     exposure = vm.shell.run(
         "systemd-analyze security --no-pager"
-        " | grep -E '^(pandora-box|clamav-daemon|usbguard)\\.service' || true"
+        " | grep -E '^(pandora-box|pandora-box-siem|clamav-daemon|usbguard)\\.service' || true"
     )
     print("sysctl, kernel options, lockdown, firewall, no login console: OK")
     units = [" ".join(line.split()[:2]) for line in exposure.splitlines()]
@@ -720,6 +723,90 @@ def check_online_update(vm: Machine, workdir: Path) -> int:
     finally:
         publisher.stop()
     return serial
+
+
+class SiemReceiver:
+    """Syslog receiver (TCP, octet counting) for the log export of the machine."""
+
+    def __init__(self) -> None:
+        self.listener = socket.create_server(("127.0.0.1", SIEM_PORT))
+        self.data = b""
+        self.lock = threading.Lock()
+        threading.Thread(target=self._serve, daemon=True).start()
+
+    def _serve(self) -> None:
+        while True:
+            try:
+                conn, _ = self.listener.accept()
+            except OSError:
+                return
+            threading.Thread(target=self._receive, args=(conn,), daemon=True).start()
+
+    def _receive(self, conn: socket.socket) -> None:
+        with conn:
+            while chunk := conn.recv(65536):
+                with self.lock:
+                    self.data += chunk
+
+    def messages(self) -> list[bytes]:
+        with self.lock:
+            data = self.data
+        messages = []
+        while data:
+            length, _, rest = data.partition(b" ")
+            if not length.isdigit() or len(rest) < int(length):
+                break
+            messages.append(rest[: int(length)])
+            data = rest[int(length) :]
+        return messages
+
+    def close(self) -> None:
+        self.listener.close()
+
+
+def check_siem(vm: Machine) -> None:
+    """The log entries of the kiosk sent to the SIEM of the test profile."""
+    step("log export to a SIEM")
+    receiver = SiemReceiver()
+    try:
+        # At once, without waiting for the next attempt of the service
+        vm.shell.run("systemctl restart pandora-box-siem.service")
+        logged = len(events(vm))
+        deadline = time.monotonic() + 60
+        while len(receiver.messages()) < logged and time.monotonic() < deadline:
+            time.sleep(1.0)
+        messages = receiver.messages()
+        check(len(messages) >= logged, f"{len(messages)} entries sent of {logged}")
+        # HOSTNAME, APP-NAME and PROCID of RFC 5424
+        headers = {m.split(b" ", 6)[2:5] == [b"vm-test", b"pandora-box", b"-"] for m in messages}
+        check(headers == {True}, f"syslog header: {messages[0][:80]!r}")
+        sent = [json.loads(m.split(b" - ", 2)[2])["event"] for m in messages]
+        check("device_verdict" in sent, f"events sent: {sorted(set(sent))}")
+        # A new entry is sent as it is logged
+        marker = '{"level": "INFO", "kiosk": "vm-test", "event": "vm_siem_marker"}'
+        vm.shell.run(f"echo '{marker}' >> {LOG}")
+        deadline = time.monotonic() + 30
+        while not receiver.messages()[-1].endswith(marker.encode()):
+            check(time.monotonic() < deadline, "new entry not sent")
+            time.sleep(0.5)
+        print(f"{len(receiver.messages())} log entries sent over syslog (RFC 5424, TCP)")
+
+        user = vm.shell.run("ps -o user:32= -p $(systemctl show -P MainPID pandora-box-siem)")
+        check(user.split() == ["pandora-box-siem"], f"service user: {user}")
+        check(
+            vm.shell.succeeds("test -s /var/lib/pandora-box-siem/state.json"),
+            "position of the last entry not saved",
+        )
+        # It reads the logs, not the reports or the quarantine
+        siem_user = "setpriv --reuid=pandora-box-siem --regid=pandora-box-siem --init-groups"
+        check(vm.shell.succeeds(f"{siem_user} head -c1 {LOG}"), "cannot read the log file")
+        check(
+            not vm.shell.succeeds(f"{siem_user} ls /var/lib/pandora-box"),
+            "the SIEM export user reads the reports",
+        )
+        print("service user reads the log file only")
+    finally:
+        receiver.close()
 
 
 def image_state(vm: Machine) -> tuple[str, list[str], list[str]]:
@@ -1133,6 +1220,7 @@ def main(argv: list[str] | None = None) -> int:
                 check_structure_key(vm, workdir)
                 check_signature_update(vm, workdir)
                 online_set = check_online_update(vm, workdir)
+                check_siem(vm)
                 check_usb_policy(vm)
                 check_hardening(vm)
                 check_audit(vm)

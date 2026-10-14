@@ -47,6 +47,7 @@ pandora-box = "pandora_box.cli:main"
 pandora-box-signatures = "pandora_box.sigsets:main"
 pandora-box-image = "pandora_box.imageupdate:main"
 pandora-box-theme = "pandora_box.ui.preview:main"
+pandora-box-siem = "pandora_box.siem:main"
 
 [project.urls]
 Homepage = "https://github.com/dbarzin/pandora-box"

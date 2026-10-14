@@ -380,7 +380,8 @@ After a change of the dependencies in `pyproject.toml`, regenerate it with
 `--profile online` adds online signature updates from their sources (see
 [signatures.md](signatures.md#online-updates)): systemd-networkd (DHCP on the
 wired network), systemd-resolved, freshclam, the `pandora-box-update` timer
-and a firewall that only lets the update service out
+and a firewall that only lets the update service and the log export to a
+SIEM out (see [siem.md](siem.md))
 (`image/mkosi.profiles/online/`). Its `postinst.chroot` enables `[updates]`
 in the configuration of the kiosk, and installs the credentials of
 `image/credentials.toml` (outside git) in `/etc/credstore`: an image built
@@ -453,7 +454,9 @@ the virtio console:
     set, a set signed with another key and an older set are refused; a newer
     set published on an HTTP server by the test is downloaded by the update
     service (only its changed file), installed and loaded by the idle kiosk,
-    and only the update service user can open a network connection; an
+    and only the update service user can open a network connection; the
+    log entries of the kiosk are sent to a syslog receiver of the test
+    (`[siem]`), by the SIEM export user, who cannot read the reports; an
     emulated USB keyboard and network adapter are blocked by USBGuard (no
     input device, no network interface) and the excluded drivers are not in
     the image; the kernel settings, the firewall and the service sandboxes are
