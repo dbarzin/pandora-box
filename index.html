@@ -785,6 +785,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#sample-screenshots" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample screenshots
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sample screenshots">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#waiting-for-a-key-scan-in-progress" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ⏳ Waiting for a key, scan in progress
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threats-found-key-cleaned" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ☣️ Threats found, key cleaned
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#objective" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -867,13 +906,11 @@ station": a user inserts a USB key, the kiosk scans every file with several
 detection engines, shows the dangerous files it found, and removes them when
 the user touches the screen. It is a complete rewrite of the first version of
 PandoraBox, without dependency on Pandora (CIRCL).</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p><strong>PandoraBox is under active development and is not production-ready.</strong>
-There is no release yet, no release signing key and no external security
-audit. Until the first release, do not rely on it to check USB devices.</p>
-</div>
-<p><img alt="The kiosk lists the dangerous files before removing them" src="images/interface-threats.png" /></p>
+<h2 id="sample-screenshots">Sample screenshots<a class="headerlink" href="#sample-screenshots" title="Permanent link">&para;</a></h2>
+<h3 id="waiting-for-a-key-scan-in-progress">⏳ <strong>Waiting for a key, scan in progress</strong><a class="headerlink" href="#waiting-for-a-key-scan-in-progress" title="Permanent link">&para;</a></h3>
+<p><a href="images/interface-ready.png"><img src="images/interface-ready.png" width="400"></a> <a href="images/interface-scanning.png"><img src="images/interface-scanning.png" width="400"></a></p>
+<h3 id="threats-found-key-cleaned">☣️ <strong>Threats found, key cleaned</strong><a class="headerlink" href="#threats-found-key-cleaned" title="Permanent link">&para;</a></h3>
+<p><a href="images/interface-threats.png"><img src="images/interface-threats.png" width="400"></a> <a href="images/interface-cleaned.png"><img src="images/interface-cleaned.png" width="400"></a></p>
 <h2 id="objective">Objective<a class="headerlink" href="#objective" title="Permanent link">&para;</a></h2>
 <p>USB keys remain a common way into information systems that are otherwise
 well protected: shared between organizations, used on unmanaged computers,
@@ -884,18 +921,6 @@ commercial kiosks, for sensitive environments: healthcare, industry, public
 administration. It runs on a refurbished small computer with a touch screen,
 and works without network.</p>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart LR
-    A[USB key inserted] --&gt; B[Mounted read-only]
-    B --&gt; C[Inventory of the files]
-    C --&gt; D[Scan by the engines&lt;br/&gt;in sandboxed workers]
-    D --&gt; E{Verdict}
-    E -- clean --&gt; F[Key can be used]
-    E -- threats --&gt; G[Files listed&lt;br/&gt;on the screen]
-    G -- touch --&gt; H[Quarantine,&lt;br/&gt;then removal]
-    E -- not fully scanned --&gt; I[Key NOT verified]
-    F --&gt; J[Report, eject]
-    H --&gt; J
-    I --&gt; J</code></pre>
 <ul>
 <li><strong>Several engines</strong>: known malicious hashes (MalwareBazaar), known files
   (CIRCL Hashlookup), ClamAV, YARA-X rules (YARA Forge) and structure
