@@ -1,0 +1,1662 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Open source USB decontamination kiosk">
+      
+      
+      
+        <link rel="canonical" href="https://dbarzin.github.io/pandora-box/image/">
+      
+      
+        <link rel="prev" href="../hardware/">
+      
+      
+        <link rel="next" href="../interface/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.31">
+    
+    
+      
+        <title>-- Image and installation - PandoraBox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.3cba04c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../css/overrides.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#kiosk-image" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PandoraBox" class="md-header__button md-logo" aria-label="PandoraBox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PandoraBox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              -- Image and installation
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/dbarzin/pandora-box" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PandoraBox" class="md-nav__button md-logo" aria-label="PandoraBox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    PandoraBox
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/dbarzin/pandora-box" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href=".." class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    GETTING STARTED
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            GETTING STARTED
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    -- Hardware
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    -- Image and installation
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    -- Image and installation
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      Layout
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signing-secure-boot-and-dm-verity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Signing, Secure Boot and dm-verity
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      Screen
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maintenance-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      Maintenance device
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usb-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      USB devices
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      System hardening
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scan-worker-sandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scan worker sandbox
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unified-kernel-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unified kernel image
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ab-updates-of-the-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      A/B updates of the image
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependencies
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profile-online" class="md-nav__link">
+    <span class="md-ellipsis">
+      Profile online
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test profile
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automated-test-in-a-virtual-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      Automated test in a virtual machine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-virtual-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interactive virtual machine
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interactive virtual machine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-usb-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Real USB keys
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    USING THE KIOSK
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            USING THE KIOSK
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    -- Interface
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    -- Configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../siem/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    -- Log export to a SIEM
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    DETECTION
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            DETECTION
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../engines/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    -- Detection engines
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../signatures/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    -- Signature updates
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    DEVELOPMENT
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            DEVELOPMENT
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    -- Development
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      Layout
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#build" class="md-nav__link">
+    <span class="md-ellipsis">
+      Build
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signing-secure-boot-and-dm-verity" class="md-nav__link">
+    <span class="md-ellipsis">
+      Signing, Secure Boot and dm-verity
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      Screen
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maintenance-device" class="md-nav__link">
+    <span class="md-ellipsis">
+      Maintenance device
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usb-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      USB devices
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      System hardening
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scan-worker-sandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scan worker sandbox
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unified-kernel-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      Unified kernel image
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ab-updates-of-the-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      A/B updates of the image
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      Dependencies
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profile-online" class="md-nav__link">
+    <span class="md-ellipsis">
+      Profile online
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#test-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test profile
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#automated-test-in-a-virtual-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      Automated test in a virtual machine
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-virtual-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interactive virtual machine
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Interactive virtual machine">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#real-usb-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Real USB keys
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/dbarzin/pandora-box/edit/main/docs/image.md" title="Edit this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/dbarzin/pandora-box/raw/main/docs/image.md" title="View source of this page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.15 8.15 0 0 1-1.23-2Z"/></svg>
+    </a>
+  
+
+
+<h1 id="kiosk-image">Kiosk image<a class="headerlink" href="#kiosk-image" title="Permanent link">&para;</a></h1>
+<p>The kiosk is distributed as a complete system image (phase 2), built with
+<a href="https://github.com/systemd/mkosi">mkosi</a> from Debian 13 (trixie) packages,
+and tested in a QEMU/KVM virtual machine. Everything runs in a Debian 13
+container (<code>image/Dockerfile</code>: mkosi, QEMU, OVMF), so the developer only needs
+Docker.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The image and the signature sets are signed with development keys only.
+The production image has no signature set: the kiosk scans nothing until a
+signature update device is inserted (see <a href="../signatures/">signatures.md</a>).
+See the phase 2 tasks in the <a href="https://github.com/dbarzin/pandora-box/blob/main/ROADMAP.md#phase-2--minimal-hardened-image">roadmap</a>.</p>
+</div>
+<h2 id="layout">Layout<a class="headerlink" href="#layout" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>image/mkosi.conf</code></td>
+<td>Image definition: Debian 13, x86_64, systemd-boot, unified kernel image (UKI), packages</td>
+</tr>
+<tr>
+<td><code>image/mkosi.repart/</code></td>
+<td>Partitions: ESP, two system slots (read-only root filesystem, its dm-verity hash and signature), data partition</td>
+</tr>
+<tr>
+<td><code>image/mkosi.images/initrd/</code></td>
+<td>The initrd: the default initrd of mkosi, which restarts instead of opening an emergency shell, without the files a read-only root does not need</td>
+</tr>
+<tr>
+<td><code>image/mkosi.prepare.chroot</code></td>
+<td>Runtime dependencies in a virtual environment (<code>/usr/lib/pandora-box</code>), from <code>image/requirements.txt</code> (pinned with their hashes)</td>
+</tr>
+<tr>
+<td><code>image/mkosi.build.chroot</code></td>
+<td>pandora-box wheel, built from the repository without network</td>
+</tr>
+<tr>
+<td><code>image/mkosi.postinst.chroot</code></td>
+<td>Installs pandora-box, its configuration, systemd service, tmpfiles and logrotate files (<code>packaging/</code>), and the clamd settings</td>
+</tr>
+<tr>
+<td><code>image/mkosi.extra/</code></td>
+<td>Files copied into the image: systemd presets (enabled and disabled units), <code>/etc/fstab</code>, growth of the data partition (<code>/usr/lib/repart.d/</code>), A/B updates (<code>/usr/lib/sysupdate.d/</code>, boot assessment), USBGuard policy, kernel settings (<code>sysctl.d</code>), firewall (<code>nftables.conf</code>), clamd sandbox</td>
+</tr>
+<tr>
+<td><code>image/mkosi.profiles/test/</code></td>
+<td>Test profile, for the virtual machine tests only</td>
+</tr>
+<tr>
+<td><code>image/vm/</code></td>
+<td>Virtual machine tests: corpus, QEMU driver, automated test</td>
+</tr>
+<tr>
+<td><code>image/build.sh</code>, <code>image/vm.sh</code></td>
+<td>Build and run in the container</td>
+</tr>
+<tr>
+<td><code>image/build-test.sh</code>, <code>image/package-update.sh</code></td>
+<td>Build the images of the virtual machine test; build a signed image update</td>
+</tr>
+</tbody>
+</table>
+<h2 id="build">Build<a class="headerlink" href="#build" title="Permanent link">&para;</a></h2>
+<p>Requirements: Docker, about 5 GB of disk space, network access (Debian
+packages and Python wheels).</p>
+<div class="highlight"><pre><span></span><code>image/build.sh<span class="w">                  </span><span class="c1"># production image</span>
+image/build.sh<span class="w"> </span>--profile<span class="w"> </span><span class="nb">test</span><span class="w">   </span><span class="c1"># test image</span>
+</code></pre></div>
+<p>The image is written to <code>image/mkosi.output/</code>: <code>pandora-box.raw</code> (or
+<code>pandora-box-test.raw</code>, a GPT disk image), the UKI (<code>.efi</code>) and the list of
+installed packages (<code>.manifest</code>). The first build takes a few minutes; the
+following ones reuse the installed packages (mkosi incremental build, cached
+in the <code>pandora-box-mkosi</code> Docker volume) and take less than a minute.</p>
+<p>The cache is not rebuilt when <code>image/requirements.txt</code> or
+<code>image/mkosi.prepare.chroot</code> change: rebuild it with <code>image/build.sh -f</code>
+(<code>docker volume rm pandora-box-mkosi</code> removes it completely).</p>
+<p>The disk image has two system slots (A/B updates) and a data partition:</p>
+<table>
+<thead>
+<tr>
+<th>Partition</th>
+<th>Filesystem</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ESP</td>
+<td>vfat, 512 MB</td>
+<td>systemd-boot and the UKIs (<code>pandora-box_&lt;version&gt;.efi</code>), all signed</td>
+</tr>
+<tr>
+<td>root, slot A (<code>pandora-box_&lt;version&gt;</code>)</td>
+<td>EROFS, read-only, 1 GB</td>
+<td>the whole system but <code>/var</code> (about 400 MB used)</td>
+</tr>
+<tr>
+<td>root-verity, slot A</td>
+<td>64 MB</td>
+<td>dm-verity hash tree of the root filesystem</td>
+</tr>
+<tr>
+<td>root-verity-sig, slot A</td>
+<td>16 KB</td>
+<td>signature of the root hash</td>
+</tr>
+<tr>
+<td>root, root-verity, root-verity-sig, slot B (<code>_empty</code>)</td>
+<td>same sizes</td>
+<td>the next version (A/B updates)</td>
+</tr>
+<tr>
+<td>data (<code>pandora-box-data</code>)</td>
+<td>ext4, 1 GB in the image</td>
+<td><code>/var</code>: scan reports, quarantine, logs, signed signature sets (clamd reads its databases there)</td>
+</tr>
+</tbody>
+</table>
+<p>The version of the image is the date and time of its build, UTC, like the
+serial of a signature set: <code>20261005143700</code> (<code>image/build.sh</code> sets it,
+<code>--image-version=N</code> overrides it). It is in <code>/etc/os-release</code>
+(<code>IMAGE_VERSION</code>), in the labels of its partitions (<code>pandora-box_&lt;version&gt;</code>,
+<code>_verity</code>, <code>_veritysig</code>: 36 characters at most) and in the name of its UKI.</p>
+<p>The root filesystem is read-only by design (EROFS cannot be written at all):
+the system and its configuration only change with a new image. Everything
+the kiosk writes is in <code>/var</code>. The data partition is the last one: at every
+boot, <code>systemd-repart</code> grows it to fill the disk
+(<code>/usr/lib/repart.d/20-var.conf</code>), then <code>systemd-growfs</code> grows its
+filesystem (<code>x-systemd.growfs</code> in <code>/etc/fstab</code>), so the image can be written
+to a disk of any size. As <code>/etc</code> is read-only, the machine ID is generated
+again at every boot (a new journal folder per boot, within the journald
+size limits).</p>
+<p>The image contains:</p>
+<ul>
+<li>the kernel, systemd and udev, Python 3 and clamd (<code>clamav-daemon</code>), with no
+  network service: <code>systemd-networkd</code>, <code>systemd-resolved</code>, freshclam and the
+  ClamAV on-access scanner are disabled (<code>10-pandora-box.preset</code>);</li>
+<li>pandora-box in <code>/usr/lib/pandora-box</code> (<code>/usr/bin/pandora-box</code>), its
+  configuration in <code>/etc/pandora-box/pandora-box.toml</code> and its service, which
+  shows the curses interface on the first console;</li>
+<li>no <code>login</code> program and no root password: no interactive session is
+  possible.</li>
+</ul>
+<h2 id="signing-secure-boot-and-dm-verity">Signing, Secure Boot and dm-verity<a class="headerlink" href="#signing-secure-boot-and-dm-verity" title="Permanent link">&para;</a></h2>
+<p>The boot chain is verified from the firmware to every block of the system:</p>
+<ol>
+<li>with Secure Boot, the firmware only starts systemd-boot if it is signed
+   with a key of its <code>db</code>, and systemd-boot only starts a signed UKI;</li>
+<li>the UKI holds the kernel, the initrd and the kernel command line, which
+   contains the dm-verity root hash (<code>roothash=</code>): changing it breaks the
+   signature;</li>
+<li>the root filesystem is opened with dm-verity: every block read is checked
+   against the hash tree, whose root is that hash. A modified block cannot
+   be read (I/O error, "data block ... is corrupted" in the kernel log);</li>
+<li>with Secure Boot, the Debian kernel enables its lockdown mode
+   (<code>integrity</code>): even root cannot modify the running kernel.</li>
+</ol>
+<p><code>/var</code> is not protected by dm-verity: it holds the data of the kiosk, never
+programs or configuration.</p>
+<p>The image is signed with <code>image/mkosi.key</code> and <code>image/mkosi.crt</code> (systemd-boot,
+UKI, root hash). When they do not exist, <code>image/build.sh</code> generates a
+<strong>development</strong> key pair, valid 10 years, that never leaves the developer's
+computer (ignored by git). A kiosk must only trust the release keys of the
+project, which are not defined yet: they will be kept out of the repository,
+and mkosi can sign with a key in a hardware token
+(<code>--secure-boot-key-source=provider:pkcs11</code>).</p>
+<p>The image also trusts the signature sets signed with <code>image/update.key</code>: its
+public key <code>image/update.pem</code> is installed in <code>/usr/share/pandora-box/keys/</code>
+(under dm-verity). <code>image/build.sh</code> generates a development pair when they
+do not exist; the test profile signs its signature set with it. See
+<a href="../signatures/">signatures.md</a>.</p>
+<p>On a kiosk, the certificate is enrolled in the firmware in place of the
+Microsoft keys (PK, KEK and db), so that it starts nothing else. The ESP
+contains the keys in the format expected by the firmware
+(<code>loader/keys/auto/</code>): with the firmware in Secure Boot setup mode (keys
+cleared in the firmware setup), systemd-boot enrolls them at the first boot
+(<code>secure-boot-enroll force</code>). Enrolling only the project certificate also
+refuses the option ROMs signed by Microsoft: a computer whose display or
+disk controller needs one (a graphics card, for instance) would not start
+it. The virtual machines enroll the certificate with <code>virt-fw-vars</code> instead
+(<code>image/vm/machine.py</code>).</p>
+<p>systemd-boot has no menu (<code>/efi/loader/loader.conf</code>, <code>timeout
+menu-disabled</code>): it starts the default entry, the newest version not marked
+bad, and does not read the keyboard. A keyboard plugged into the kiosk
+cannot select another version, edit the kernel command line (refused with
+Secure Boot anyway), power off the machine or reboot into the firmware
+setup. The ESP is not part of the image updates: this file stays as
+installed.</p>
+<h2 id="screen">Screen<a class="headerlink" href="#screen" title="Permanent link">&para;</a></h2>
+<p>The kiosk draws its graphical interface into the framebuffer of the graphics
+driver (<code>/dev/fb0</code>), without a display server or a browser, and puts the
+first console (<code>tty1</code>) in graphics mode so that the kernel does not draw text
+over it: see <a href="../interface/">interface.md</a>. The screen of the reference
+hardware is a Waveshare 7-inch HDMI LCD (1024x600). The firmware of the
+ThinkCentre starts in 1024x768, and the Intel driver keeps that mode: the
+bottom of the interface would be off the screen. The kernel command line
+therefore sets the mode of the screen, <code>video=1024x600M@60</code> (CVT timings, as
+Waveshare documents them); with another screen, change it in
+<code>image/mkosi.conf</code>. The Intel driver still keeps the framebuffer of the
+firmware, large enough for that mode: the kiosk only draws its visible part,
+the size of <code>video=</code>, and follows a change of the framebuffer size. It logs
+the size and the pixel format it draws for (<code>display_started</code>).</p>
+<p>The curses interface (<code>kiosk.interface = "curses"</code>, administrator mode) draws
+text on the console instead: it shrinks the console to the screen of
+<code>video=</code> (8x16 font: 37 lines, 128 columns) the same way, and logs the size
+it draws for (<code>display_started</code>, <code>display_resized</code>).</p>
+<h2 id="maintenance-device">Maintenance device<a class="headerlink" href="#maintenance-device" title="Permanent link">&para;</a></h2>
+<p>A kiosk has no login and accepts no connection: to diagnose it without
+taking its disk out, a <strong>maintenance device</strong> brings its logs back. On the
+computer that holds the update key, with a USB key mounted:</p>
+<div class="highlight"><pre><span></span><code>image/maintenance-key.sh<span class="w"> </span>/media/<span class="nv">$USER</span>/KEY<span class="w">            </span><span class="c1"># any kiosk</span>
+image/maintenance-key.sh<span class="w"> </span>/media/<span class="nv">$USER</span>/KEY<span class="w"> </span>kiosk-1<span class="w">    </span><span class="c1"># only kiosk.name = kiosk-1</span>
+</code></pre></div>
+<p>writes <code>pandora-box-maintenance/</code> on the key: a request signed with the
+update key, valid 7 days. Inserted into the kiosk, even one without
+signatures, the key is not scanned: the kiosk verifies the request, writes
+its logs to <code>pandora-box-maintenance/&lt;kiosk&gt;-&lt;date&gt;/</code> (journal of the boot
+and of the previous one, kernel, services, logs of the kiosk and of
+USBGuard, USB devices and rules, disks, boot entries, hardware and screens,
+installed signature set) and ejects the key (<code>src/pandora_box/maintenance.py</code>).
+Nothing changes on the kiosk, and the export holds no key, credential or
+scan report. A request signed by another key, too old, for another kiosk
+or modified is refused (<code>maintenance_refused</code> in the log).</p>
+<p>One key can hold a maintenance request, a signature set
+(<code>pandora-box-signatures/</code>) and an image update (<code>pandora-box-image/</code>):
+the kiosk handles them in that order in one insertion, each verified on its
+own; the export shows the kiosk before the updates, and the image update
+comes last as it restarts the kiosk.</p>
+<h2 id="usb-devices">USB devices<a class="headerlink" href="#usb-devices" title="Permanent link">&para;</a></h2>
+<p>A kiosk must only use USB storage devices: a key that is also a keyboard
+(BadUSB) could type commands, a network adapter could open a network.</p>
+<ul>
+<li><strong>USBGuard</strong> (<code>/etc/usbguard/rules.conf</code>) allows hubs and the devices
+  whose interfaces are all mass storage; it blocks every other device,
+  including a key that has a storage interface and another one. Blocked
+  devices are listed in <code>/var/log/usbguard/usbguard-audit.log</code>.</li>
+<li><strong>No device is authorized before USBGuard has started</strong>: the kernel
+  command line sets <code>usbcore.authorized_default=0</code>. If USBGuard does not
+  start, no USB device is usable.</li>
+<li><strong>Drivers removed from the image</strong> (<code>KernelModulesExclude=</code> in
+  <code>image/mkosi.conf</code>): USB network adapters, wireless, Bluetooth, USB serial
+  adapters and modems, plus the staging drivers and batman-adv, which would
+  bring the wireless modules back as dependencies. Such devices have no
+  driver even if they were authorized.</li>
+<li><strong>USB HID is kept for the touchscreen</strong> of the reference hardware, a
+  Waveshare 7-inch HDMI LCD (C), allowed by its own rule:</li>
+</ul>
+<div class="highlight"><pre><span></span><code>allow id 0eef:0005 serial &quot;220211&quot; name &quot;WS170120&quot; with-interface 03:00:00 via-port &quot;1-8&quot;
+</code></pre></div>
+<p>its USB touch controller (eGalax) with its single generic HID interface (a
+  keyboard has <code>03:01:01</code>), on the internal port of the enclosure, this unit
+  only. A device that copies its identifiers on another port, or that adds a
+  keyboard interface, is blocked; so is every keyboard and mouse. Another
+  unit or port: adapt the rule to the line the audit log shows when it is
+  blocked. The kernel (<code>mousedev</code>) turns a touch into a left click on
+  <code>/dev/input/mice</code>, which the kiosk reads to confirm a cleaning.</p>
+<p>The test image allows the touch tablet of the virtual machine (QEMU
+  <code>usb-tablet</code>, same interface) in its own rule
+  (<code>/etc/usbguard/rules.d/50-vm-test.conf</code>): the test confirms a cleaning
+  with a touch. The keyboard of the virtual machines is not a USB device.</p>
+<h2 id="system-hardening">System hardening<a class="headerlink" href="#system-hardening" title="Permanent link">&para;</a></h2>
+<p>After the ANSSI configuration recommendations for GNU/Linux systems:</p>
+<ul>
+<li><strong>Kernel settings</strong> (<code>/usr/lib/sysctl.d/90-pandora-box.conf</code>): kernel
+  logs and addresses hidden, no ptrace, no kexec, no unprivileged eBPF, user
+  namespaces or userfaultfd, io_uring disabled, no SysRq, no core dumps,
+  protected links and FIFOs, no IP forwarding or redirects.</li>
+<li><strong>Kernel command line</strong>: memory initialized on allocation and free, no
+  slab merging, randomized page allocator and kernel stack, no legacy
+  vsyscall, no debugfs, lockdown in <code>confidentiality</code> mode (Secure Boot only
+  enables <code>integrity</code>: even root cannot read kernel memory), IOMMU in strict
+  mode and no DMA before the kernel starts (DMA attacks through ports).</li>
+<li><strong>Firewall</strong> (<code>/etc/nftables.conf</code>): every packet is dropped, in and out,
+  except on the loopback interface.</li>
+<li><strong>No login</strong>: no login console on the screens (<code>getty@</code> and <code>getty-static</code>
+  disabled), no <code>login</code> program, no root password, Ctrl-Alt-Del masked.</li>
+<li><strong>clamd sandbox</strong> (<code>clamav-daemon.service.d/50-pandora-box.conf</code>): no
+  network, read-only system, no device, system call filter,
+  <code>MemoryDenyWriteExecute</code> (the Debian clamd interprets bytecode signatures,
+  without JIT); it runs as the <code>clamav</code> user.</li>
+<li><strong>Kiosk service</strong> (<code>packaging/systemd/pandora-box.service</code>): read-only
+  system, system call filter, limited capabilities. It keeps <code>AF_NETLINK</code>
+  (udev events), the capabilities needed to start the worker sandbox
+  (namespaces, change of user, loopback interface of the workers) and
+  cannot have <code>MemoryDenyWriteExecute</code> or <code>RestrictSUIDSGID</code>: the first one
+  would also apply to the YARA-X workers, which compile rules to native
+  code, the second one refuses a system call bubblewrap needs.</li>
+<li><strong>Kernel modules removed</strong>: network protocols the kiosk never uses (DCCP,
+  SCTP, RDS, TIPC) and FireWire, another way to reach the memory of the
+  kiosk, besides the USB network, Bluetooth and Wi-Fi drivers. The protocols
+  and FireWire are also listed in <code>/etc/modprobe.d/pandora-box.conf</code>, where
+  the auditing tools look for them.</li>
+<li><strong>Audit log</strong> (<code>/etc/audit/audit.rules</code>, auditd): loading of kernel modules,
+  mounts (except those of systemd and bubblewrap), every program started,
+  ptrace, changes of the clock, of the signature sets and of the staged image
+  updates. The rules are locked (<code>-e 2</code>): changing them needs a reboot. They
+  are loaded by <code>auditctl -R</code> (<code>augenrules</code> writes into <code>/etc</code>, read-only).
+  The log is in <code>/var/log/audit/audit.log</code>, for instance
+  <code>ausearch -k signatures -i</code>.</li>
+</ul>
+<p>The test profile includes <code>lynis</code>, run by the automated test: hardening index
+73, no warnings. Its remaining suggestions do not apply to a kiosk without
+login (password policy, banners, package tools, fail2ban) or come later
+(remote logging, phase 5).</p>
+<h2 id="scan-worker-sandbox">Scan worker sandbox<a class="headerlink" href="#scan-worker-sandbox" title="Permanent link">&para;</a></h2>
+<p>The scan workers parse hostile files with several engines (libmagic, YARA-X,
+the clamd client...): they are assumed compromisable (<code>scan.sandbox</code>,
+<code>src/pandora_box/sandbox.py</code>).</p>
+<ul>
+<li><strong>One engine per worker</strong>: a compromised engine (a crafted file
+  exploiting YARA-X or libmagic) cannot forge the result of another engine.
+  The kiosk hashes each file itself, asks the worker of each hash engine
+  (MalwareBazaar, Hashlookup) with the hashes only, then passes the file to
+  a worker of each content engine (ClamAV, YARA-X), and combines their
+  results itself; a worker only reports the result of its own engine.
+  Content engines have <code>scan.workers</code> workers each, hash engines one.
+  <code>scan.workers = "auto"</code> (the default) scans one file per CPU at the same
+  time, as many as the memory allows (1.5 GB for clamd and the system, then
+  256 MB each, for the YARA rules mostly): 6 on the ThinkCentre M720q (6
+  cores, 8 GB), 1 or 2 on a computer with 2 GB.</li>
+<li><strong>No access to the device</strong>: the kiosk opens each file safely (no link
+  followed, the file of the inventory) and passes the open descriptor to the
+  workers of the content engines, which never open a file of the device;
+  the workers of the hash engines never get the file.</li>
+<li><strong>bubblewrap</strong>: new PID, IPC, UTS, cgroup and network namespaces (no
+  network interface but loopback); a file system holding only <code>/usr</code>, a few
+  files of <code>/etc</code>, the signature folders of the enabled engines
+  (read-only), the YARA-X cache and the clamd socket folder: no device
+  mount point, no reports, quarantine, logs or configuration.</li>
+<li><strong>Dedicated user</strong> <code>pandora-box-scan</code> (<code>packaging/sysusers/</code>), switched to
+  by <code>setpriv</code>: no capability, no supplementary group, <code>no_new_privs</code>.</li>
+<li><strong>System call filter</strong> (<code>src/pandora_box/seccomp.py</code>), installed once
+  the engines are loaded: no program execution, debugging, mounts,
+  namespaces, eBPF, kernel modules, io_uring, network sockets...</li>
+<li><strong>Untrusted answers</strong>: workers answer in JSON (never pickle), limited in
+  size and validated (<code>src/pandora_box/protocol.py</code>); the path and size of
+  the file always come from the kiosk. A malformed answer kills the worker
+  and the file is reported as an error.</li>
+</ul>
+<p>bubblewrap runs as root (the kiosk service), so unprivileged user namespaces
+stay disabled.</p>
+<p>The virtual machine test checks these settings and prints the exposure of
+the services measured by <code>systemd-analyze security</code> (0 to 10, lower is
+better): about 1.6 for clamd, 3.8 for the kiosk (which starts the worker
+sandbox), 2.8 for USBGuard.</p>
+<h2 id="unified-kernel-image">Unified kernel image<a class="headerlink" href="#unified-kernel-image" title="Permanent link">&para;</a></h2>
+<p>The UKI (about 40 MB) holds the kernel, the initrd of the image
+(<code>image/mkosi.images/initrd/</code>, without the udev hardware database, charset
+conversions, Perl, documentation and networkd) and an initrd of kernel
+modules. That one only holds what mounts the root filesystem
+(<code>KernelModulesInitrdInclude=</code> in <code>image/mkosi.conf</code>): disk controllers
+(NVMe, SATA, Intel VMD, eMMC, virtio), dm-verity, EROFS and CRC32C, which
+EROFS loads by name. The other modules are loaded from the root filesystem.
+A computer whose disk controller is not in this list cannot find its root
+filesystem: add its module there.</p>
+<h2 id="ab-updates-of-the-image">A/B updates of the image<a class="headerlink" href="#ab-updates-of-the-image" title="Permanent link">&para;</a></h2>
+<p>The system is updated as a whole, never file by file
+(<code>src/pandora_box/imageupdate.py</code>, <code>image/mkosi.extra/usr/lib/sysupdate.d/</code>).</p>
+<ul>
+<li><strong>Building an update.</strong> Build a new version (its version is the time of
+  the build: newer than the running one), then package it:</li>
+</ul>
+<div class="highlight"><pre><span></span><code>image/build.sh
+image/package-update.sh<span class="w"> </span>image/mkosi.output/pandora-box.raw<span class="w"> </span>update<span class="w"> </span>image/update.key
+</code></pre></div>
+<p><code>update/</code> holds the partitions of slot A of the new image (compressed
+  with xz, the format that <code>systemd-sysupdate</code> of Debian 13 decompresses),
+  named with their UUID, the UKI, and a manifest signed with the update key
+  (the format of the signature sets, content <code>image</code>, serial = version).
+  About 215 MB, of which 40 MB for the UKI.
+- <strong>Installing it.</strong> Copy <code>update/</code> as <code>pandora-box-image/</code> at the root of a
+  USB key and insert it into the kiosk (<code>updates.image_from_devices</code>). The
+  kiosk verifies the signature, that the version is newer than the running
+  one and every file, copies them to <code>/var/lib/pandora-box-image</code>, then
+  <code>systemd-sysupdate</code> writes the partitions to the free slot and the UKI to
+  the ESP with 3 boot tries (<code>pandora-box_2+3-0.efi</code>), and the kiosk
+  restarts. The running version is never overwritten; the device is not
+  scanned.
+- <strong>Online.</strong> With the profile <code>online</code> and <code>updates.image_url</code> (the URL of
+  a published update folder), <code>pandora-box-update.service</code> downloads a newer
+  update as its unprivileged user (every file checked), then installs it as
+  root without network (<code>pandora-box-image install</code>), with the same checks
+  as an update device. The kiosk restarts on the new version when it is idle
+  (between two devices): a scan is never interrupted.
+- <strong>Boot assessment.</strong> The new version is kept (<code>systemd-bless-boot</code>) once
+  <code>boot-complete.target</code> is reached, which requires the kiosk to be ready
+  (<code>Type=notify</code>). A boot that fails restarts: kernel panic (<code>panic=10</code>),
+  failure in the initrd (its emergency shell restarts,
+  <code>image/mkosi.images/initrd/</code>), or no <code>boot-complete.target</code> in 15 minutes.
+  After 3 failed tries, systemd-boot boots the previous version again; the
+  data (<code>/var</code>) is shared by the versions.</p>
+<p>Two keys protect the update: the update key decides what is installed, the
+Secure Boot key decides what can boot (the UKI is signed and holds the root
+hash of its slot).</p>
+<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
+<p>Runtime dependencies are pinned with their hashes in <code>image/requirements.txt</code>.
+After a change of the dependencies in <code>pyproject.toml</code>, regenerate it with
+<code>image/lock-requirements.sh</code>.</p>
+<h2 id="profile-online">Profile online<a class="headerlink" href="#profile-online" title="Permanent link">&para;</a></h2>
+<p><code>--profile online</code> adds online signature updates from their sources (see
+<a href="../signatures/#online-updates">signatures.md</a>): systemd-networkd (DHCP on the
+wired network), systemd-resolved, freshclam, the <code>pandora-box-update</code> timer
+and a firewall that only lets the update service and the log export to a
+SIEM out (see <a href="../siem/">siem.md</a>)
+(<code>image/mkosi.profiles/online/</code>). Its <code>postinst.chroot</code> enables <code>[updates]</code>
+in the configuration of the kiosk, and installs the credentials of
+<code>image/credentials.toml</code> (outside git) in <code>/etc/credstore</code>: an image built
+with them must not be published. Without the profile, the image has no
+network configuration at all.</p>
+<div class="highlight"><pre><span></span><code>cp<span class="w"> </span>image/credentials.toml.example<span class="w"> </span>image/credentials.toml<span class="w">   </span><span class="c1"># then the abuse.ch Auth-Key</span>
+image/build.sh<span class="w"> </span>--profile<span class="w"> </span>online
+</code></pre></div>
+<h2 id="test-profile">Test profile<a class="headerlink" href="#test-profile" title="Permanent link">&para;</a></h2>
+<p><code>--profile test</code> builds <code>pandora-box-test.raw</code>, for the virtual machine tests
+only, never for a kiosk. It includes the profile <code>online</code>, and adds:</p>
+<ul>
+<li>a test-only signature set, generated from <code>image/vm/corpus.py</code>, signed
+  with the development update key and installed (serial 1): a ClamAV
+  database that detects the EICAR test file, a MalwareBazaar database, a
+  Hashlookup filter and a YARA rule, each detecting one file of the test key;</li>
+<li>the matching configuration, with every engine enabled, and online updates
+  from <code>http://10.0.2.2:8080/</code> (the build container, seen from the QEMU user
+  network);</li>
+<li>a root shell without password on the virtio console (<code>hvc0</code>), and kernel
+  messages on the serial port;</li>
+<li><code>kiosk-screen</code>, which prints the texts of the kiosk screen in that shell (the
+  graphical interface logs them, <code>display_screen</code> events at the DEBUG level).</li>
+</ul>
+<h2 id="automated-test-in-a-virtual-machine">Automated test in a virtual machine<a class="headerlink" href="#automated-test-in-a-virtual-machine" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>image/build-test.sh<span class="w">   </span><span class="c1"># the test image (version 1) and updates to versions 2 to 4</span>
+image/vm.sh<span class="w"> </span><span class="nb">test</span>
+</code></pre></div>
+<p>The test boots the test image in QEMU (KVM when <code>/dev/kvm</code> is writable,
+otherwise much slower emulation), with UEFI firmware (OVMF) where the image
+signing certificate is enrolled (Secure Boot enabled), and an empty USB 3
+controller. It plays the whole user workflow, through QMP and the shell on
+the virtio console:</p>
+<ol>
+<li>the kiosk starts with its five engines and the signature set 1, verified,
+   and no systemd unit fails;</li>
+<li>the scan workers (one engine each) run in their sandbox (user,
+   capabilities, <code>no_new_privs</code>, seccomp, network namespace, no device or
+   kiosk data in their file system); Secure Boot is enabled, the kernel is
+   locked down and the root filesystem is on dm-verity;</li>
+<li>the root filesystem is read-only EROFS, and <code>/var</code> was grown to fill the
+   8 GB disk of the machine;</li>
+<li>an emulated USB key (a vfat disk image holding the corpus) is inserted,
+   which triggers the same udev events as a real device;</li>
+<li>each file gets the expected verdict from the expected engine;</li>
+<li>the cleaning is confirmed with a key press on the kiosk screen; the
+   infected files are quarantined (checked against their SHA-256) and
+   removed from the key, which is ejected;</li>
+<li>the key is removed: only the clean files are left on it;</li>
+<li>the cleaned key is inserted again and reported clean;</li>
+<li>keys of the other filesystems go through the same scan and cleaning, then
+   are reported clean: exfat, NTFS, ext4 (its files private to their owner,
+   as on the key of a Linux user) and a key with an MBR partition table and a
+   vfat partition; a key on EROFS (a filesystem the kernel mounts, but not
+   allowed) and an ext4 key whose group descriptors are overwritten are
+   refused; a vfat key with a cut cluster chain is mounted, but the file
+   cannot be read: the key is reported not verified (<code>image/vm/keys.py</code>;
+   exfat and NTFS have no tool writing files without mounting them: they
+   are formatted in the container, then filled by the kernel of the machine,
+   the kiosk stopped);</li>
+<li>a signature update key with a newer set (serial 2) is installed, the
+    engines are reloaded and the new sample it detects is found; a modified
+    set, a set signed with another key and an older set are refused; a newer
+    set published on an HTTP server by the test is downloaded by the update
+    service (only its changed file), installed and loaded by the idle kiosk,
+    and only the update service user can open a network connection; the
+    log entries of the kiosk are sent to a syslog receiver of the test
+    (<code>[siem]</code>), by the SIEM export user, who cannot read the reports; an
+    emulated USB keyboard and network adapter are blocked by USBGuard (no
+    input device, no network interface) and the excluded drivers are not in
+    the image; the kernel settings, the firewall and the service sandboxes are
+    in place;</li>
+<li>after a reboot, the scan reports are still there, the root filesystem is
+    unchanged and the signature set 5 is verified at start; a key pressed
+    while the firmware and the boot loader start does not open the boot
+    loader menu;</li>
+<li>an image update key to version 2 is inserted: the kiosk installs it in
+    the free slot and restarts, version 2 boots from slot B and is kept (its
+    UKI loses its boot counter), with the same data; version 3, published on
+    an HTTP server by the test, is downloaded and installed by the update
+    service, then the idle kiosk restarts on it and it is kept; finally a
+    version 4 whose root filesystem is modified is installed from a key: it
+    fails 3 boots (dm-verity, the initrd restarts) and systemd-boot goes back
+    to version 3.</li>
+</ol>
+<p>Two more machines boot the same image:</p>
+<ul>
+<li>with a block of the root filesystem modified on the disk (a canary file of
+  the test image): it cannot be read and the kernel reports the corruption;</li>
+<li>with firmware trusting another key: the firmware refuses systemd-boot
+  ("Access Denied") and nothing starts.</li>
+</ul>
+<p>The built image is never modified: the machine writes to a new disk overlay
+(<code>system.qcow2</code>) at every start. It takes about 7 minutes with KVM.
+<code>image/vm.sh test --workdir DIR</code> keeps the serial console logs, the QEMU logs
+and the key images in <code>DIR</code>, and the kiosk log (<code>kiosk.log</code>) when the test
+fails.</p>
+<h2 id="interactive-virtual-machine">Interactive virtual machine<a class="headerlink" href="#interactive-virtual-machine" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>image/vm.sh<span class="w"> </span>run<span class="w">                              </span><span class="c1"># test image</span>
+image/vm.sh<span class="w"> </span>run<span class="w"> </span>image/mkosi.output/pandora-box.raw
+</code></pre></div>
+<p>The kiosk screen is shown over VNC, display <code>:0</code>
+(port 5900), for example with <code>gvncviewer localhost:0</code> (most viewers read
+<code>host:N</code> as a display number, port 5900 + N); <code>kiosk-screen</code> also prints it in the shell of the test
+image. The terminal shows this shell (virtio console), not the kiosk, and, after
+<code>Ctrl-A C</code>, the QEMU monitor; <code>Ctrl-A X</code> stops the machine. A test key is
+created in <code>image/vm/work/usbkey.img</code>; insert and remove it from the monitor:</p>
+<div class="highlight"><pre><span></span><code>(qemu) drive_add 0 if=none,id=key,format=raw,file=/src/image/vm/work/usbkey.img
+(qemu) device_add usb-storage,bus=xhci.0,drive=key,id=usbkey,removable=on
+(qemu) device_del usbkey
+</code></pre></div>
+<p>Paths are seen from the container, where the repository is mounted on <code>/src</code>.
+Any disk image can be used as a key, but hostile samples should only ever be
+copied into key images, never onto the development desktop.</p>
+<h3 id="real-usb-keys">Real USB keys<a class="headerlink" href="#real-usb-keys" title="Permanent link">&para;</a></h3>
+<p>A USB key plugged into this computer can be passed through to the machine.
+List the USB storage devices of this computer, with their port (<code>BUS-PORT</code>)
+and identifier (<code>VENDOR:PRODUCT</code>):</p>
+<p><div class="highlight"><pre><span></span><code>image/vm.sh<span class="w"> </span>usb
+</code></pre></div>
+<div class="highlight"><pre><span></span><code>1-4  abcd:1234  General UDisk
+    sda     3,8G
+    └─sda1  3,7G vfat   /media/didier/6B20-F9DE
+</code></pre></div></p>
+<p>Then start the machine with <code>--usb</code>, followed by a port, which passes through
+any key plugged into that port, like the USB port of a kiosk, or by an
+identifier, which passes through that model of key on any port:</p>
+<div class="highlight"><pre><span></span><code>image/vm.sh<span class="w"> </span>run<span class="w"> </span>--usb<span class="w"> </span><span class="m">1</span>-4
+</code></pre></div>
+<p>QEMU attaches the key to the machine as soon as it is plugged in (or at once
+if it is already there) and takes it from this computer: its kernel driver is
+detached. Before starting the machine, unmount the key
+(<code>udisksctl unmount -b /dev/sda1</code>) and disable the automatic mounting of USB
+devices of the desktop, so that this computer never mounts a key meant for
+the kiosk. <code>--usb</code> can be given several times. On GNOME:</p>
+<div class="highlight"><pre><span></span><code>gsettings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>org.gnome.desktop.media-handling<span class="w"> </span>automount<span class="w"> </span><span class="nb">false</span>
+gsettings<span class="w"> </span><span class="nb">set</span><span class="w"> </span>org.gnome.desktop.media-handling<span class="w"> </span>automount-open<span class="w"> </span><span class="nb">false</span>
+<span class="c1"># after the tests: the same commands with &quot;true&quot;</span>
+</code></pre></div>
+<p>QEMU then runs as root in the container, with access to the USB devices of
+this computer and its network (to receive the udev events of the keys
+plugged in later); the kiosk screen is on <code>localhost:5900</code> as before.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a>.
+    </div>
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.sections", "navigation.indexes", "navigation.expand", "navigation.top", "content.code.copy", "content.action.edit", "content.action.view"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.fe8b6f2b.min.js"></script>
+      
+    
+  </body>
+</html>

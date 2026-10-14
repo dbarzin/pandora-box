@@ -1,0 +1,10 @@
+/* Inline code in blue */
+.md-typeset code {
+    color: #0066cc;
+}
+
+/* Screenshots of the kiosk: a thin border, never wider than the page */
+.md-typeset img {
+    max-width: 100%;
+    border: 1px solid var(--md-default-fg-color--lightest);
+}
