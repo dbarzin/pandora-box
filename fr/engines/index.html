@@ -1,0 +1,2033 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Open source USB decontamination kiosk">
+      
+      
+      
+        <link rel="canonical" href="https://sourcentis.github.io/pandora-box/fr/engines/">
+      
+      
+        <link rel="prev" href="../configuration/">
+      
+      
+        <link rel="next" href="../image/">
+      
+      
+        
+          <link rel="alternate" href="../../engines/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="fr">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>-- Moteurs de détection - PandoraBox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../css/overrides.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#moteurs-de-detection-et-politique-de-verdict" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../" title="PandoraBox" class="md-header__button md-logo" aria-label="PandoraBox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PandoraBox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              -- Moteurs de détection
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Sélectionner la langue">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../engines/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="fr" class="md-select__link">
+              Français
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sourcentis/pandora-box" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="PandoraBox" class="md-nav__button md-logo" aria-label="PandoraBox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PandoraBox
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sourcentis/pandora-box" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DÉMARRAGE
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    DÉMARRAGE
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Matériel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INSTALLATION
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    INSTALLATION
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Construction de l'image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Test avec QEMU
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Installation initiale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MAINTENANCE
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    MAINTENANCE
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Signatures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../update/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Mises à jour du système
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Journaux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../siem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Export vers un SIEM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RÉFÉRENCE
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RÉFÉRENCE
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Moteurs de détection
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Moteurs de détection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chaîne d'analyse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#engines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Moteurs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Moteurs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#malwarebazaar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MalwareBazaar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hashlookup-circl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hashlookup (CIRCL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clamav" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ClamAV
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yara-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        YARA-X
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-type-libmagic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type de fichier (libmagic)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heuristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heuristiques
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fake-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Faux moteur
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verdict-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Politique de verdict
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Politique de verdict">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verdict d'un fichier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#device-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verdict d'une clé
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keys-with-several-partitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clés à plusieurs partitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limites
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Délais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signature-freshness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fraîcheur des signatures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scan-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rapport d'analyse
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../image/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Fonctionnement de l'image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DÉVELOPPEMENT
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    DÉVELOPPEMENT
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Développement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chaîne d'analyse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#engines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Moteurs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Moteurs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#malwarebazaar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MalwareBazaar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hashlookup-circl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hashlookup (CIRCL)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#clamav" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ClamAV
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yara-x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        YARA-X
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-type-libmagic" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type de fichier (libmagic)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#heuristics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heuristiques
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fake-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Faux moteur
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verdict-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Politique de verdict
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Politique de verdict">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#file-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verdict d'un fichier
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#device-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verdict d'une clé
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keys-with-several-partitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clés à plusieurs partitions
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limites
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timeouts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Délais
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signature-freshness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fraîcheur des signatures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scan-report" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rapport d'analyse
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/sourcentis/pandora-box/edit/main/docs/engines.fr.md" title="Editer cette page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/sourcentis/pandora-box/raw/main/docs/engines.fr.md" title="Consulter la source de cette page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="moteurs-de-detection-et-politique-de-verdict">Moteurs de détection et politique de verdict<a class="headerlink" href="#moteurs-de-detection-et-politique-de-verdict" title="Permanent link">&para;</a></h1>
+<p>Ce document décrit la chaîne d'analyse de la phase 1 : chaque moteur de
+détection, ses fichiers de données et comment les obtenir pour le
+développement, et la façon dont les verdicts sont décidés.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Les téléchargements de signatures décrits ici sont réservés au
+<strong>développement</strong> : ces fichiers ne sont pas signés. Une borne n'utilise
+qu'un jeu de signatures signé, vérifié à chaque démarrage et installé
+depuis une clé de mise à jour des signatures : voir
+<a href="../signatures/">Signatures</a>.</p>
+</div>
+<h2 id="pipeline">Chaîne d'analyse<a class="headerlink" href="#pipeline" title="Permanent link">&para;</a></h2>
+<p>Pour chaque clé insérée :</p>
+<ol>
+<li><strong>Inventaire</strong> (processus de la borne, métadonnées uniquement) : le point
+   de montage est parcouru avec <code>os.scandir</code>/<code>lstat</code>. Les liens ne sont
+   jamais suivis, le parcours ne quitte jamais la clé, et les FIFO, sockets
+   et fichiers de périphérique sont listés comme ignorés. Les limites
+   s'appliquent ici (voir <a href="#limits">Limites</a>).</li>
+<li><strong>Analyse</strong> (processus d'analyse, un fichier à la fois par processus) :<ol>
+<li>ouvrir le fichier en lecture seule, composant par composant avec
+   <code>O_NOFOLLOW</code>, et vérifier que c'est le fichier régulier enregistré
+   par l'inventaire ;</li>
+<li>calculer SHA-256, SHA-1 et MD5 en une seule lecture ;</li>
+<li>identifier le type avec libmagic (type MIME et description) ;</li>
+<li>lancer les <strong>moteurs d'empreintes</strong> (MalwareBazaar, puis
+   Hashlookup) ;</li>
+<li>lancer les <strong>moteurs de contenu</strong> (ClamAV, YARA-X), sauf si le
+   fichier est un fichier connu qu'aucun moteur d'empreintes ne signale
+   (voir <a href="#hashlookup-circl">Hashlookup</a>) ;</li>
+<li>combiner les résultats des moteurs en un verdict pour le fichier.</li>
+</ol>
+</li>
+<li><strong>Verdict de la clé</strong>, nettoyage et <strong>rapport d'analyse JSON</strong>.</li>
+</ol>
+<p>Les moteurs reçoivent un <code>FileInfo</code> (chemin relatif, taille, empreintes,
+type MIME, description et un descripteur de fichier en lecture seule). Ils
+ne rouvrent jamais le fichier par son chemin et ne gardent aucun état d'un
+fichier à l'autre.</p>
+<h2 id="engines">Moteurs<a class="headerlink" href="#engines" title="Permanent link">&para;</a></h2>
+<p>Tous les moteurs sont activés par défaut. Si un moteur activé ne peut pas
+charger ses données, la borne refuse de démarrer
+(<code>pandora-box --check-config</code> indique pourquoi). Au moins un moteur de
+contenu (ClamAV ou YARA-X) est requis : les recherches d'empreintes seules
+ne reconnaissent que des fichiers déjà connus.</p>
+<p>Pour le développement, <code>pandora-box-signatures publish dev-signatures
+--sources yara-forge,malwarebazaar,hashlookup</code> télécharge les règles YARA,
+la liste MalwareBazaar et le filtre Hashlookup dans <code>./dev-signatures/</code>, les
+vérifie, et affiche la configuration correspondante (un jeu non signé : voir
+<a href="../signatures/">Signatures</a>).</p>
+<h3 id="malwarebazaar">MalwareBazaar<a class="headerlink" href="#malwarebazaar" title="Permanent link">&para;</a></h3>
+<p>Liste hors ligne des empreintes SHA-256 de logiciels malveillants connus,
+issue de <a href="https://bazaar.abuse.ch/">abuse.ch MalwareBazaar</a>. Une
+correspondance est <strong>malveillante</strong> (détection
+<code>MalwareBazaar.KnownMalware</code>).</p>
+<ul>
+<li><strong>Entrée</strong> : l'export SHA-256 complet. Le télécharger nécessite une
+  Auth-Key abuse.ch gratuite (<a href="https://auth.abuse.ch/">auth.abuse.ch</a>),
+  envoyée dans l'en-tête HTTP <code>Auth-Key</code>, depuis
+  <code>https://bazaar.abuse.ch/export/txt/sha256/full/</code>. L'export est une
+  archive zip contenant <code>full_sha256.txt</code> : un en-tête de commentaires <code>#</code>,
+  puis une empreinte SHA-256 hexadécimale en minuscules par ligne. Le
+  convertisseur accepte l'archive zip ou le fichier texte. Toute autre ligne
+  est une erreur : un export malformé n'est jamais chargé en partie. En
+  octobre 2026, l'export contenait 1,1 million d'empreintes, soit une base de
+  37 Mo.</li>
+<li><strong>Conversion</strong> :
+  <code>python -m pandora_box.hashdb build full_sha256.zip malwarebazaar.sha256.bin</code>
+  (<code>python -m pandora_box.hashdb info &lt;base&gt;</code> décrit une base).</li>
+<li><strong>Format</strong> (<code>pandora_box/hashdb.py</code>) : un en-tête de 64 octets (nombre
+  magique, version, nombre d'empreintes, date de création, SHA-256 de
+  l'export source) suivi des empreintes de 32 octets, triées. Le fichier est
+  projeté en mémoire et parcouru par dichotomie : un million d'empreintes
+  occupent 32 Mo, partagés par les processus d'analyse via le cache de
+  pages.</li>
+<li><strong>Configuration</strong> : <code>[engines.malwarebazaar] database</code>.</li>
+</ul>
+<h3 id="hashlookup-circl">Hashlookup (CIRCL)<a class="headerlink" href="#hashlookup-circl" title="Permanent link">&para;</a></h3>
+<p>Le filtre de Bloom des fichiers connus de
+<a href="https://www.circl.lu/services/hashlookup/">CIRCL hashlookup</a> (NSRL,
+distributions Linux, dépôts de logiciels).</p>
+<ul>
+<li><strong>Données</strong> : <code>https://cra.circl.lu/hashlookup/hashlookup-full.bloom</code>
+  (environ 1 Go et 418 millions d'empreintes en octobre 2026, mis à jour
+  chaque mois). Il contient le <strong>SHA-1</strong> de chaque fichier connu, en
+  hexadécimal majuscule, au format bloom de DCSO.</li>
+<li><strong>Format</strong> : le format de l'outil Go <code>bloom</code> de DCSO et de la bibliothèque
+  Python <code>flor</code>. <code>flor</code> charge tout le tableau de bits en mémoire (1 Go par
+  processus d'analyse), c'est pourquoi PandoraBox a son propre lecteur
+  projeté en mémoire (<code>pandora_box/bloom.py</code>). Les tests vérifient qu'il
+  donne les mêmes réponses que <code>flor</code>. Sur le vrai filtre du CIRCL, il donne
+  les mêmes réponses que <code>flor</code>, reconnaît la plupart des binaires système
+  de Debian, et répond « connu » pour environ 1 empreinte aléatoire sur
+  10 000, comme attendu.</li>
+<li><strong>Connu ne veut pas dire sans danger</strong> : les sources de hashlookup
+  contiennent aussi des outils offensifs et à double usage. Une
+  correspondance Hashlookup est rapportée comme le fait <code>known = true</code> avec
+  le verdict <code>clean</code> (aucune détection), jamais comme une preuve
+  d'innocuité.</li>
+<li><strong>Faux positifs</strong> : un filtre de Bloom répond « connu » pour certains
+  fichiers inconnus. Le filtre du CIRCL est construit pour une probabilité
+  de 1 sur 10 000. La probabilité est enregistrée avec chaque réponse
+  (<code>fp_rate</code>) dans le rapport d'analyse.</li>
+<li><strong>Moteurs de contenu sur les fichiers connus</strong> : par défaut, ClamAV et
+  YARA-X analysent chaque fichier, connu ou non. Le filtre du CIRCL liste
+  les fichiers qu'il a vus, parmi lesquels le fichier de test EICAR, des
+  outils offensifs et des échantillons de logiciels malveillants : une borne
+  qui les ignorait déclarait EICAR sain.
+  <code>[engines.hashlookup] skip_content_engines = true</code> ne lance pas les
+  moteurs de contenu sur les fichiers connus, ce qui fait gagner du temps sur
+  les clés remplies de logiciels courants, à ce prix. Les moteurs
+  d'empreintes tournent toujours, et <strong>une correspondance MalwareBazaar
+  l'emporte toujours</strong> : les moteurs de contenu tournent quand même sur un
+  fichier connu qu'un moteur d'empreintes signale. Les moteurs ignorés
+  figurent dans le rapport avec la raison <code>known file (hashlookup)</code>, pour
+  que la décision soit vérifiable.</li>
+</ul>
+<h3 id="clamav">ClamAV<a class="headerlink" href="#clamav" title="Permanent link">&para;</a></h3>
+<p><a href="https://www.clamav.net/">ClamAV</a> par le démon <code>clamd</code>, avec un petit client
+intégré pour son protocole sur socket Unix (<code>pandora_box/clamd.py</code>) :
+<code>zPING</code>, <code>zVERSION</code>, <code>zFILDES</code> et <code>zINSTREAM</code>.</p>
+<ul>
+<li><strong>Modes</strong> (<code>[engines.clamav] mode</code>) : <code>fildes</code> passe le descripteur de
+  fichier ouvert à clamd, qui n'a donc pas besoin de lire le point de
+  montage ; <code>instream</code> envoie le contenu ; <code>auto</code> (par défaut) utilise
+  <code>fildes</code>, et <code>instream</code> seulement quand clamd signale une erreur avec le
+  descripteur.</li>
+<li><strong>Verdicts</strong> : une détection est malveillante, ou suspecte quand son nom
+  correspond à <code>suspicious_names</code> (par défaut <code>PUA.*</code>, <code>Heuristics.*</code>). Les
+  noms qui correspondent à <code>error_names</code> (par défaut
+  <code>Heuristics.Limits.Exceeded.*</code>) signifient que le fichier n'a pas été
+  entièrement analysé : ce sont des erreurs. Les erreurs de limite de taille
+  d'INSTREAM, les dépassements de délai et les réponses inattendues sont
+  aussi des erreurs.</li>
+<li><strong>Versions</strong> : la version du moteur, la version de la base et sa date
+  viennent de <code>VERSION</code>, redemandé pour chaque rapport d'analyse (clamd
+  recharge ses bases en fonctionnement).</li>
+</ul>
+<p>Réglages de <code>clamd.conf</code> requis :</p>
+<div class="highlight"><pre><span></span><code>LocalSocket /run/clamav/clamd.ctl
+# Sans ce réglage, le contenu au-delà des limites ci-dessous est déclaré
+# sain sans avoir été analysé
+AlertExceedsMax yes
+# Au moins engines.clamav.max_file_size (100 Mio par défaut)
+MaxFileSize 100M
+MaxScanSize 400M
+StreamMaxLength 100M
+</code></pre></div>
+<p>L'image de la borne règle aussi :</p>
+<ul>
+<li><code>AlertEncrypted yes</code> : une archive ou un document chiffré ne peut pas être
+  analysé ; ClamAV le signale (<code>Heuristics.Encrypted.Zip</code>, <code>.RAR</code>,
+  <code>.PDF</code>...) et la borne le compte comme pas entièrement analysé
+  (<code>error_names</code>) : la clé n'est pas vérifiée, le fichier n'est pas
+  supprimé ;</li>
+<li><code>AlertOLE2Macros yes</code> : un document Office avec des macros (VBA, y compris
+  dans un <code>.docm</code> ou un <code>.xlsm</code>) est suspect
+  (<code>Heuristics.OLE2.ContainsMacros</code>) : avec <code>scan.suspicious = "block"</code>, il
+  est mis en quarantaine et supprimé comme un fichier malveillant ; <code>"warn"</code>
+  se contente de le signaler.</li>
+</ul>
+<p>Les archives (zip, rar, 7z, tar, cab...) sont décompressées et analysées par
+ClamAV lui-même, dans ses limites (<code>MaxScanSize</code>, <code>MaxFileSize</code>,
+<code>MaxRecursion</code>, <code>MaxFiles</code>) : au-delà, une bombe de décompression par
+exemple, le fichier n'est pas entièrement analysé (<code>AlertExceedsMax</code>).</p>
+<p><code>ScanImageFuzzyHash no</code> : ClamAV décoderait chaque image, y compris celles
+contenues dans un PDF ou un document Office, pour comparer une empreinte
+floue à quelques signatures d'images connues. Cela prenait la moitié du
+temps d'analyse d'un PDF d'images de 29 Mo (41 s, puis 19 s) ; les images
+sont toujours analysées.</p>
+<p>Les fichiers plus gros que <code>[engines.clamav] max_file_size</code> sont des erreurs
+sans être envoyés : gardez cette valeur égale aux limites de clamd.</p>
+<p><strong>Installation pour le développement</strong> (Debian ou Ubuntu) :</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>clamav-daemon<span class="w"> </span>clamav-freshclam
+sudo<span class="w"> </span>systemctl<span class="w"> </span>stop<span class="w"> </span>clamav-freshclam<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>freshclam<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>clamav-freshclam
+<span class="c1"># modifiez /etc/clamav/clamd.conf comme ci-dessus, puis</span>
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>clamav-daemon
+</code></pre></div>
+<p><strong>Signatures tierces</strong> (par exemple
+<a href="https://sanesecurity.com/usage/linux-scripts/">Sanesecurity</a>) : il suffit
+que clamd puisse les charger. Placez les fichiers de base (<code>.ndb</code>, <code>.hdb</code>,
+<code>.ldb</code>...) dans le <code>DatabaseDirectory</code> de clamd (<code>/var/lib/clamav</code>) et
+rechargez clamd (<code>clamdscan --reload</code>). Le script amont
+<code>clamav-unofficial-sigs</code> automatise cela (le paquet Debian n'existe que
+jusqu'à Debian 12). Certaines signatures tierces donnent facilement des
+faux positifs : listez leurs noms dans <code>suspicious_names</code> pour les signaler
+comme suspectes plutôt que malveillantes.</p>
+<h3 id="yara-x">YARA-X<a class="headerlink" href="#yara-x" title="Permanent link">&para;</a></h3>
+<p><a href="https://virustotal.github.io/yara-x/">YARA-X</a> par ses bindings Python
+officiels, avec les règles <a href="https://yarahq.github.io/">YARA Forge</a> et
+<a href="https://github.com/Neo23x0/signature-base">signature-base</a>.</p>
+<ul>
+<li><strong>Jeux de règles</strong> (<code>[engines.yara] rules</code>) : une liste de
+  <code>{ name, path }</code>, où path est un fichier <code>.yar</code> ou un dossier de fichiers
+  <code>.yar</code>/<code>.yara</code>. Chaque fichier a son propre espace de noms, si bien que
+  des règles de même nom n'entrent jamais en conflit.</li>
+<li><strong>YARA Forge inclut déjà signature-base</strong> : par défaut, seul le paquet
+  <code>core</code> de YARA Forge est configuré. N'ajoutez le jeu complet
+  signature-base que si vous avez besoin des règles que YARA Forge écarte.</li>
+<li><strong>Compilation</strong> : une fois au démarrage. Les règles compilées sont mises
+  en cache dans <code>cache_dir</code>, indexées par la version de YARA-X, les options
+  et le contenu de chaque fichier de règles. Le cache contient du code
+  natif : il doit être aussi digne de confiance que les règles elles-mêmes
+  (dossier <code>0700</code>, appartenant à la borne).</li>
+<li><strong>Les erreurs de compilation</strong> ne sont jamais ignorées en silence.
+  <code>on_compile_error = "fail"</code> (par défaut) refuse de démarrer et liste
+  chaque erreur ; <code>"skip_rule"</code> écarte les règles invalides, les journalise
+  et les liste dans chaque rapport d'analyse
+  (<code>engines[].extra.excluded_rules</code>). <code>exclude</code> ignore des fichiers de
+  règles par motif glob. Avec YARA-X 1.21, YARA Forge core (5 110 règles) et
+  signature-base (5 904 règles) compilent sans erreur.</li>
+<li>
+<p><strong>Variables externes</strong> utilisées par les règles de signature-base,
+  remplies pour chaque fichier :</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Valeur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>filename</code></td>
+<td>nom du fichier</td>
+</tr>
+<tr>
+<td><code>filepath</code></td>
+<td>chemin complet sur la clé, commençant par <code>/</code></td>
+</tr>
+<tr>
+<td><code>extension</code></td>
+<td>extension en minuscules, avec le point (<code>.exe</code>)</td>
+</tr>
+<tr>
+<td><code>filetype</code></td>
+<td>type à la manière de THOR, déduit du type MIME de libmagic (<code>EXE</code>, <code>ELF</code>, <code>ZIP</code>, <code>PDF</code>...), vide s'il est inconnu : une approximation de THOR</td>
+</tr>
+<tr>
+<td><code>owner</code></td>
+<td>toujours vide : les systèmes de fichiers amovibles n'ont pas de propriétaire significatif</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>Correspondance des verdicts</strong>, d'après la métadonnée <code>score</code> de chaque
+  règle qui correspond (0-100, utilisée par YARA Forge et signature-base) :</p>
+<table>
+<thead>
+<tr>
+<th>Score</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&gt;= malicious_score</code> (75)</td>
+<td>malveillant</td>
+</tr>
+<tr>
+<td><code>&gt;= suspicious_score</code> (40)</td>
+<td>suspect</td>
+</tr>
+<tr>
+<td>en dessous</td>
+<td>informatif : enregistré dans le rapport (<code>facts.informational</code>), sans effet sur le verdict</td>
+</tr>
+<tr>
+<td>pas de score</td>
+<td><code>default_score</code> (60) : suspect</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li>
+<p><strong>Délai</strong> : le délai natif de YARA-X (<code>timeout</code>, en secondes) ; un
+  dépassement est une erreur.</p>
+</li>
+<li>YARA-X compile les règles en code natif à l'exécution (wasmtime) : il ne
+  fonctionne pas sous <code>MemoryDenyWriteExecute=yes</code> de systemd.</li>
+</ul>
+<p>YARA ne décompresse pas les archives : EICAR dans un zip est détecté par
+ClamAV, pas par YARA.</p>
+<h3 id="file-type-libmagic">Type de fichier (libmagic)<a class="headerlink" href="#file-type-libmagic" title="Permanent link">&para;</a></h3>
+<p><code>python-magic</code> (paquet Debian <code>python3-magic</code>) identifie le type MIME et la
+description à partir du premier Mio de chaque fichier, transmis sous forme
+de tampon : libmagic n'accède pas au système de fichiers et ne décompresse
+rien. Le type est enregistré dans le rapport, utilisé pour la variable YARA
+<code>filetype</code> et par les heuristiques.</p>
+<h3 id="heuristics">Heuristiques<a class="headerlink" href="#heuristics" title="Permanent link">&para;</a></h3>
+<p>La structure des fichiers, sans signatures
+(<code>src/pandora_box/engines/heuristics.py</code>, <code>[engines.heuristics]</code>) ; ce
+qu'elles trouvent est suspect, jamais malveillant :</p>
+<ul>
+<li><strong>PDF avec contenu actif</strong> (comme pdfid) : JavaScript (<code>/JavaScript</code>,
+  <code>/JS</code>) ou une action de lancement (<code>Heuristics.PDF.JavaScript</code>,
+  <code>Heuristics.PDF.Launch</code>). Les noms masqués par des échappements
+  (<code>/J#61vaScript</code>) sont décodés. Les actions automatiques, les fichiers
+  incorporés et les formulaires (<code>/OpenAction</code>, <code>/AA</code>, <code>/EmbeddedFile</code>,
+  <code>/RichMedia</code>, <code>/XFA</code>, <code>/AcroForm</code>) sont comptés comme des faits du
+  rapport. Les noms à l'intérieur des flux d'objets compressés ne sont pas
+  vus : ClamAV et YARA y regardent.</li>
+<li><strong>Programme déguisé</strong> : un programme (PE, ELF, Mach-O, MSI, d'après
+  libmagic) dont l'extension prétend autre chose (<code>facture.pdf</code> :
+  <code>Heuristics.Executable.Disguised</code>), ou une extension de document suivie
+  d'une extension que Windows exécute (<code>facture.pdf.exe</code>,
+  <code>rapport.docx.js</code> : <code>Heuristics.DoubleExtension</code>).</li>
+</ul>
+<p>Les heuristiques seules ne détectent aucun logiciel malveillant : ClamAV ou
+YARA-X reste requis.</p>
+<h3 id="fake-engine">Faux moteur<a class="headerlink" href="#fake-engine" title="Permanent link">&para;</a></h3>
+<p><code>kiosk.fake_scan = true</code> remplace chaque moteur par le faux moteur, pour le
+développement uniquement : il déclare le fichier de test EICAR malveillant
+et tout le reste sain.</p>
+<h2 id="verdict-policy">Politique de verdict<a class="headerlink" href="#verdict-policy" title="Permanent link">&para;</a></h2>
+<h3 id="file-verdict">Verdict d'un fichier<a class="headerlink" href="#file-verdict" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Résultats des moteurs</th>
+<th>Verdict du fichier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>au moins <code>policy.min_malicious_engines</code> moteurs signalent un fichier malveillant (par défaut : un)</td>
+<td>malveillant</td>
+</tr>
+<tr>
+<td>sinon, un résultat malveillant ou suspect</td>
+<td>suspect</td>
+</tr>
+<tr>
+<td>sinon, une erreur ou un dépassement de délai d'un moteur, un moteur de contenu sans résultat, ou des moteurs de contenu ignorés pour une autre raison qu'un fichier connu</td>
+<td>erreur</td>
+</tr>
+<tr>
+<td>sinon</td>
+<td>sain</td>
+</tr>
+</tbody>
+</table>
+<p>Un fichier n'est jamais sain à moins que chaque moteur de contenu activé
+l'ait analysé, ou l'ait ignoré parce que c'est un fichier connu.</p>
+<h3 id="device-verdict">Verdict d'une clé<a class="headerlink" href="#device-verdict" title="Permanent link">&para;</a></h3>
+<p>Le pire verdict de ses fichiers : <strong>malveillant</strong>, puis <strong>suspect</strong>, puis
+<strong>non vérifié</strong> (un fichier n'a pas pu être entièrement analysé, ou le
+parcours s'est arrêté à une limite), puis <strong>sain</strong>. La borne applique
+ensuite :</p>
+<table>
+<thead>
+<tr>
+<th>Réglage</th>
+<th><code>block</code> (par défaut)</th>
+<th><code>warn</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>scan.suspicious</code></td>
+<td>les fichiers suspects sont mis en quarantaine et supprimés comme les malveillants</td>
+<td>ils sont conservés et listés comme un avertissement</td>
+</tr>
+<tr>
+<td><code>scan.on_error</code></td>
+<td>la clé est déclarée <strong>NON VÉRIFIÉE : ne pas l'utiliser</strong></td>
+<td>l'utilisateur est averti</td>
+</tr>
+</tbody>
+</table>
+<p>Les fichiers qui n'ont pas pu être analysés sont listés mais <strong>jamais
+supprimés</strong> : on ne sait pas s'ils sont malveillants.</p>
+<h3 id="keys-with-several-partitions">Clés à plusieurs partitions<a class="headerlink" href="#keys-with-several-partitions" title="Permanent link">&para;</a></h3>
+<p>Une clé est analysée comme un tout : toutes ses partitions forment une seule
+insertion, un seul verdict, un seul rapport et une seule confirmation. La
+borne monte chaque système de fichiers tour à tour, en lecture seule, et
+l'analyse ; pour nettoyer la clé, elle ne monte en lecture-écriture que les
+partitions qui contiennent les fichiers à supprimer, puis éjecte la clé une
+seule fois.</p>
+<ul>
+<li>Une clé avec un seul système de fichiers, avec ou sans table de
+  partitions, est analysée comme avant.</li>
+<li>Une partition qui ne peut pas être analysée rend la clé <strong>non vérifiée</strong>
+  (<code>scan.on_error</code>), puisqu'un ordinateur pourrait quand même la lire : une
+  partition chiffrée (LUKS, BitLocker), une partition sans système de
+  fichiers reconnu par la borne, un système de fichiers non autorisé
+  (<code>device.allowed_filesystems</code>) ou qui ne peut pas être monté. Ses autres
+  partitions sont quand même analysées et nettoyées. Quand aucune ne peut
+  être montée, la borne affiche une erreur.</li>
+<li>Les partitions qui ne contiennent pas de fichiers sont ignorées :
+  partitions étendues MBR (le conteneur des partitions logiques), partitions
+  GPT BIOS boot et réservées Microsoft.</li>
+<li>À l'écran et dans le rapport, un fichier est nommé d'après sa partition
+  (<code>sdb2/docs/report.pdf</code>). Le rapport liste les partitions
+  (<code>device.partitions</code> : système de fichiers, taille, analysée ou pourquoi
+  non), et chaque fichier indique sa <code>partition</code>, son <code>path</code> étant relatif à
+  la racine de cette partition. Le manifeste de la quarantaine donne aussi
+  la <code>partition</code> de chaque fichier.</li>
+<li>Une clé de maintenance, de mise à jour des signatures ou de l'image a un
+  seul système de fichiers : les dossiers d'une telle clé ne sont pas
+  cherchés sur une clé à plusieurs partitions, qui est analysée.</li>
+</ul>
+<h3 id="limits">Limites<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Réglage</th>
+<th>Par défaut</th>
+<th>Au-delà</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>limits.max_file_size</code></td>
+<td>1 Gio</td>
+<td>le fichier est ignoré, la clé n'est pas vérifiée</td>
+</tr>
+<tr>
+<td><code>limits.max_files</code></td>
+<td>100 000</td>
+<td>fichiers et dossiers ; le parcours s'arrête, la clé n'est pas vérifiée</td>
+</tr>
+<tr>
+<td><code>limits.max_depth</code></td>
+<td>64</td>
+<td>les dossiers plus profonds sont ignorés, la clé n'est pas vérifiée</td>
+</tr>
+</tbody>
+</table>
+<h3 id="timeouts">Délais<a class="headerlink" href="#timeouts" title="Permanent link">&para;</a></h3>
+<p>Chaque processus d'analyse traite un fichier à la fois. Le processus de la
+borne les surveille avec deux échéances :</p>
+<ul>
+<li>l'<strong>échéance du moteur</strong> : le délai du moteur en cours plus 5 secondes ;
+  les moteurs qui ont un délai natif (YARA-X, le socket de clamd) le
+  signalent en premier ;</li>
+<li>l'<strong>échéance du fichier</strong> : <code>scan.file_timeout</code> pour tout le fichier.</li>
+</ul>
+<p>Quand une échéance expire, le processus est tué et remplacé, et le fichier
+est une erreur qui nomme le moteur. Un processus qui plante est traité de la
+même façon. Une réponse « sain » qui arrive après le délai du moteur est
+aussi une erreur.</p>
+<h2 id="signature-freshness">Fraîcheur des signatures<a class="headerlink" href="#signature-freshness" title="Permanent link">&para;</a></h2>
+<p>Au démarrage, la borne avertit (journaux et écran) quand une base de
+signatures est plus ancienne que <code>signatures.max_age_days</code> (7 jours), ou que
+le <code>max_age_days</code> de son moteur (45 jours pour Hashlookup, publié chaque
+mois). La date vient du <code>manifest.json</code> du dossier de signatures quand il
+existe (<code>{"&lt;fichier&gt;": {"version", "date", "source", "sha256"}}</code>), sinon de
+la date de modification du fichier ; ClamAV indique la date de sa propre
+base. Une base sans date est seulement journalisée (<code>signatures_undated</code>),
+pas affichée : une base ClamAV ne contenant que des signatures
+personnalisées n'en a pas (la date vient de l'en-tête de la base officielle
+<code>daily</code>).</p>
+<h2 id="scan-report">Rapport d'analyse<a class="headerlink" href="#scan-report" title="Permanent link">&para;</a></h2>
+<p>Chaque analyse écrit un rapport JSON dans <code>report.folder</code>, décrit par
+<a href="https://github.com/sourcentis/pandora-box/blob/main/src/pandora_box/schemas/scan-report-v1.schema.json"><code>src/pandora_box/schemas/scan-report-v1.schema.json</code></a> :
+la clé, la configuration, les versions des moteurs et des signatures, chaque
+fichier avec ses empreintes, son type, son verdict et les résultats par
+moteur, le verdict de la clé et les actions effectuées. Le manifeste de la
+quarantaine y fait référence.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a>.
+    </div>
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.expand", "navigation.top", "content.code.copy", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

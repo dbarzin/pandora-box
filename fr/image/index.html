@@ -1,0 +1,1625 @@
+
+<!doctype html>
+<html lang="fr" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Open source USB decontamination kiosk">
+      
+      
+      
+        <link rel="canonical" href="https://sourcentis.github.io/pandora-box/fr/image/">
+      
+      
+        <link rel="prev" href="../engines/">
+      
+      
+        <link rel="next" href="../development/">
+      
+      
+        
+          <link rel="alternate" href="../../image/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="fr">
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>-- Fonctionnement de l'image - PandoraBox</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../css/overrides.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#fonctionnement-de-limage" class="md-skip">
+          Aller au contenu
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="En-tête">
+    <a href="../" title="PandoraBox" class="md-header__button md-logo" aria-label="PandoraBox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PandoraBox
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              -- Fonctionnement de l'image
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Sélectionner la langue">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../image/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="fr" class="md-select__link">
+              Français
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Rechercher" placeholder="Rechercher" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Recherche">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Effacer" aria-label="Effacer" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initialisation de la recherche
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sourcentis/pandora-box" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="PandoraBox" class="md-nav__button md-logo" aria-label="PandoraBox" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PandoraBox
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sourcentis/pandora-box" title="Aller au dépôt" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_1" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DÉMARRAGE
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_1" id="__nav_1_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    DÉMARRAGE
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Matériel
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    INSTALLATION
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    INSTALLATION
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Construction de l'image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Test avec QEMU
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Installation initiale
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MAINTENANCE
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    MAINTENANCE
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../signatures/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Signatures
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../update/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Mises à jour du système
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Journaux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../siem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Export vers un SIEM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RÉFÉRENCE
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    RÉFÉRENCE
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Interface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../engines/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Moteurs de détection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Fonctionnement de l'image
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Fonctionnement de l'image
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#partitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Partitions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signing-secure-boot-and-dm-verity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signature, Secure Boot et dm-verity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Écran
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usb-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Périphériques USB
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Durcissement du système
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scan-worker-sandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bac à sable des processus d'analyse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unified-kernel-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Image noyau unifiée
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DÉVELOPPEMENT
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    DÉVELOPPEMENT
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Développement
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table des matières">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table des matières
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#partitions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Partitions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signing-secure-boot-and-dm-verity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signature, Secure Boot et dm-verity
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Écran
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usb-devices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Périphériques USB
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Durcissement du système
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scan-worker-sandbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bac à sable des processus d'analyse
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unified-kernel-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Image noyau unifiée
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/sourcentis/pandora-box/edit/main/docs/image.fr.md" title="Editer cette page" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/sourcentis/pandora-box/raw/main/docs/image.fr.md" title="Consulter la source de cette page" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.2 8.2 0 0 1-1.23-2"/></svg>
+    </a>
+  
+
+
+<h1 id="fonctionnement-de-limage">Fonctionnement de l'image<a class="headerlink" href="#fonctionnement-de-limage" title="Permanent link">&para;</a></h1>
+<p>Comment l'image de la borne est faite et protégée. Pour la construire, la
+tester, l'installer et la maintenir, voir
+<a href="../build/">Construction de l'image</a>, <a href="../vm/">Test avec QEMU</a>,
+<a href="../install/">Installation initiale</a> et
+<a href="../update/">Mises à jour du système</a>.</p>
+<p>L'image est construite avec <a href="https://github.com/systemd/mkosi">mkosi</a> à
+partir des paquets Debian 13 (trixie).</p>
+<h2 id="partitions">Partitions<a class="headerlink" href="#partitions" title="Permanent link">&para;</a></h2>
+<p>L'image disque a deux emplacements système (mises à jour A/B) et une
+partition de données :</p>
+<table>
+<thead>
+<tr>
+<th>Partition</th>
+<th>Système de fichiers</th>
+<th>Contenu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ESP</td>
+<td>vfat, 512 Mo</td>
+<td>systemd-boot et les UKI (<code>pandora-box_&lt;version&gt;.efi</code>), tous signés</td>
+</tr>
+<tr>
+<td>root, emplacement A (<code>pandora-box_&lt;version&gt;</code>)</td>
+<td>EROFS, lecture seule, 1 Go</td>
+<td>tout le système sauf <code>/var</code> (environ 400 Mo utilisés)</td>
+</tr>
+<tr>
+<td>root-verity, emplacement A</td>
+<td>64 Mo</td>
+<td>arbre de hachage dm-verity du système de fichiers racine</td>
+</tr>
+<tr>
+<td>root-verity-sig, emplacement A</td>
+<td>16 Ko</td>
+<td>signature du hash racine</td>
+</tr>
+<tr>
+<td>root, root-verity, root-verity-sig, emplacement B (<code>_empty</code>)</td>
+<td>mêmes tailles</td>
+<td>la version suivante (mises à jour A/B)</td>
+</tr>
+<tr>
+<td>données (<code>pandora-box-data</code>)</td>
+<td>ext4, 1 Go dans l'image</td>
+<td><code>/var</code> : rapports d'analyse, quarantaine, journaux, jeux de signatures signés (clamd y lit ses bases)</td>
+</tr>
+</tbody>
+</table>
+<p>La version de l'image est la date et l'heure de sa construction, en UTC,
+comme le numéro de série d'un jeu de signatures : <code>20261005143700</code>
+(<code>image/build.sh</code> la fixe, <code>--image-version=N</code> la remplace). Elle figure dans
+<code>/etc/os-release</code> (<code>IMAGE_VERSION</code>), dans les étiquettes de ses partitions
+(<code>pandora-box_&lt;version&gt;</code>, <code>_verity</code>, <code>_veritysig</code> : 36 caractères au
+maximum) et dans le nom de son UKI.</p>
+<p>Le système de fichiers racine est en lecture seule par conception (EROFS ne
+peut pas du tout être écrit) : le système et sa configuration ne changent
+qu'avec une nouvelle image. Tout ce que la borne écrit est dans <code>/var</code>. La
+partition de données est la dernière : à chaque démarrage, <code>systemd-repart</code>
+l'agrandit pour remplir le disque (<code>/usr/lib/repart.d/20-var.conf</code>), puis
+<code>systemd-growfs</code> agrandit son système de fichiers (<code>x-systemd.growfs</code> dans
+<code>/etc/fstab</code>), si bien que l'image peut être écrite sur un disque de
+n'importe quelle taille. Comme <code>/etc</code> est en lecture seule, l'identifiant de
+machine est régénéré à chaque démarrage (un nouveau dossier de journal par
+démarrage, dans les limites de taille de journald).</p>
+<p>L'image contient :</p>
+<ul>
+<li>le noyau, systemd et udev, Python 3 et clamd (<code>clamav-daemon</code>), sans
+  service réseau : <code>systemd-networkd</code>, <code>systemd-resolved</code>, freshclam et
+  l'analyse à l'accès de ClamAV sont désactivés (<code>10-pandora-box.preset</code>) ;</li>
+<li>pandora-box dans <code>/usr/lib/pandora-box</code> (<code>/usr/bin/pandora-box</code>), sa
+  configuration dans <code>/etc/pandora-box/pandora-box.toml</code> et son service, qui
+  affiche l'interface sur la première console ;</li>
+<li>ni programme <code>login</code> ni mot de passe root : aucune session interactive
+  n'est possible.</li>
+</ul>
+<h2 id="signing-secure-boot-and-dm-verity">Signature, Secure Boot et dm-verity<a class="headerlink" href="#signing-secure-boot-and-dm-verity" title="Permanent link">&para;</a></h2>
+<p>La chaîne de démarrage est vérifiée du firmware jusqu'à chaque bloc du
+système :</p>
+<ol>
+<li>avec Secure Boot, le firmware ne démarre systemd-boot que s'il est signé
+   avec une clé de sa base <code>db</code>, et systemd-boot ne démarre qu'une UKI
+   signée ;</li>
+<li>l'UKI contient le noyau, l'initrd et la ligne de commande du noyau, qui
+   contient le hash racine dm-verity (<code>roothash=</code>) : le modifier casse la
+   signature ;</li>
+<li>le système de fichiers racine est ouvert avec dm-verity : chaque bloc lu
+   est vérifié par rapport à l'arbre de hachage, dont la racine est ce hash.
+   Un bloc modifié ne peut pas être lu (erreur d'entrée-sortie,
+   « data block ... is corrupted » dans le journal du noyau) ;</li>
+<li>avec Secure Boot, le noyau Debian active son mode lockdown
+   (<code>integrity</code>) : même root ne peut pas modifier le noyau en cours
+   d'exécution.</li>
+</ol>
+<p><code>/var</code> n'est pas protégé par dm-verity : il contient les données de la
+borne, jamais de programmes ni de configuration.</p>
+<p>L'image est signée avec <code>image/mkosi.key</code> et <code>image/mkosi.crt</code> (systemd-boot,
+UKI, hash racine). Quand ils n'existent pas, <code>image/build.sh</code> génère une
+paire de clés de <strong>développement</strong>, valable 10 ans, qui ne quitte jamais
+l'ordinateur du développeur (ignorée par git). Une borne ne doit faire
+confiance qu'aux clés de publication du projet, qui ne sont pas encore
+définies : elles seront gardées hors du dépôt, et mkosi peut signer avec une
+clé dans un jeton matériel (<code>--secure-boot-key-source=provider:pkcs11</code>).</p>
+<p>L'image fait aussi confiance aux jeux de signatures signés avec
+<code>image/update.key</code> : sa clé publique <code>image/update.pem</code> est installée dans
+<code>/usr/share/pandora-box/keys/</code> (sous dm-verity). <code>image/build.sh</code> génère une
+paire de développement quand elles n'existent pas ; le profil de test signe
+son jeu de signatures avec elle. Voir <a href="../signatures/">Signatures</a>.</p>
+<p>Sur une borne, le certificat est enrôlé dans le firmware à la place des clés
+Microsoft (PK, KEK et db), pour qu'elle ne démarre rien d'autre. L'ESP
+contient les clés au format attendu par le firmware (<code>loader/keys/auto/</code>) :
+avec le firmware en mode configuration de Secure Boot (clés effacées dans la
+configuration du firmware), systemd-boot les enrôle au premier démarrage
+(<code>secure-boot-enroll force</code>). N'enrôler que le certificat du projet refuse
+aussi les option ROM signées par Microsoft : un ordinateur dont l'affichage
+ou le contrôleur de disque en a besoin (une carte graphique, par exemple) ne
+la démarrerait pas. Les machines virtuelles enrôlent plutôt le certificat
+avec <code>virt-fw-vars</code> (<code>image/vm/machine.py</code>).</p>
+<p>systemd-boot n'a pas de menu (<code>/efi/loader/loader.conf</code>, <code>timeout
+menu-disabled</code>) : il démarre l'entrée par défaut, la version la plus récente
+qui n'est pas marquée mauvaise, et ne lit pas le clavier. Un clavier branché
+sur la borne ne peut ni choisir une autre version, ni modifier la ligne de
+commande du noyau (refusé avec Secure Boot de toute façon), ni éteindre la
+machine, ni redémarrer dans la configuration du firmware. L'ESP ne fait pas
+partie des mises à jour de l'image : ce fichier reste tel qu'installé.</p>
+<h2 id="screen">Écran<a class="headerlink" href="#screen" title="Permanent link">&para;</a></h2>
+<p>La borne dessine son interface graphique dans le framebuffer du pilote
+graphique (<code>/dev/fb0</code>), sans serveur d'affichage ni navigateur, et met la
+première console (<code>tty1</code>) en mode graphique pour que le noyau n'écrive pas
+de texte par-dessus : voir <a href="../interface/">Interface</a>. L'écran du matériel de
+référence est un Waveshare 7 pouces HDMI LCD (1024x600). Le firmware du
+ThinkCentre démarre en 1024x768, et le pilote Intel garde ce mode : le bas
+de l'interface serait hors de l'écran. La ligne de commande du noyau règle
+donc le mode de l'écran, <code>video=1024x600M@60</code> (timings CVT, comme les
+documente Waveshare) ; avec un autre écran, modifiez-le dans
+<code>image/mkosi.conf</code>. Le pilote Intel garde tout de même le framebuffer du
+firmware, assez grand pour ce mode : la borne ne dessine que sa partie
+visible, de la taille de <code>video=</code>, et suit un changement de taille du
+framebuffer. Elle journalise la taille et le format de pixel pour lesquels
+elle dessine (<code>display_started</code>).</p>
+<p>L'interface curses (<code>kiosk.interface = "curses"</code>, mode administrateur)
+écrit plutôt du texte sur la console : elle réduit de la même façon la
+console à l'écran de <code>video=</code> (police 8x16 : 37 lignes, 128 colonnes), et
+journalise la taille pour laquelle elle dessine (<code>display_started</code>,
+<code>display_resized</code>).</p>
+<h2 id="usb-devices">Périphériques USB<a class="headerlink" href="#usb-devices" title="Permanent link">&para;</a></h2>
+<p>Une borne ne doit utiliser que des périphériques de stockage USB : une clé
+qui est aussi un clavier (BadUSB) pourrait taper des commandes, un
+adaptateur réseau pourrait ouvrir un réseau.</p>
+<ul>
+<li><strong>USBGuard</strong> (<code>/etc/usbguard/rules.conf</code>) autorise les concentrateurs et
+  les périphériques dont toutes les interfaces sont du stockage de masse ;
+  il bloque tous les autres, y compris une clé qui a une interface de
+  stockage et une autre. Les périphériques bloqués sont listés dans
+  <code>/var/log/usbguard/usbguard-audit.log</code>.</li>
+<li><strong>Aucun périphérique n'est autorisé avant le démarrage d'USBGuard</strong> : la
+  ligne de commande du noyau fixe <code>usbcore.authorized_default=0</code>. Si
+  USBGuard ne démarre pas, aucun périphérique USB n'est utilisable.</li>
+<li><strong>Pilotes retirés de l'image</strong> (<code>KernelModulesExclude=</code> dans
+  <code>image/mkosi.conf</code>) : adaptateurs réseau USB, sans-fil, Bluetooth,
+  adaptateurs série et modems USB, ainsi que les pilotes staging et
+  batman-adv, qui ramèneraient les modules sans-fil comme dépendances. De
+  tels périphériques n'ont pas de pilote même s'ils étaient autorisés.</li>
+<li>
+<p><strong>L'USB HID est gardé pour l'écran tactile</strong> du matériel de référence, un
+  Waveshare 7 pouces HDMI LCD (C), autorisé par sa propre règle :</p>
+<div class="highlight"><pre><span></span><code>allow id 0eef:0005 serial "220211" name "WS170120" with-interface 03:00:00 via-port "1-8"
+</code></pre></div>
+<p>son contrôleur tactile USB (eGalax) avec son unique interface HID
+générique (un clavier a <code>03:01:01</code>), sur le port interne du boîtier, cet
+exemplaire uniquement. Un périphérique qui copie ses identifiants sur un
+autre port, ou qui ajoute une interface clavier, est bloqué ; tout
+clavier et toute souris aussi. Pour un autre exemplaire ou un autre
+port : adaptez la règle d'après la ligne que montre le journal d'audit
+quand il est bloqué. Le noyau (<code>mousedev</code>) transforme un appui en clic
+gauche sur <code>/dev/input/mice</code>, que la borne lit pour confirmer un
+nettoyage.</p>
+<p>L'image de test autorise la tablette tactile de la machine virtuelle
+(QEMU <code>usb-tablet</code>, même interface) par sa propre règle
+(<code>/etc/usbguard/rules.d/50-vm-test.conf</code>) : le test confirme un
+nettoyage par un appui. Le clavier des machines virtuelles n'est pas un
+périphérique USB.</p>
+</li>
+</ul>
+<h2 id="system-hardening">Durcissement du système<a class="headerlink" href="#system-hardening" title="Permanent link">&para;</a></h2>
+<p>D'après les recommandations de configuration d'un système GNU/Linux de
+l'ANSSI :</p>
+<ul>
+<li><strong>Réglages du noyau</strong> (<code>/usr/lib/sysctl.d/90-pandora-box.conf</code>) : journaux
+  et adresses du noyau masqués, pas de ptrace, pas de kexec, pas d'eBPF,
+  d'espaces de noms utilisateur ni d'userfaultfd sans privilèges, io_uring
+  désactivé, pas de SysRq, pas de core dumps, liens et FIFO protégés, ni
+  routage IP ni redirections.</li>
+<li><strong>Ligne de commande du noyau</strong> : mémoire initialisée à l'allocation et à
+  la libération, pas de fusion des slabs, allocateur de pages et pile du
+  noyau aléatoires, pas de vsyscall historique, pas de debugfs, lockdown en
+  mode <code>confidentiality</code> (Secure Boot n'active que <code>integrity</code> : même root
+  ne peut pas lire la mémoire du noyau), IOMMU en mode strict et pas de DMA
+  avant le démarrage du noyau (attaques DMA par les ports).</li>
+<li><strong>Pare-feu</strong> (<code>/etc/nftables.conf</code>) : chaque paquet est rejeté, en entrée
+  comme en sortie, sauf sur l'interface de bouclage.</li>
+<li><strong>Aucune session</strong> : pas de console de connexion sur les écrans (<code>getty@</code>
+  et <code>getty-static</code> désactivés), pas de programme <code>login</code>, pas de mot de
+  passe root, Ctrl-Alt-Suppr masqué.</li>
+<li><strong>Bac à sable de clamd</strong> (<code>clamav-daemon.service.d/50-pandora-box.conf</code>) :
+  pas de réseau, système en lecture seule, pas de périphérique, filtre
+  d'appels système, <code>MemoryDenyWriteExecute</code> (le clamd de Debian interprète
+  les signatures bytecode, sans JIT) ; il tourne sous l'utilisateur
+  <code>clamav</code>.</li>
+<li><strong>Service de la borne</strong> (<code>packaging/systemd/pandora-box.service</code>) :
+  système en lecture seule, filtre d'appels système, capacités limitées. Il
+  garde <code>AF_NETLINK</code> (événements udev), les capacités nécessaires pour
+  lancer le bac à sable des processus d'analyse (espaces de noms,
+  changement d'utilisateur, interface de bouclage des processus) et ne peut
+  pas avoir <code>MemoryDenyWriteExecute</code> ni <code>RestrictSUIDSGID</code> : le premier
+  s'appliquerait aussi aux processus YARA-X, qui compilent les règles en
+  code natif, le second refuse un appel système dont bubblewrap a besoin.</li>
+<li><strong>Modules du noyau retirés</strong> : protocoles réseau que la borne n'utilise
+  jamais (DCCP, SCTP, RDS, TIPC) et FireWire, un autre moyen d'atteindre la
+  mémoire de la borne, en plus des pilotes réseau USB, Bluetooth et Wi-Fi.
+  Les protocoles et FireWire sont aussi listés dans
+  <code>/etc/modprobe.d/pandora-box.conf</code>, où les outils d'audit les cherchent.</li>
+<li><strong>Journal d'audit</strong> (<code>/etc/audit/audit.rules</code>, auditd) : chargement de
+  modules du noyau, montages (sauf ceux de systemd et de bubblewrap), chaque
+  programme lancé, ptrace, changements de l'horloge, des jeux de signatures
+  et des mises à jour de l'image en attente. Les règles sont verrouillées
+  (<code>-e 2</code>) : les modifier demande un redémarrage. Elles sont chargées par
+  <code>auditctl -R</code> (<code>augenrules</code> écrit dans <code>/etc</code>, en lecture seule). Le
+  journal est dans <code>/var/log/audit/audit.log</code>, par exemple
+  <code>ausearch -k signatures -i</code>.</li>
+</ul>
+<p>Le profil de test inclut <code>lynis</code>, lancé par le test automatisé : indice de
+durcissement 73, aucun avertissement. Ses suggestions restantes ne
+s'appliquent pas à une borne sans session (politique de mots de passe,
+bannières, outils de paquets, fail2ban) ou viendront plus tard
+(journalisation distante, phase 5).</p>
+<h2 id="scan-worker-sandbox">Bac à sable des processus d'analyse<a class="headerlink" href="#scan-worker-sandbox" title="Permanent link">&para;</a></h2>
+<p>Les processus d'analyse examinent des fichiers hostiles avec plusieurs
+moteurs (libmagic, YARA-X, le client clamd...) : ils sont supposés
+compromettables (<code>scan.sandbox</code>, <code>src/pandora_box/sandbox.py</code>).</p>
+<ul>
+<li><strong>Un moteur par processus</strong> : un moteur compromis (un fichier piégé qui
+  exploite YARA-X ou libmagic) ne peut pas falsifier le résultat d'un autre
+  moteur. La borne calcule elle-même les empreintes de chaque fichier,
+  interroge le processus de chaque moteur d'empreintes (MalwareBazaar,
+  Hashlookup) avec les empreintes seulement, puis passe le fichier à un
+  processus de chaque moteur de contenu (ClamAV, YARA-X), et combine
+  elle-même leurs résultats ; un processus ne rapporte que le résultat de
+  son propre moteur. Les moteurs de contenu ont chacun <code>scan.workers</code>
+  processus, les moteurs d'empreintes un seul. <code>scan.workers = "auto"</code> (par
+  défaut) analyse un fichier par processeur en même temps, autant que la
+  mémoire le permet (1,5 Go pour clamd et le système, puis 256 Mo chacun,
+  surtout pour les règles YARA) : 6 sur le ThinkCentre M720q (6 cœurs,
+  8 Go), 1 ou 2 sur un ordinateur avec 2 Go.</li>
+<li><strong>Pas d'accès à la clé</strong> : la borne ouvre chaque fichier de façon sûre
+  (aucun lien suivi, le fichier de l'inventaire) et passe le descripteur
+  ouvert aux processus des moteurs de contenu, qui n'ouvrent jamais un
+  fichier de la clé ; les processus des moteurs d'empreintes ne reçoivent
+  jamais le fichier.</li>
+<li><strong>bubblewrap</strong> : nouveaux espaces de noms PID, IPC, UTS, cgroup et réseau
+  (aucune interface réseau à part le bouclage) ; un système de fichiers qui
+  ne contient que <code>/usr</code>, quelques fichiers de <code>/etc</code>, les dossiers de
+  signatures des moteurs activés (en lecture seule), le cache de YARA-X et
+  le dossier du socket de clamd : ni point de montage de la clé, ni
+  rapports, quarantaine, journaux ou configuration.</li>
+<li><strong>Utilisateur dédié</strong> <code>pandora-box-scan</code> (<code>packaging/sysusers/</code>), adopté
+  par <code>setpriv</code> : aucune capacité, aucun groupe supplémentaire,
+  <code>no_new_privs</code>.</li>
+<li><strong>Filtre d'appels système</strong> (<code>src/pandora_box/seccomp.py</code>), installé une
+  fois les moteurs chargés : ni exécution de programme, ni débogage, ni
+  montage, ni espace de noms, ni eBPF, ni module du noyau, ni io_uring, ni
+  socket réseau...</li>
+<li><strong>Réponses non fiables</strong> : les processus répondent en JSON (jamais en
+  pickle), avec une taille limitée et validée
+  (<code>src/pandora_box/protocol.py</code>) ; le chemin et la taille du fichier
+  viennent toujours de la borne. Une réponse malformée tue le processus et
+  le fichier est déclaré en erreur.</li>
+</ul>
+<p>bubblewrap tourne en root (le service de la borne), si bien que les espaces
+de noms utilisateur sans privilèges restent désactivés.</p>
+<p>Le test en machine virtuelle vérifie ces réglages et affiche l'exposition
+des services mesurée par <code>systemd-analyze security</code> (de 0 à 10, plus c'est
+bas, mieux c'est) : environ 1,6 pour clamd, 3,8 pour la borne (qui lance le
+bac à sable des processus d'analyse), 2,8 pour USBGuard.</p>
+<h2 id="unified-kernel-image">Image noyau unifiée<a class="headerlink" href="#unified-kernel-image" title="Permanent link">&para;</a></h2>
+<p>L'UKI (environ 40 Mo) contient le noyau, l'initrd de l'image
+(<code>image/mkosi.images/initrd/</code>, sans la base matérielle d'udev, les
+conversions de jeux de caractères, Perl, la documentation et networkd) et un
+initrd de modules du noyau. Celui-ci ne contient que ce qui monte le
+système de fichiers racine (<code>KernelModulesInitrdInclude=</code> dans
+<code>image/mkosi.conf</code>) : contrôleurs de disque (NVMe, SATA, Intel VMD, eMMC,
+virtio), dm-verity, EROFS et CRC32C, qu'EROFS charge par son nom. Les autres
+modules sont chargés depuis le système de fichiers racine. Un ordinateur
+dont le contrôleur de disque n'est pas dans cette liste ne trouve pas son
+système de fichiers racine : ajoutez-y son module.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Retour en haut de la page
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a>.
+    </div>
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.indexes", "navigation.expand", "navigation.top", "content.code.copy", "content.action.edit", "content.action.view"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copi\u00e9 dans le presse-papier", "clipboard.copy": "Copier dans le presse-papier", "search.result.more.one": "1 de plus sur cette page", "search.result.more.other": "# de plus sur cette page", "search.result.none": "Aucun document trouv\u00e9", "search.result.one": "1 document trouv\u00e9", "search.result.other": "# documents trouv\u00e9s", "search.result.placeholder": "Taper pour d\u00e9marrer la recherche", "search.result.term.missing": "Non trouv\u00e9", "select.version": "S\u00e9lectionner la version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
