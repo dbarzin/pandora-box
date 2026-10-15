@@ -27,6 +27,16 @@ machine ([Testing with QEMU](vm.md)).
 Docker, about 5 GB of disk space, network access (Debian packages and Python
 wheels).
 
+On Windows, build in WSL from a clone in the WSL file system (not under
+`/mnt/c`), with LF line endings: Windows line endings (CRLF) break the
+configuration of the image, and USBGuard then blocks every USB device.
+`image/build.sh` refuses to build from files with CRLF.
+
+```sh
+git config --global core.autocrlf input
+git clone https://github.com/sourcentis/pandora-box.git
+```
+
 ## Before the build
 
 The image is read-only: everything below is part of it, and changing it

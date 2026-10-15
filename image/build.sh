@@ -17,6 +17,17 @@ case " $* " in
 *" --image-version="*) ;;
 *) set -- --image-version="$(date -u +%Y%m%d%H%M%S)" "$@" ;;
 esac
+# Windows line endings (a clone made on Windows, or core.autocrlf=true)
+# break the configuration of the image: USBGuard rejects its rules and
+# blocks every USB device. Refuse to build an image from such files.
+crlf=$(grep -rlI --exclude-dir=mkosi.output --exclude-dir=work \
+    --exclude-dir=__pycache__ "$(printf '\r')" . ../packaging ../src || true)
+if [ -n "$crlf" ]; then
+    echo "error: files with Windows line endings (CRLF):" >&2
+    echo "$crlf" | sed 's/^/  /' >&2
+    echo "Clone the repository again with LF line endings (git config --global core.autocrlf input)." >&2
+    exit 1
+fi
 docker build -q -t pandora-box-builder . >/dev/null
 mkdir -p mkosi.output
 # Privileged: mkosi creates namespaces and mounts to build the image. Its

@@ -1,0 +1,11 @@
+# Text files are checked out with LF line endings on every system, even
+# with core.autocrlf=true on Windows: the image is built from these files,
+# and services such as USBGuard reject a configuration file with CRLF.
+* text=auto eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.pdf binary
+*.stl binary
+*.zip binary

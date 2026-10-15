@@ -28,6 +28,17 @@ une machine virtuelle ([Test avec QEMU](vm.md)).
 Docker, environ 5 Go d'espace disque, un accès réseau (paquets Debian et
 wheels Python).
 
+Sous Windows, construisez dans WSL à partir d'un clone dans le système de
+fichiers de WSL (pas sous `/mnt/c`), avec des fins de ligne LF : les fins de
+ligne Windows (CRLF) cassent la configuration de l'image, et USBGuard bloque
+alors tous les périphériques USB. `image/build.sh` refuse de construire à
+partir de fichiers en CRLF.
+
+```sh
+git config --global core.autocrlf input
+git clone https://github.com/sourcentis/pandora-box.git
+```
+
 ## Avant la construction { #before-the-build }
 
 L'image est en lecture seule : tout ce qui suit en fait partie, et le
