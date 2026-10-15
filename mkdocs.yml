@@ -43,6 +43,38 @@ extra:
 
 plugins:
   - search
+  # English pages are page.md, French pages page.fr.md
+  - i18n:
+      docs_structure: suffix
+      fallback_to_default: true
+      reconfigure_material: true
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: fr
+          name: Français
+          build: true
+          nav_translations:
+            GETTING STARTED: DÉMARRAGE
+            -- Hardware: -- Matériel
+            INSTALLATION: INSTALLATION
+            -- Building the image: -- Construction de l'image
+            -- Testing with QEMU: -- Test avec QEMU
+            -- Initial installation: -- Installation initiale
+            MAINTENANCE: MAINTENANCE
+            -- Signatures: -- Signatures
+            -- System updates: -- Mises à jour du système
+            -- Logs: -- Journaux
+            -- Log export to a SIEM: -- Export vers un SIEM
+            REFERENCE: RÉFÉRENCE
+            -- Interface: -- Interface
+            -- Configuration: -- Configuration
+            -- Detection engines: -- Moteurs de détection
+            -- Image internals: -- Fonctionnement de l'image
+            DEVELOPMENT: DÉVELOPPEMENT
+            -- Development: -- Développement
 
 markdown_extensions:
   - attr_list

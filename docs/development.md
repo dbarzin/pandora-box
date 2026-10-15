@@ -116,11 +116,13 @@ mkdocs serve        # http://127.0.0.1:8000, reloaded on every change
 mkdocs build --strict
 ```
 
+The documentation is in English and French (`mkdocs-static-i18n` plugin): each English page `page.md` has its translation `page.fr.md`, published under `/fr/`. A page without a translation is shown in English. The headings of a French page keep the anchor of the English page (`## Profil online { #profile-online }`), so that links to a section work in both languages.
+
 With MkDocs installed by pipx, add the extensions of `requirements-docs.txt`
 to its environment instead (the GitHub alerts, `> [!WARNING]`, need
 `markdown-callouts`):
 
 ```sh
 pipx install mkdocs
-pipx inject mkdocs mkdocs-material markdown-callouts
+pipx inject mkdocs mkdocs-material markdown-callouts mkdocs-static-i18n
 ```

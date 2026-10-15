@@ -16,7 +16,7 @@ Les clés USB restent une porte d'entrée courante dans des systèmes d'informat
 
 PandoraBox veut être une alternative **libre, auditable et durcie** aux bornes commerciales, pour les environnements sensibles comme la santé, l'industrie et les administrations. C'est une réécriture complète de la première version de PandoraBox, sans dépendance à Pandora (CIRCL).
 
-📚 [Lire la documentation](https://sourcentis.github.io/pandora-box/) (en anglais) |
+📚 [Lire la documentation](https://sourcentis.github.io/pandora-box/fr/) |
 🗺️ [Feuille de route](ROADMAP.md) |
 🔍 [Code source](src/pandora_box/)
 
@@ -54,7 +54,7 @@ PandoraBox veut être une alternative **libre, auditable et durcie** aux bornes 
 - **Écran :** Waveshare 7 pouces HDMI LCD (C), écran tactile capacitif, 1024x600
 - **Boîtier :** imprimé en 3D, dans le dossier [3D](3D/) (CERN-OHL-S v2)
 
-Voir le [guide du matériel](https://sourcentis.github.io/pandora-box/hardware/), et le [guide d'installation](https://sourcentis.github.io/pandora-box/install/) pour les réglages du BIOS.
+Voir le [guide du matériel](https://sourcentis.github.io/pandora-box/fr/hardware/), et le [guide d'installation](https://sourcentis.github.io/pandora-box/fr/install/) pour les réglages du BIOS.
 
 ## 📦 **Installation**
 
@@ -67,9 +67,9 @@ image/build.sh                                  # construit l'image
 image/build-test.sh && image/vm.sh test         # facultatif : la teste dans une machine virtuelle
 ```
 
-Écrivez ensuite `image/mkosi.output/pandora-box.raw` sur le disque de la borne, enrôlez la clé Secure Boot et installez un jeu de signatures depuis une clé USB. Chaque étape est décrite dans la documentation : [construction de l'image](https://sourcentis.github.io/pandora-box/build/), [test avec QEMU](https://sourcentis.github.io/pandora-box/vm/), [installation initiale](https://sourcentis.github.io/pandora-box/install/), et la maintenance : [signatures](https://sourcentis.github.io/pandora-box/signatures/), [mises à jour du système](https://sourcentis.github.io/pandora-box/update/), [journaux](https://sourcentis.github.io/pandora-box/logs/).
+Écrivez ensuite `image/mkosi.output/pandora-box.raw` sur le disque de la borne, enrôlez la clé Secure Boot et installez un jeu de signatures depuis une clé USB. Chaque étape est décrite dans la documentation : [construction de l'image](https://sourcentis.github.io/pandora-box/fr/build/), [test avec QEMU](https://sourcentis.github.io/pandora-box/fr/vm/), [installation initiale](https://sourcentis.github.io/pandora-box/fr/install/), et la maintenance : [signatures](https://sourcentis.github.io/pandora-box/fr/signatures/), [mises à jour du système](https://sourcentis.github.io/pandora-box/fr/update/), [journaux](https://sourcentis.github.io/pandora-box/fr/logs/).
 
-Pour travailler sur le code, voir le [guide de développement](https://sourcentis.github.io/pandora-box/development/).
+Pour travailler sur le code, voir le [guide de développement](https://sourcentis.github.io/pandora-box/fr/development/).
 
 ## 📜 **Feuille de route**
 
