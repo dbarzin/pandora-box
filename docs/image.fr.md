@@ -48,7 +48,8 @@ L'image contient :
   l'analyse à l'accès de ClamAV sont désactivés (`10-pandora-box.preset`) ;
 - pandora-box dans `/usr/lib/pandora-box` (`/usr/bin/pandora-box`), sa
   configuration dans `/etc/pandora-box/pandora-box.toml` et son service, qui
-  affiche l'interface sur la première console ;
+  dessine l'interface graphique tactile sur la première console
+  (framebuffer, voir [Écran](#screen)) ;
 - ni programme `login` ni mot de passe root : aucune session interactive
   n'est possible.
 

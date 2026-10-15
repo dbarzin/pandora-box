@@ -44,7 +44,8 @@ The image contains:
   ClamAV on-access scanner are disabled (`10-pandora-box.preset`);
 - pandora-box in `/usr/lib/pandora-box` (`/usr/bin/pandora-box`), its
   configuration in `/etc/pandora-box/pandora-box.toml` and its service, which
-  shows the curses interface on the first console;
+  draws the graphical touch interface on the first console (framebuffer, see
+  [Screen](#screen));
 - no `login` program and no root password: no interactive session is
   possible.
 
