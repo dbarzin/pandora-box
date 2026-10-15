@@ -202,6 +202,18 @@ def test_scanning_screen() -> None:
     assert frame.image(0.0).tobytes() != frame.image(frame.animation.interval).tobytes()
 
 
+def test_sample_files_follow_the_language() -> None:
+    def names(language: str) -> list[str]:
+        return [f.rel_path for f in sample_states(language)["threats"].files]
+
+    assert names("en")[0] == "Invoices/invoice-2026-10.pdf.exe"
+    assert names("fr")[0] == "Factures/facture-2026-10.pdf.exe"
+    # A language a theme adds gets the English names
+    assert names("de") == names("en")
+    device = sample_states("fr")["scanning"].device
+    assert device is not None and device.label == "CLE-USB"
+
+
 def test_preview(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert theme_main(["check"]) == 0
     assert "OK (en, fr)" in capsys.readouterr().out

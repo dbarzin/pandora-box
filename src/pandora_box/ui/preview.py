@@ -14,9 +14,35 @@ from pandora_box.ui.base import Screen
 from pandora_box.ui.screens import REFERENCE, Renderer, ViewState
 from pandora_box.ui.theme import ThemeError, load_theme, theme_languages
 
+# Made-up file names and device label, in French for the French texts and in
+# English for the others
+SAMPLE_NAMES = {
+    "en": {
+        "invoice": "Invoices/invoice-2026-10.pdf.exe",
+        "budget": "Documents/budget.xlsm",
+        "protected": "protected-archive.zip",
+        "invoice_previous": "Invoices/invoice-2026-09.pdf",
+        "photo_1": "Photos/holidays/IMG_2041.jpg",
+        "photo_2": "Photos/holidays/IMG_2040.jpg",
+        "notes": "Meeting notes.docx",
+        "label": "USB-KEY",
+    },
+    "fr": {
+        "invoice": "Factures/facture-2026-10.pdf.exe",
+        "budget": "Documents/budget.xlsm",
+        "protected": "archive-protégée.zip",
+        "invoice_previous": "Factures/facture-2026-09.pdf",
+        "photo_1": "Photos/vacances/IMG_2041.jpg",
+        "photo_2": "Photos/vacances/IMG_2040.jpg",
+        "notes": "Notes de réunion.docx",
+        "label": "CLE-USB",
+    },
+}
 
-def sample_states() -> dict[str, ViewState]:
-    """Every screen, with made-up files."""
+
+def sample_states(language: str = "en") -> dict[str, ViewState]:
+    """Every screen, with made-up files named in the language of the texts."""
+    names = SAMPLE_NAMES.get(language, SAMPLE_NAMES["en"])
 
     def result(path: str, verdict: Verdict, detection: str = "", error: str = "") -> FileResult:
         engine = EngineResult(
@@ -27,19 +53,19 @@ def sample_states() -> dict[str, ViewState]:
         )
 
     threats = (
-        result("Factures/facture-2026-10.pdf.exe", Verdict.MALICIOUS, "Win.Trojan.Agent-1234"),
+        result(names["invoice"], Verdict.MALICIOUS, "Win.Trojan.Agent-1234"),
         result("eicar.com", Verdict.MALICIOUS, "Eicar-Signature"),
-        result("Documents/budget.xlsm", Verdict.SUSPICIOUS, "Heuristics.OLE2.ContainsMacros"),
+        result(names["budget"], Verdict.SUSPICIOUS, "Heuristics.OLE2.ContainsMacros"),
     )
-    unscanned = (result("archive-protégée.zip", Verdict.ERROR, error="Heuristics.Encrypted.Zip"),)
+    unscanned = (result(names["protected"], Verdict.ERROR, error="Heuristics.Encrypted.Zip"),)
     recent = (
         threats[0],
-        result("Factures/facture-2026-09.pdf", Verdict.CLEAN),
-        result("Photos/vacances/IMG_2041.jpg", Verdict.CLEAN),
-        result("Photos/vacances/IMG_2040.jpg", Verdict.CLEAN),
-        result("Notes de réunion.docx", Verdict.CLEAN),
+        result(names["invoice_previous"], Verdict.CLEAN),
+        result(names["photo_1"], Verdict.CLEAN),
+        result(names["photo_2"], Verdict.CLEAN),
+        result(names["notes"], Verdict.CLEAN),
     )
-    device = UsbDevice("/dev/sda1", "vfat", "CLE-USB", "Cruzer Blade", "4C53", "SanDisk")
+    device = UsbDevice("/dev/sda1", "vfat", names["label"], "Cruzer Blade", "4C53", "SanDisk")
     info = (
         "PandoraBox 20261014120000 of 2026-10-14 12:00 UTC",
         "Signatures: set 42 of 2026-10-14 06:00 UTC",
@@ -124,7 +150,7 @@ def main(argv: list[str] | None = None) -> int:
     args.output.mkdir(parents=True, exist_ok=True)
     for theme in themes:
         renderer = Renderer(theme, args.size)
-        for name, state in sample_states().items():
+        for name, state in sample_states(theme.language).items():
             frame = renderer.render(state)
             path = args.output / f"{theme.language}-{name}.png"
             frame.image(0.0).save(path)

@@ -35,11 +35,11 @@ PandoraBox veut être une alternative **libre, auditable et durcie** aux bornes 
 
 ### ⏳ **Attente d'une clé, analyse en cours**
 
-[<img src="docs/images/interface-ready.png" width="400">](docs/images/interface-ready.png) [<img src="docs/images/interface-scanning.png" width="400">](docs/images/interface-scanning.png)
+[<img src="docs/images/interface-ready.fr.png" width="400">](docs/images/interface-ready.fr.png) [<img src="docs/images/interface-scanning.fr.png" width="400">](docs/images/interface-scanning.fr.png)
 
 ### ☣️ **Menaces trouvées, clé nettoyée**
 
-[<img src="docs/images/interface-threats.png" width="400">](docs/images/interface-threats.png) [<img src="docs/images/interface-cleaned.png" width="400">](docs/images/interface-cleaned.png)
+[<img src="docs/images/interface-threats.fr.png" width="400">](docs/images/interface-threats.fr.png) [<img src="docs/images/interface-cleaned.fr.png" width="400">](docs/images/interface-cleaned.fr.png)
 
 ## 🛠️ **Technologies**
 
