@@ -1353,6 +1353,13 @@ machine (<a href="../vm/">Testing with QEMU</a>).</p>
 <h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
 <p>Docker, about 5 GB of disk space, network access (Debian packages and Python
 wheels).</p>
+<p>On Windows, build in WSL from a clone in the WSL file system (not under
+<code>/mnt/c</code>), with LF line endings: Windows line endings (CRLF) break the
+configuration of the image, and USBGuard then blocks every USB device.
+<code>image/build.sh</code> refuses to build from files with CRLF.</p>
+<div class="highlight"><pre><span></span><code>git<span class="w"> </span>config<span class="w"> </span>--global<span class="w"> </span>core.autocrlf<span class="w"> </span>input
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/sourcentis/pandora-box.git
+</code></pre></div>
 <h2 id="before-the-build">Before the build<a class="headerlink" href="#before-the-build" title="Permanent link">&para;</a></h2>
 <p>The image is read-only: everything below is part of it, and changing it
 means building a new image, then installing it as an
