@@ -37,7 +37,8 @@ Notes for this hardware:
 A computer or a screen not listed here may need its own settings: the mode
 of its screen, the rule of its touchscreen, the disk controller in the
 initrd (`KernelModulesInitrdInclude=` of `image/mkosi.conf`: NVMe, SATA,
-Intel VMD, eMMC).
+Intel VMD, eMMC). A screen without touch needs a mouse, allowed by its own
+USBGuard rule (see [image.md](image.md#mouse-instead-of-a-touchscreen)).
 
 ## Enclosure
 

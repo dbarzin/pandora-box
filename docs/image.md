@@ -158,6 +158,35 @@ A kiosk must only use USB storage devices: a key that is also a keyboard
   (`/etc/usbguard/rules.d/50-vm-test.conf`): the test confirms a cleaning
   with a touch. The keyboard of the virtual machines is not a USB device.
 
+### Mouse instead of a touchscreen
+
+With a screen that is not a touchscreen, a mouse confirms a cleaning: the
+kernel merges all mice in `/dev/input/mice`, and a left click is read as a
+touch. Nothing changes in the kiosk, but USBGuard blocks every mouse: allow
+yours by its own rule in `image/mkosi.extra/etc/usbguard/rules.conf`, then
+rebuild the image and write it again. The root file system is read-only and
+checked by dm-verity: a rule changed on the kiosk itself is not possible.
+
+1. Plug the mouse into the kiosk and take its line from
+   `/var/log/usbguard/usbguard-audit.log`, or from `usb-devices.txt` of a
+   [maintenance export](logs.md#maintenance-device): its `id`, `name`,
+   `serial` (when it has one) and port.
+2. Add a rule that allows this mouse, with only a mouse interface
+   (`03:01:02`), on the port where it is plugged, for example:
+
+    ```
+    allow id 046d:c077 name "USB Optical Mouse" with-interface equals { 03:01:02 } via-port "1-5"
+    ```
+
+    Add `serial "..."` when the mouse has a serial number: the rule then
+    allows this unit only.
+
+Choose a simple wired mouse. Many wireless mice (receivers shared with a
+keyboard) and gaming mice also have a keyboard interface (`03:01:01`):
+`equals` keeps them blocked, so that a keyboard cannot pass for a mouse.
+Keep the mouse on the port of the rule. Edit the file with LF line endings:
+the build refuses a file with CRLF line endings.
+
 ## System hardening
 
 After the ANSSI configuration recommendations for GNU/Linux systems:

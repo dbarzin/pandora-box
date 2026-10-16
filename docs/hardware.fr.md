@@ -38,7 +38,9 @@ Remarques sur ce matériel :
 Un ordinateur ou un écran absent de cette liste peut demander ses propres
 réglages : le mode de son écran, la règle de son écran tactile, le
 contrôleur de disque dans l'initrd (`KernelModulesInitrdInclude=` de
-`image/mkosi.conf` : NVMe, SATA, Intel VMD, eMMC).
+`image/mkosi.conf` : NVMe, SATA, Intel VMD, eMMC). Un écran sans tactile
+demande une souris, autorisée par sa propre règle USBGuard (voir
+[image.md](image.md#mouse-instead-of-a-touchscreen)).
 
 ## Boîtier { #enclosure }
 

@@ -173,6 +173,37 @@ adaptateur réseau pourrait ouvrir un réseau.
     nettoyage par un appui. Le clavier des machines virtuelles n'est pas un
     périphérique USB.
 
+### Souris à la place de l'écran tactile { #mouse-instead-of-a-touchscreen }
+
+Avec un écran qui n'est pas tactile, une souris confirme un nettoyage : le
+noyau regroupe toutes les souris dans `/dev/input/mice`, et un clic gauche
+est lu comme un appui. Rien ne change dans la borne, mais USBGuard bloque
+toute souris : autorisez la vôtre par sa propre règle dans
+`image/mkosi.extra/etc/usbguard/rules.conf`, puis reconstruisez l'image et
+réécrivez-la. Le système de fichiers racine est en lecture seule et vérifié
+par dm-verity : modifier une règle sur la borne elle-même n'est pas possible.
+
+1. Branchez la souris sur la borne et relevez sa ligne dans
+   `/var/log/usbguard/usbguard-audit.log`, ou dans `usb-devices.txt` d'un
+   [export de maintenance](logs.md#maintenance-device) : son `id`, son
+   `name`, son `serial` (si elle en a un) et son port.
+2. Ajoutez une règle qui autorise cette souris, avec une seule interface de
+   souris (`03:01:02`), sur le port où elle est branchée, par exemple :
+
+    ```
+    allow id 046d:c077 name "USB Optical Mouse" with-interface equals { 03:01:02 } via-port "1-5"
+    ```
+
+    Ajoutez `serial "..."` si la souris a un numéro de série : la règle
+    n'autorise alors que cet exemplaire.
+
+Choisissez une souris filaire simple. Beaucoup de souris sans fil
+(récepteurs partagés avec un clavier) et de souris de jeu ont aussi une
+interface clavier (`03:01:01`) : `equals` les garde bloquées, pour qu'un
+clavier ne puisse pas passer pour une souris. Gardez la souris sur le port de
+la règle. Modifiez le fichier avec des fins de ligne LF : le build refuse un
+fichier avec des fins de ligne CRLF.
+
 ## Durcissement du système { #system-hardening }
 
 D'après les recommandations de configuration d'un système GNU/Linux de
