@@ -1,5 +1,7 @@
 # PandoraBox
 
+[<img src="docs/images/pandora-box.png" width="200">](docs/images/pandora-box.png)
+
 [![CI](https://img.shields.io/github/actions/workflow/status/sourcentis/pandora-box/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/sourcentis/pandora-box/actions/workflows/ci.yml)
 ![License](https://img.shields.io/github/license/sourcentis/pandora-box.svg?style=flat-square)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue?style=flat-square)
