@@ -983,6 +983,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="USB devices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mouse-instead-of-a-touchscreen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mouse instead of a touchscreen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1194,6 +1211,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="USB devices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mouse-instead-of-a-touchscreen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mouse instead of a touchscreen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1434,6 +1468,32 @@ it draws for (<code>display_started</code>, <code>display_resized</code>).</p>
   <code>usb-tablet</code>, same interface) in its own rule
   (<code>/etc/usbguard/rules.d/50-vm-test.conf</code>): the test confirms a cleaning
   with a touch. The keyboard of the virtual machines is not a USB device.</p>
+<h3 id="mouse-instead-of-a-touchscreen">Mouse instead of a touchscreen<a class="headerlink" href="#mouse-instead-of-a-touchscreen" title="Permanent link">&para;</a></h3>
+<p>With a screen that is not a touchscreen, a mouse confirms a cleaning: the
+kernel merges all mice in <code>/dev/input/mice</code>, and a left click is read as a
+touch. Nothing changes in the kiosk, but USBGuard blocks every mouse: allow
+yours by its own rule in <code>image/mkosi.extra/etc/usbguard/rules.conf</code>, then
+rebuild the image and write it again. The root file system is read-only and
+checked by dm-verity: a rule changed on the kiosk itself is not possible.</p>
+<ol>
+<li>Plug the mouse into the kiosk and take its line from
+   <code>/var/log/usbguard/usbguard-audit.log</code>, or from <code>usb-devices.txt</code> of a
+   <a href="../logs/#maintenance-device">maintenance export</a>: its <code>id</code>, <code>name</code>,
+   <code>serial</code> (when it has one) and port.</li>
+<li>
+<p>Add a rule that allows this mouse, with only a mouse interface
+   (<code>03:01:02</code>), on the port where it is plugged, for example:</p>
+<div class="highlight"><pre><span></span><code>allow id 046d:c077 name "USB Optical Mouse" with-interface equals { 03:01:02 } via-port "1-5"
+</code></pre></div>
+<p>Add <code>serial "..."</code> when the mouse has a serial number: the rule then
+allows this unit only.</p>
+</li>
+</ol>
+<p>Choose a simple wired mouse. Many wireless mice (receivers shared with a
+keyboard) and gaming mice also have a keyboard interface (<code>03:01:01</code>):
+<code>equals</code> keeps them blocked, so that a keyboard cannot pass for a mouse.
+Keep the mouse on the port of the rule. Edit the file with LF line endings:
+the build refuses a file with CRLF line endings.</p>
 <h2 id="system-hardening">System hardening<a class="headerlink" href="#system-hardening" title="Permanent link">&para;</a></h2>
 <p>After the ANSSI configuration recommendations for GNU/Linux systems:</p>
 <ul>

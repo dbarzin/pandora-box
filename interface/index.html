@@ -1348,8 +1348,9 @@ into the Linux framebuffer (<code>display.framebuffer</code>, <code>/dev/fb0</co
 server, no browser, nothing that listens on a socket. The kiosk puts its
 console (<code>tty1</code>) in graphics mode, so that the kernel does not draw text over
 the screens. Touches are read from <code>/dev/input/mice</code> (the touch screen is
-seen as a mouse), only while the kiosk waits for the cleaning to be
-confirmed. File names and device labels come from the key: they are made
+seen as a mouse; a mouse allowed by USBGuard clicks instead, see
+<a href="../image/#mouse-instead-of-a-touchscreen">image.md</a>), only while the kiosk
+waits for the cleaning to be confirmed. File names and device labels come from the key: they are made
 printable (control and invisible formatting characters replaced) and cut to
 their place, never interpreted. The graphical interface needs a 24 or 32 bits
 per pixel framebuffer (Intel, <code>efifb</code>, QEMU).</p>

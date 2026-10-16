@@ -983,6 +983,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Périphériques USB">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mouse-instead-of-a-touchscreen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Souris à la place de l'écran tactile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1194,6 +1211,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Périphériques USB">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mouse-instead-of-a-touchscreen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Souris à la place de l'écran tactile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1451,6 +1485,34 @@ nettoyage par un appui. Le clavier des machines virtuelles n'est pas un
 périphérique USB.</p>
 </li>
 </ul>
+<h3 id="mouse-instead-of-a-touchscreen">Souris à la place de l'écran tactile<a class="headerlink" href="#mouse-instead-of-a-touchscreen" title="Permanent link">&para;</a></h3>
+<p>Avec un écran qui n'est pas tactile, une souris confirme un nettoyage : le
+noyau regroupe toutes les souris dans <code>/dev/input/mice</code>, et un clic gauche
+est lu comme un appui. Rien ne change dans la borne, mais USBGuard bloque
+toute souris : autorisez la vôtre par sa propre règle dans
+<code>image/mkosi.extra/etc/usbguard/rules.conf</code>, puis reconstruisez l'image et
+réécrivez-la. Le système de fichiers racine est en lecture seule et vérifié
+par dm-verity : modifier une règle sur la borne elle-même n'est pas possible.</p>
+<ol>
+<li>Branchez la souris sur la borne et relevez sa ligne dans
+   <code>/var/log/usbguard/usbguard-audit.log</code>, ou dans <code>usb-devices.txt</code> d'un
+   <a href="../logs/#maintenance-device">export de maintenance</a> : son <code>id</code>, son
+   <code>name</code>, son <code>serial</code> (si elle en a un) et son port.</li>
+<li>
+<p>Ajoutez une règle qui autorise cette souris, avec une seule interface de
+   souris (<code>03:01:02</code>), sur le port où elle est branchée, par exemple :</p>
+<div class="highlight"><pre><span></span><code>allow id 046d:c077 name "USB Optical Mouse" with-interface equals { 03:01:02 } via-port "1-5"
+</code></pre></div>
+<p>Ajoutez <code>serial "..."</code> si la souris a un numéro de série : la règle
+n'autorise alors que cet exemplaire.</p>
+</li>
+</ol>
+<p>Choisissez une souris filaire simple. Beaucoup de souris sans fil
+(récepteurs partagés avec un clavier) et de souris de jeu ont aussi une
+interface clavier (<code>03:01:01</code>) : <code>equals</code> les garde bloquées, pour qu'un
+clavier ne puisse pas passer pour une souris. Gardez la souris sur le port de
+la règle. Modifiez le fichier avec des fins de ligne LF : le build refuse un
+fichier avec des fins de ligne CRLF.</p>
 <h2 id="system-hardening">Durcissement du système<a class="headerlink" href="#system-hardening" title="Permanent link">&para;</a></h2>
 <p>D'après les recommandations de configuration d'un système GNU/Linux de
 l'ANSSI :</p>

@@ -1350,7 +1350,9 @@ dans le framebuffer Linux (<code>display.framebuffer</code>, <code>/dev/fb0</cod
 serveur d'affichage, pas de navigateur, rien qui écoute sur un socket. La
 borne met sa console (<code>tty1</code>) en mode graphique, pour que le noyau n'écrive
 pas de texte par-dessus les écrans. Les appuis sont lus depuis
-<code>/dev/input/mice</code> (l'écran tactile est vu comme une souris), seulement
+<code>/dev/input/mice</code> (l'écran tactile est vu comme une souris ; une souris
+autorisée par USBGuard clique à sa place, voir
+<a href="../image/#mouse-instead-of-a-touchscreen">image.md</a>), seulement
 pendant que la borne attend la confirmation du nettoyage. Les noms de
 fichiers et les étiquettes des clés viennent de la clé : ils sont rendus
 imprimables (caractères de contrôle et de formatage invisibles remplacés) et

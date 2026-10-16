@@ -1227,7 +1227,9 @@ signatures sur le réseau filaire, les clés de maintenance.</p>
 <p>Un ordinateur ou un écran absent de cette liste peut demander ses propres
 réglages : le mode de son écran, la règle de son écran tactile, le
 contrôleur de disque dans l'initrd (<code>KernelModulesInitrdInclude=</code> de
-<code>image/mkosi.conf</code> : NVMe, SATA, Intel VMD, eMMC).</p>
+<code>image/mkosi.conf</code> : NVMe, SATA, Intel VMD, eMMC). Un écran sans tactile
+demande une souris, autorisée par sa propre règle USBGuard (voir
+<a href="../image/#mouse-instead-of-a-touchscreen">image.md</a>).</p>
 <h2 id="enclosure">Boîtier<a class="headerlink" href="#enclosure" title="Permanent link">&para;</a></h2>
 <p>Un boîtier de bureau imprimé en 3D, en une seule pièce, d'environ
 191 x 184 x 86 mm : l'écran dans la fenêtre de sa face avant inclinée, des
