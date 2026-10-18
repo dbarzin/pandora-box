@@ -34,6 +34,19 @@ Notes for this hardware:
   less for other files (ClamAV takes almost all of it); six files are
   scanned at the same time, one per core.
 
+## Also tested
+
+| Computer | Notes |
+|---|---|
+| HP ProDesk 400 G5 SFF | Tested by a user ([issue #41](https://github.com/sourcentis/pandora-box/issues/41)), with a mouse instead of a touchscreen |
+
+What was checked on it: boot, USB keys, signature updates from a USB key,
+maintenance devices, confirming a cleaning with a mouse click. Notes:
+
+- **BIOS**: the USB ports are enabled in *Advanced → Port Options*.
+- **Mouse**: allowed by its own USBGuard rule, on its port (see
+  [image.md](image.md#mouse-instead-of-a-touchscreen)).
+
 A computer or a screen not listed here may need its own settings: the mode
 of its screen, the rule of its touchscreen, the disk controller in the
 initrd (`KernelModulesInitrdInclude=` of `image/mkosi.conf`: NVMe, SATA,

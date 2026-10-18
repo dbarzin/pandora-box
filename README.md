@@ -52,7 +52,7 @@ PandoraBox aims to be a **free, auditable and hardened** alternative to commerci
 
 ## 💻 **Hardware**
 
-- **Computer:** refurbished Lenovo ThinkCentre Tiny (validated: M720q, Core i5-9400T), 2 GB of memory minimum
+- **Computer:** refurbished Lenovo ThinkCentre Tiny (validated: M720q, Core i5-9400T; also tested: HP ProDesk 400 G5 SFF), 2 GB of memory minimum
 - **Screen:** Waveshare 7-inch HDMI LCD (C), capacitive touch screen, 1024x600
 - **Enclosure:** 3D-printed, in the [3D](3D/) folder (CERN-OHL-S v2)
 

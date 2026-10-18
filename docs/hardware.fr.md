@@ -35,6 +35,20 @@ Remarques sur ce matériel :
   beaucoup moins pour les autres fichiers (ClamAV en prend presque tout le
   temps) ; six fichiers sont analysés en même temps, un par cœur.
 
+## Également testé { #also-tested }
+
+| Ordinateur | Remarques |
+|---|---|
+| HP ProDesk 400 G5 SFF | Testé par un utilisateur ([issue #41](https://github.com/sourcentis/pandora-box/issues/41)), avec une souris à la place d'un écran tactile |
+
+Ce qui a été vérifié : le démarrage, les clés USB, les mises à jour des
+signatures depuis une clé USB, les clés de maintenance, la confirmation d'un
+nettoyage par un clic de souris. Remarques :
+
+- **BIOS** : les ports USB s'activent dans *Advanced → Port Options*.
+- **Souris** : autorisée par sa propre règle USBGuard, sur son port (voir
+  [image.md](image.md#mouse-instead-of-a-touchscreen)).
+
 Un ordinateur ou un écran absent de cette liste peut demander ses propres
 réglages : le mode de son écran, la règle de son écran tactile, le
 contrôleur de disque dans l'initrd (`KernelModulesInitrdInclude=` de

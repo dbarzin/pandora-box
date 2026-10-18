@@ -52,7 +52,7 @@ PandoraBox veut être une alternative **libre, auditable et durcie** aux bornes 
 
 ## 💻 **Matériel**
 
-- **Ordinateur :** Lenovo ThinkCentre Tiny reconditionné (validé : M720q, Core i5-9400T), 2 Go de mémoire au minimum
+- **Ordinateur :** Lenovo ThinkCentre Tiny reconditionné (validé : M720q, Core i5-9400T ; également testé : HP ProDesk 400 G5 SFF), 2 Go de mémoire au minimum
 - **Écran :** Waveshare 7 pouces HDMI LCD (C), écran tactile capacitif, 1024x600
 - **Boîtier :** imprimé en 3D, dans le dossier [3D](3D/) (CERN-OHL-S v2)
 
