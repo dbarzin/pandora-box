@@ -398,6 +398,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#also-tested" class="md-nav__link">
+    <span class="md-ellipsis">
+      Also tested
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#enclosure" class="md-nav__link">
     <span class="md-ellipsis">
       Enclosure
@@ -947,6 +956,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#also-tested" class="md-nav__link">
+    <span class="md-ellipsis">
+      Also tested
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#enclosure" class="md-nav__link">
     <span class="md-ellipsis">
       Enclosure
@@ -1042,6 +1060,28 @@ signatures over the wired network, maintenance devices.</p>
 <li><strong>Speed</strong>: about 0.5 s per MB for a PDF full of images (ClamAV), much
   less for other files (ClamAV takes almost all of it); six files are
   scanned at the same time, one per core.</li>
+</ul>
+<h2 id="also-tested">Also tested<a class="headerlink" href="#also-tested" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Computer</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HP ProDesk 400 G5 SFF</td>
+<td>Tested by a user (<a href="https://github.com/sourcentis/pandora-box/issues/41">issue #41</a>), with a mouse instead of a touchscreen</td>
+</tr>
+</tbody>
+</table>
+<p>What was checked on it: boot, USB keys, signature updates from a USB key,
+maintenance devices, confirming a cleaning with a mouse click. Notes:</p>
+<ul>
+<li><strong>BIOS</strong>: the USB ports are enabled in <em>Advanced → Port Options</em>.</li>
+<li><strong>Mouse</strong>: allowed by its own USBGuard rule, on its port (see
+  <a href="../image/#mouse-instead-of-a-touchscreen">image.md</a>).</li>
 </ul>
 <p>A computer or a screen not listed here may need its own settings: the mode
 of its screen, the rule of its touchscreen, the disk controller in the
