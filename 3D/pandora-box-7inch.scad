@@ -42,13 +42,17 @@ recess_start = 1.744;   // from the bottom edge, along the slope
 // bottom edge of the front face, before the shift)
 window_w     = 156;
 window_h     = 100;
+window_ext_l = 3;       // window edges moved outwards, seen from the front:
+window_ext_r = -1;      // left and right (negative = inwards)
 window_u     = 15.744;
 hole_d       = 3;
 hole_y       = 78.75;   // half the distance across the face (157.5 mm)
 hole_u       = [8.244, 123.244]; // 115 mm apart along the slope
+hole_dy      = -3;      // offset across the face (negative = to the left,
+                        // seen from the front)
 
 // Base
-base_open    = [120, 130];  // opening in the base, centred on x = 0
+base_open    = [150, 150];  // opening in the base, centred on x = 0
 base_hole_d  = 3.8;
 base_holes   = [[-57.15, -83.5], [72.85, -83.5], [7.85, 83.5]];
 
@@ -118,13 +122,14 @@ module on_face(u) {
 
 module window() {
     on_face(window_u + screen_shift + window_h / 2)
-        translate([0, 0, 1.5 * face_t])
-            cube([window_h, window_w, face_t + 2], center = true);
+        translate([0, (window_ext_r - window_ext_l) / 2, 1.5 * face_t])
+            cube([window_h, window_w + window_ext_l + window_ext_r, face_t + 2],
+                 center = true);
 }
 
 module screen_holes() {
     for (u = hole_u, y = [-hole_y, hole_y])
-        on_face(u + screen_shift) translate([0, y, 0])
+        on_face(u + screen_shift) translate([0, y + hole_dy, 0])
             translate([0, 0, face_t - 1])
                 cylinder(d = hole_d, h = face_t + 2, $fn = 48);
 }
