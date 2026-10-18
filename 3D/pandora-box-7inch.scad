@@ -24,7 +24,9 @@ screen_shift = 10;
 width        = 184;     // across the face
 side_wall    = 2;       // side walls
 floor_t      = 3;       // base thickness
-face_t       = 5;       // front face thickness
+face_t       = 4;       // front face thickness
+face_out     = 10;      // outer side of the front face, out of the slope
+                        // (set by the rounded back)
 face_angle   = 36.2021; // tilt of the front face from the vertical
 front_x      = 100;     // front edge of the base
 face_length  = 131.244; // length of the original front face, along the slope
@@ -35,7 +37,6 @@ back_x_out   = -85;     // back wall, outside
 back_x_in    = -81.275; // back wall, inside
 
 // Screen recess behind the bottom of the front face
-recess_t     = 5;       // depth behind the inner face
 recess_start = 1.744;   // from the bottom edge, along the slope
 
 // Window and screen holes (positions along the slope are measured from the
@@ -69,6 +70,7 @@ arc_steps    = 60;
 
 // --- Derived values ------------------------------------------------------
 
+face_in = face_out - face_t;               // inner side of the front face
 U = [-cos(face_angle), sin(face_angle)];  // up the slope, in the XZ plane
 N = [ sin(face_angle), cos(face_angle)];  // out of the front face
 F = [front_x, 0];                          // front edge of the base
@@ -87,24 +89,24 @@ function arc(r, a0, a1) =
 
 // Inner top corner: where the inner face meets the inner rounded back.
 function inner_apex_u() =
-    let(d = face_pt(0, face_t) - C, b = d * U, c = d * d - back_r_in * back_r_in)
+    let(d = face_pt(0, face_in) - C, b = d * U, c = d * d - back_r_in * back_r_in)
     -b + sqrt(b * b - c);
 
 // --- Profiles (XZ plane) -------------------------------------------------
 
 function outer_profile() =
     let(a_back = acos(back_x_out / back_r_out))
-    concat([[C[0] + back_x_out, 0], F, face_pt(0, 2 * face_t)],
+    concat([[C[0] + back_x_out, 0], F, face_pt(0, face_out)],
            arc(back_r_out, 90, a_back));
 
 function inner_profile() =
-    let(a_apex = atan2(face_pt(inner_apex_u(), face_t)[1] - C[1],
-                       face_pt(inner_apex_u(), face_t)[0] - C[0]),
+    let(a_apex = atan2(face_pt(inner_apex_u(), face_in)[1] - C[1],
+                       face_pt(inner_apex_u(), face_in)[0] - C[0]),
         a_back = acos(back_x_in / back_r_in))
     concat([[C[0] + back_x_in, floor_t],
             face_pt(floor_t / sin(face_angle), 0),
             face_pt(recess_start, 0),
-            face_pt(recess_start, recess_t)],
+            face_pt(recess_start, face_in)],
            arc(back_r_in, a_apex, a_back));
 
 // --- Parts ---------------------------------------------------------------
@@ -122,7 +124,7 @@ module on_face(u) {
 
 module window() {
     on_face(window_u + screen_shift + window_h / 2)
-        translate([0, (window_ext_r - window_ext_l) / 2, 1.5 * face_t])
+        translate([0, (window_ext_r - window_ext_l) / 2, (face_in + face_out) / 2])
             cube([window_h, window_w + window_ext_l + window_ext_r, face_t + 2],
                  center = true);
 }
@@ -130,7 +132,7 @@ module window() {
 module screen_holes() {
     for (u = hole_u, y = [-hole_y, hole_y])
         on_face(u + screen_shift) translate([0, y + hole_dy, 0])
-            translate([0, 0, face_t - 1])
+            translate([0, 0, face_in - 1])
                 cylinder(d = hole_d, h = face_t + 2, $fn = 48);
 }
 
