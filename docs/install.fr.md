@@ -75,12 +75,12 @@ contrôleur de disque additionnel ne démarrerait pas.
 ## Écriture de l'image { #writing-the-image }
 
 Le SSD est écrit une seule fois, depuis un autre ordinateur (dans un boîtier
-USB), avec le conteneur de construction :
+USB) :
 
 ```sh
 lsblk -o NAME,SIZE,MODEL,TRAN          # le disque du SSD, par exemple /dev/sdX
-docker run --rm --device /dev/sdX -v "$PWD/image/mkosi.output:/o:ro" \
-    pandora-box-builder dd if=/o/pandora-box.raw of=/dev/sdX bs=4M conv=fsync status=progress
+sudo umount /dev/sdX?*                 # si des partitions ont été montées automatiquement
+sudo dd if=image/mkosi.output/pandora-box.raw of=/dev/sdX bs=4M conv=fsync status=progress
 ```
 
 > [!CAUTION]

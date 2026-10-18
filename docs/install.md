@@ -70,13 +70,12 @@ start it.
 
 ## Writing the image
 
-The SSD is written once, from another computer (in a USB enclosure), with
-the build container:
+The SSD is written once, from another computer (in a USB enclosure):
 
 ```sh
 lsblk -o NAME,SIZE,MODEL,TRAN          # the disk of the SSD, e.g. /dev/sdX
-docker run --rm --device /dev/sdX -v "$PWD/image/mkosi.output:/o:ro" \
-    pandora-box-builder dd if=/o/pandora-box.raw of=/dev/sdX bs=4M conv=fsync status=progress
+sudo umount /dev/sdX?*                 # if partitions were mounted automatically
+sudo dd if=image/mkosi.output/pandora-box.raw of=/dev/sdX bs=4M conv=fsync status=progress
 ```
 
 > [!CAUTION]
