@@ -24,7 +24,7 @@ screen_shift = 10;
 width        = 184;     // across the face
 side_wall    = 2;       // side walls
 floor_t      = 3;       // base thickness
-face_t       = 4;       // front face thickness
+face_t       = 3;       // front face thickness
 face_out     = 10;      // outer side of the front face, out of the slope
                         // (set by the rounded back)
 face_angle   = 36.2021; // tilt of the front face from the vertical
@@ -42,11 +42,12 @@ recess_start = 1.744;   // from the bottom edge, along the slope
 // Window and screen holes (positions along the slope are measured from the
 // bottom edge of the front face, before the shift)
 window_w     = 156;
-window_h     = 100;
+window_h     = 95;
 window_ext_l = 3;       // window edges moved outwards, seen from the front:
 window_ext_r = -1;      // left and right (negative = inwards)
-window_u     = 15.744;
+window_u     = 20.744;
 hole_d       = 3;
+hole_csk_d   = 5.2;     // 90° countersink on the outer face (M2.5 flat head)
 hole_y       = 78.75;   // half the distance across the face (157.5 mm)
 hole_u       = [8.244, 123.244]; // 115 mm apart along the slope
 hole_dy      = -3;      // offset across the face (negative = to the left,
@@ -55,11 +56,12 @@ hole_dy      = -3;      // offset across the face (negative = to the left,
 // Base
 base_open    = [150, 150];  // opening in the base, centred on x = 0
 base_hole_d  = 3.8;
+base_csk_d   = 7;       // 90° countersink on the inner side (M3 flat head)
 base_holes   = [[-57.15, -83.5], [72.85, -83.5], [7.85, 83.5]];
 
 // Cable opening at the back
-cable_y      = [37, 87];
-cable_z      = [9.838, 31.838];
+cable_y      = [-13, 37];
+cable_z      = [9.838, 26.838];
 
 // Ventilation slots on top
 vent_x       = [-53.077, -30.077];
@@ -131,17 +133,26 @@ module window() {
 
 module screen_holes() {
     for (u = hole_u, y = [-hole_y, hole_y])
-        on_face(u + screen_shift) translate([0, y + hole_dy, 0])
+        on_face(u + screen_shift) translate([0, y + hole_dy, 0]) {
             translate([0, 0, face_in - 1])
                 cylinder(d = hole_d, h = face_t + 2, $fn = 48);
+            translate([0, 0, face_out - (hole_csk_d - hole_d) / 2])
+                cylinder(d1 = hole_d, d2 = hole_csk_d + 2,
+                         h = (hole_csk_d - hole_d) / 2 + 1, $fn = 48);
+        }
 }
 
 module base_cuts() {
     translate([0, 0, floor_t / 2])
         cube([base_open[0], base_open[1], 2 * floor_t], center = true);
     for (p = base_holes)
-        translate([p[0], p[1], -1])
-            cylinder(d = base_hole_d, h = floor_t + 2, $fn = 32);
+        translate([p[0], p[1], 0]) {
+            translate([0, 0, -1])
+                cylinder(d = base_hole_d, h = floor_t + 2, $fn = 32);
+            translate([0, 0, floor_t - (base_csk_d - base_hole_d) / 2])
+                cylinder(d1 = base_hole_d, d2 = base_csk_d + 2,
+                         h = (base_csk_d - base_hole_d) / 2 + 1, $fn = 32);
+        }
 }
 
 module cable_opening() {
