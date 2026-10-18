@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pandora-Box Poster</title>
+<style>
+  @page { size: A4 landscape; margin: 0; }
+  :root {
+    --bg: #0d0f12; --panel: #161a20; --line: #2a3038;
+    --red: #e3202b; --red-soft: #ff5a63; --text: #eef1f4; --muted: #9aa4ae; --strong: #fff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); }
+  body {
+    width: 297mm; height: 210mm; overflow: hidden; margin: 0 auto; position: relative;
+    color: var(--text); font-family: "DejaVu Sans", "Helvetica Neue", Arial, sans-serif;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .cols { position: absolute; top: 11mm; left: 13mm; right: 13mm; bottom: 46mm;
+          display: grid; grid-template-columns: 1.05fr 1fr; gap: 9mm; }
+
+  header { display: flex; align-items: center; gap: 6mm; }
+  header img { width: 50mm; height: 50mm; flex: none; }
+  .event { font-size: 8.5pt; letter-spacing: .25em; text-transform: uppercase; color: var(--red-soft); font-weight: 700; }
+  h1 { white-space: nowrap; font-size: 42pt; line-height: 1; letter-spacing: -.02em; margin: 1.5mm 0 2mm; }
+  h1 span { color: var(--red); }
+  .tagline { font-size: 16.5pt; font-weight: 700; }
+  .sub { font-size: 10pt; color: var(--muted); margin-top: 2mm; line-height: 1.45; }
+
+  .pitch { margin-top: 6mm; padding: 4mm 5mm; border-left: 2mm solid var(--red);
+           background: var(--panel); font-size: 11pt; line-height: 1.5; }
+  .pitch b { color: var(--strong); }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3.5mm; margin-top: 5mm; }
+  .step { background: var(--panel); border: 1px solid var(--line); padding: 4.5mm 4mm; border-radius: 2mm; }
+  .step .n { font-size: 20pt; font-weight: 700; color: var(--red); line-height: 1; }
+  .step h3 { font-size: 11.5pt; margin: 1.5mm 0 1mm; }
+  .step p { font-size: 9pt; color: var(--muted); line-height: 1.4; }
+
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5mm; }
+  .shots img { width: 100%; display: block; border-radius: 1.5mm; border: 1px solid var(--line); }
+
+  .features { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5mm 6mm; margin-top: 6mm; }
+  .stack { margin-top: 6mm; padding-top: 4mm; border-top: 1px solid var(--line); font-size: 8.8pt; color: var(--muted); line-height: 1.6; }
+  .stack b { color: var(--red-soft); letter-spacing: .15em; text-transform: uppercase; font-size: 8pt; margin-right: 2mm; }
+  .feat h4 { font-size: 10.5pt; color: var(--strong); display: flex; align-items: center; gap: 2mm; }
+  .feat h4::before { content: ""; width: 2.2mm; height: 2.2mm; background: var(--red); flex: none; }
+  .feat p { font-size: 9pt; color: var(--muted); line-height: 1.4; margin-top: .8mm; padding-left: 4.2mm; }
+
+  footer { position: absolute; left: 0; right: 0; bottom: 0; height: 38mm;
+           background: var(--red); color: #fff; padding: 0 13mm;
+           display: flex; align-items: center; gap: 7mm; }
+  .qr { background: #fff; padding: 2.2mm; border-radius: 1.5mm; flex: none; }
+  .qr svg { width: 27mm; height: 27mm; display: block; }
+  .git-label { font-size: 8.5pt; letter-spacing: .2em; text-transform: uppercase; opacity: .85; }
+  .git { font-family: "DejaVu Sans Mono", Menlo, monospace; font-size: 17pt; font-weight: 700; margin: 1.5mm 0 2.5mm; }
+  .meta { font-size: 9.5pt; line-height: 1.55; }
+  .license { margin-left: auto; text-align: right; }
+  .license .big { font-size: 26pt; font-weight: 700; line-height: 1; }
+  .license .small { font-size: 8.5pt; opacity: .9; margin-top: 1.5mm; }
+</style>
+</head>
+<body>
+<div class="cols">
+  <div>
+    <header>
+      <img src="../images/pandora-box.png" alt="Pandora-Box logo">
+      <div>
+        <div class="event">Hack.lu 2026 · Live demo</div>
+        <h1>Pandora<span>-</span>Box</h1>
+        <div class="tagline">USB decontamination device</div>
+        <div class="sub">An open source, offline, hardened sheep-dip kiosk.<br>Plug in a USB key. Watch it get scanned. Touch to clean.</div>
+      </div>
+    </header>
+    <div class="pitch">
+      USB keys remain a common way into otherwise well-protected systems. <b>Pandora-Box</b> checks
+      every file with several detection engines, shows the dangerous ones on a touch screen and removes them,
+      <b>before the key reaches a workstation</b>. Free, auditable, hardened — for healthcare, industry and public administration.
+    </div>
+    <div class="steps">
+      <div class="step"><div class="n">01</div><h3>Insert</h3><p>Plug a USB key into the kiosk. No login, no buttons, no network.</p></div>
+      <div class="step"><div class="n">02</div><h3>Scan</h3><p>Every file goes through ClamAV, YARA-X, MalwareBazaar, Hashlookup and heuristics.</p></div>
+      <div class="step"><div class="n">03</div><h3>Clean</h3><p>Threats are listed, quarantined, then removed with one touch. A JSON report is kept.</p></div>
+    </div>
+  </div>
+  <div>
+    <div class="shots">
+      <img src="../images/interface-scanning.png" alt="Scan in progress">
+      <img src="../images/interface-threats.png" alt="Threats detected">
+    </div>
+    <div class="features">
+      <div class="feat"><h4>Fail closed</h4><p>A file that could not be fully scanned is never reported as clean.</p></div>
+      <div class="feat"><h4>Hardened image</h4><p>Debian 13, read-only root with dm-verity, Secure Boot, USBGuard against BadUSB.</p></div>
+      <div class="feat"><h4>Sandboxed engines</h4><p>Each engine runs in bubblewrap with no network access.</p></div>
+      <div class="feat"><h4>Signed updates</h4><p>Signatures and A/B system updates, offline from USB, automatic rollback.</p></div>
+      <div class="feat"><h4>Cheap hardware</h4><p>Refurbished Lenovo ThinkCentre Tiny + 7" Waveshare touch screen, 3D-printed case.</p></div>
+      <div class="feat"><h4>Customizable</h4><p>Logo, colors, texts and language of the interface set by the organization.</p></div>
+    </div>
+    <div class="stack"><b>Stack</b>Python 3.11 · Pillow framebuffer UI (no X, no browser) · Debian 13 · mkosi · systemd-boot · systemd-sysupdate · dm-verity · USBGuard · bubblewrap · nftables · tested end-to-end in QEMU/KVM</div>
+  </div>
+</div>
+<footer>
+  <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" class="segno"><path class="qrline" stroke="#111" d="M0 0.5h7m1 0h1m1 0h2m1 0h2m2 0h1m4 0h7m-29 1h1m5 0h1m2 0h3m5 0h1m2 0h1m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h1m2 0h4m2 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m2 0h1m2 0h2m2 0h3m1 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m3 0h3m1 0h1m2 0h2m3 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h4m2 0h1m1 0h2m2 0h1m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-19 1h1m1 0h1m1 0h3m1 0h3m-21 1h1m1 0h1m3 0h2m1 0h1m1 0h1m4 0h1m3 0h1m2 0h1m2 0h1m1 0h1m-29 1h1m2 0h1m3 0h1m1 0h1m1 0h2m2 0h2m2 0h5m3 0h2m-29 1h3m2 0h2m1 0h1m3 0h1m1 0h4m1 0h1m2 0h5m1 0h1m-29 1h2m2 0h2m1 0h4m5 0h1m1 0h2m1 0h1m2 0h2m-26 1h1m1 0h1m2 0h3m1 0h1m1 0h2m2 0h2m2 0h1m2 0h2m4 0h1m-28 1h3m1 0h1m1 0h2m3 0h2m1 0h3m1 0h2m1 0h2m3 0h2m-27 1h1m1 0h1m1 0h3m2 0h1m3 0h2m2 0h1m1 0h4m3 0h1m-29 1h3m1 0h2m2 0h2m1 0h1m2 0h3m2 0h2m1 0h2m-24 1h2m1 0h2m1 0h1m1 0h1m2 0h1m4 0h1m3 0h3m5 0h1m-28 1h1m2 0h1m2 0h1m2 0h2m1 0h4m1 0h2m2 0h2m2 0h3m-29 1h4m1 0h2m2 0h1m1 0h1m1 0h3m1 0h1m1 0h1m4 0h2m2 0h1m-27 1h1m1 0h2m1 0h2m3 0h1m7 0h1m1 0h1m1 0h1m-25 1h4m1 0h2m1 0h3m2 0h4m3 0h6m1 0h1m-20 1h3m4 0h3m2 0h1m3 0h3m1 0h1m-29 1h7m1 0h2m1 0h1m1 0h6m1 0h1m1 0h1m1 0h1m3 0h1m-29 1h1m5 0h1m2 0h1m1 0h1m6 0h3m3 0h1m2 0h1m-28 1h1m1 0h3m1 0h1m2 0h2m1 0h4m3 0h7m1 0h1m-28 1h1m1 0h3m1 0h1m3 0h2m1 0h1m1 0h2m1 0h4m2 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h3m2 0h1m1 0h1m2 0h1m2 0h1m2 0h1m2 0h2m-29 1h1m5 0h1m2 0h1m5 0h2m1 0h1m1 0h1m2 0h3m-26 1h7m1 0h4m4 0h1m1 0h1m1 0h1m3 0h2m2 0h1"/></svg></div>
+  <div>
+    <div class="git-label">Source code</div>
+    <div class="git">github.com/sourcentis/pandora-box</div>
+    <div class="meta">Docs: sourcentis.github.io/pandora-box · Contributions welcome!</div>
+  </div>
+  <div class="license">
+    <div class="big">GPLv3</div>
+    <div class="small">Free software<br>Enclosure: CERN-OHL-S v2</div>
+  </div>
+</footer>
+</body>
+</html>
