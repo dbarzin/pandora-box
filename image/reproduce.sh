@@ -10,7 +10,7 @@
 # time they were made:
 #   root filesystem and dm-verity hash tree   identical
 #   unified kernel image                      every section identical, the
-#                                             kernel without its signature;
+#                                             kernel without its signatures;
 #                                             not the signatures of the PCRs
 #   software bill of materials                identical
 # release/TAG-reproduce/ holds the build; the status is 0 when it matches.
@@ -71,9 +71,10 @@ docker run --rm -v "$PWD/$out:/reproduce" -v "$assets:/release:ro" -w /reproduce
                 file=$released
                 [ "$uki" = built ] && file=$output/pandora-box.efi
                 objcopy -O binary --only-section="$section" "$file" "$work/$uki$section"
-                # The kernel is signed for Secure Boot: compared without
+                # The kernel is signed for Secure Boot, by Debian then by
+                # the image key: compared without its signatures
                 if [ "$section" = .linux ]; then
-                    sbattach --remove "$work/$uki$section" >/dev/null
+                    while sbattach --remove "$work/$uki$section" >/dev/null 2>&1; do :; done
                 fi
             done
             compare "kernel image section $section" "$work/released$section" "$work/built$section"

@@ -158,7 +158,7 @@ development keys, then compares:
 | Part | Expected |
 |---|---|
 | root filesystem, dm-verity hash tree | identical |
-| unified kernel image | every section identical, the kernel without its Secure Boot signature |
+| unified kernel image | every section identical, the kernel without its Secure Boot signatures (Debian's and the image's) |
 | software bill of materials | identical |
 
 The signatures cannot be compared: they need the release keys, and hold the

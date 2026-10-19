@@ -169,7 +169,7 @@ compare :
 | Partie | Attendu |
 |---|---|
 | système de fichiers racine, arbre de hachage dm-verity | identiques |
-| image noyau unifiée | chaque section identique, le noyau sans sa signature Secure Boot |
+| image noyau unifiée | chaque section identique, le noyau sans ses signatures Secure Boot (celle de Debian et celle de l'image) |
 | nomenclature logicielle | identique |
 
 Les signatures ne peuvent pas être comparées : elles demandent les clés de

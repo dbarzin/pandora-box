@@ -22,10 +22,9 @@ The open tasks of the phases below, by priority.
 **1. First public release**
 
 1. Release keys of the project: create them in two YubiKeys and publish their fingerprints; the signing tools are ready (phase 2, [docs/release.md](docs/release.md))
-2. Reproducible builds and an SBOM for every release (phase 2)
-3. Documented threat model (phase 6)
-4. Deployment guide: kiosk placement, user procedure, associated USB policy (phase 6)
-5. Physical hardening and assembly guide (phase 2)
+2. Documented threat model (phase 6)
+3. Deployment guide: kiosk placement, user procedure, associated USB policy (phase 6)
+4. Physical hardening and assembly guide (phase 2)
 
 **2. Hardening and user features**
 
@@ -147,7 +146,7 @@ image/vm.sh test      # end-to-end test in a virtual machine
 - [x] Image based on Debian 13 (trixie), built with `mkosi`
 - [x] Single target: x86_64 (`Architecture=x86-64` in `image/mkosi.conf`, see reference hardware); ARM64 is not targeted, as the Raspberry Pi proved too slow
 - [x] Signed image and published checksums: `image/release.sh` builds a tag only, signs the image with the release keys of a YubiKey, and publishes the compressed disk image, the signed image update and the checksums signed with the update key as a draft GitHub release ([docs/release.md](docs/release.md))
-- [ ] Reproducible builds and an SBOM generated for every release
+- [x] Reproducible builds and an SBOM generated for every release: inputs derived from the tag (Debian snapshot, `SOURCE_DATE_EPOCH`, seed), `image/reproduce.sh` builds a release again and compares everything but the signatures, CycloneDX SBOM published with the release ([docs/release.md](docs/release.md#reproducing-a-release))
 
 ### Reference hardware
 
