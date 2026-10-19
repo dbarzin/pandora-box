@@ -15,6 +15,37 @@ Provide a **free, auditable and hardened** USB decontamination kiosk, a credible
 - **Traceability**: every scan produces a structured, timestamped report.
 - **Language**: Python 3.11+ for the orchestrator (reuse of PandoraBox v1 code, analysis ecosystem).
 
+## Priorities
+
+The open tasks of the phases below, by priority.
+
+**1. First public release**
+
+1. Release signing key of the project and release Secure Boot keys, stored on a hardware token (phase 2)
+2. Signed image and published checksums (phase 2)
+3. Reproducible builds and an SBOM for every release (phase 2)
+4. Documented threat model (phase 6)
+5. Deployment guide: kiosk placement, user procedure, associated USB policy (phase 6)
+6. Physical hardening and assembly guide (phase 2)
+
+**2. User features**
+
+1. File transfer stations: signed key identifier, then inbound station, then outbound station (phase 4); they need the `online` profile, a firewall opening to the server and SFTP/SMB clients in the image, to cover in the threat model
+2. Selective copy of clean files to a second device, sharing the selection of the inbound station (phase 4)
+3. Office documents with `oletools` (phase 4)
+4. Scan receipt for the user (phase 5)
+5. German and Dutch texts, security awareness messages, accessibility (phase 3)
+6. Protected administrator mode (phase 3)
+
+**3. Later**
+
+1. Fleet management: central server, centralized distribution of updates, dashboard (phase 5)
+2. Fuzzing of the entry points, then external security audit (phase 6)
+3. Mapping to NIS2 and ISO 27001 (phase 6)
+4. Executables with `capa`, content disarm and reconstruction with Dangerzone (phase 4)
+5. Software TPM, once measured boot is used (phase 2)
+6. Maintenance console or SSH, to reconsider: it goes against the absence of any login while the maintenance device is enough (phase 2)
+
 ---
 
 ## Phase 0 — Foundations
@@ -114,9 +145,9 @@ image/vm.sh test      # end-to-end test in a virtual machine
 ### Build
 
 - [x] Image based on Debian 13 (trixie), built with `mkosi`
-- [ ] Reproducible builds and an SBOM generated for every release
-- [ ] Single target: x86_64 (see reference hardware); ARM64 is not targeted, as the Raspberry Pi proved too slow
+- [x] Single target: x86_64 (`Architecture=x86-64` in `image/mkosi.conf`, see reference hardware); ARM64 is not targeted, as the Raspberry Pi proved too slow
 - [ ] Signed image and published checksums
+- [ ] Reproducible builds and an SBOM generated for every release
 
 ### Reference hardware
 
@@ -131,9 +162,9 @@ Tasks:
 
 - [x] List of validated ThinkCentre models (CPU, RAM, USB ports, Secure Boot support): ThinkCentre M720q Tiny (10T7, Core i5-9400T, Intel UHD 630)
 - [x] Touchscreen model selection and driver support: Waveshare 7-inch HDMI LCD (C), mode of the screen on the kernel command line, touch controller allowed by USBGuard
-- [ ] Enclosure design published in the repository (source files + STL), under an open hardware license: the STL is in [3D/](3D/), under the CERN-OHL-S v2; the source file of the model remains to be added
-- [ ] Assembly guide (bill of materials, printing settings, wiring, USB port layout for the user)
 - [ ] Physical hardening: only the scanning USB ports reachable from the outside, other ports and BIOS access protected
+- [ ] Assembly guide (bill of materials, printing settings, wiring, USB port layout for the user)
+- [ ] Enclosure design published in the repository (source files + STL), under an open hardware license: the STL of the 7-inch and 10-inch models and the OpenSCAD source of the 7-inch model are in [3D/](3D/), under the CERN-OHL-S v2; the source of the 10-inch model remains to be added
 - [x] BIOS configuration guide (password, boot order locked, Secure Boot with the image key enrolled from setup mode, VT-d, restart after a power failure)
 
 ### System integrity
@@ -204,24 +235,25 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [x] User flow: insertion, progress, dangerous files listed, cleaning on a touch of the screen (no buttons), verdict
 - [x] Touch-first interface designed for the 7-inch screen (1024x600), drawn for the size of any screen
 - [x] Customization by the administrator: theme folder built into the image (logo, colors, texts of every screen, images, fonts), checked at build time, `pandora-box-theme preview` to see the screens without a kiosk
+- [x] Internationalization: FR and EN built in, chosen with `display.language`, a theme can add a language
+- [ ] German and Dutch texts built in
 - [ ] Security awareness messages during the scan
-- [ ] Internationalization: FR, EN (built-in), DE, NL (a theme can add a language)
-- [ ] Protected administrator mode (curses or web): scan reports, signature status
 - [ ] Accessibility (contrast, font size)
+- [ ] Protected administrator mode (curses or web): scan reports, signature status
 
 ## Phase 4 — Advanced analysis
 
-- [ ] Office documents: `oletools` (olevba, mraptor); documents with macros are already suspicious (ClamAV `AlertOLE2Macros`)
 - [x] PDF: JavaScript and Launch actions are suspicious, automatic actions, embedded files and forms reported (like `pdfid`, `engines.heuristics`)
 - [x] Archives: unpacked and scanned by ClamAV within its limits; beyond them (decompression bombs) the file is not fully scanned
 - [x] Encrypted archives and documents flagged as unscannable (ClamAV `AlertEncrypted`)
-- [ ] Executables: `capa` (optional, can be disabled for performance)
 - [x] Detection of programs disguised as documents: extension / real type mismatch, double extension (`engines.heuristics`)
-- [ ] **Content disarm and reconstruction (CDR)** to a trusted device using Dangerzone
-- [ ] Selective copy of clean files only to a second device
-- [ ] Copy of the clean files of the key to a network share (SFTP, SCP over SSH or SMB), configured on the kiosk: only clean files are copied, never suspicious, malicious or unscanned ones; one directory per key, named after its identifier, with one subdirectory per scan named after the `report_id` of the report. With this option, the kiosk becomes an inbound file transfer station: the key is not cleaned, the identifier file is the only file written on it
 - [ ] Unique identifier of each key for the file transfer stations: the USB serial number is missing or shared on some keys, so at the first insertion the kiosk writes a token, a random identifier (UUID) signed with a key of the kiosks of the organization (Ed25519, systemd credential of the image), in a hidden file `.pandora-box` at the root of the key (with the hidden attribute where the filesystem and its Linux driver allow it), if the file does not exist; on a key with several partitions, on the first supported one. The file is read as hostile data (size limit, strict format) and its signature is verified: when the token is malformed or not signed by the kiosks, the error is logged and the kiosk replaces it with a new token (a new identifier, with an empty outbound directory). The signature prevents forging an identifier, not copying the file to another key
+- [ ] Copy of the clean files of the key to a network share (SFTP, SCP over SSH or SMB), configured on the kiosk: only clean files are copied, never suspicious, malicious or unscanned ones; one directory per key, named after its identifier, with one subdirectory per scan named after the `report_id` of the report. With this option, the kiosk becomes an inbound file transfer station: the key is not cleaned, the identifier file is the only file written on it
 - [ ] Outbound file transfer station: copy files from a network share (SFTP, SCP over SSH or SMB), configured on the kiosk, to the inserted key; the key is scanned first and must stay in the kiosk from the scan to the end of the copy (removed, it is scanned again at its next insertion), the files are scanned before being written. After the scan, the kiosk compares the outbound directory of the key on the server (named after its identifier) with the key: the files that are new or modified since (size, modification time) are copied from the server to the key. The free space of the key is checked before the copy, and the differences between filesystems are handled: maximum file size (4 GiB on vfat), forbidden characters, name length and case-insensitive names (vfat, exfat, ntfs3); a file that cannot be written is reported, never renamed silently
+- [ ] Selective copy of clean files only to a second device
+- [ ] Office documents: `oletools` (olevba, mraptor); documents with macros are already suspicious (ClamAV `AlertOLE2Macros`)
+- [ ] Executables: `capa` (optional, can be disabled for performance)
+- [ ] **Content disarm and reconstruction (CDR)** to a trusted device using Dangerzone
 
 ## Phase 5 — Fleet management and traceability
 
@@ -233,11 +265,11 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 
 ## Phase 6 — Assurance and compliance
 
+- [x] Detection regression test corpus (`tests/corpus/`): checked with the fake engine in every test run, with the real engines in the integration tests
 - [ ] Documented threat model
-- [ ] Fuzzing of entry points (mounting, metadata parsing)
-- [ ] Detection regression test corpus
-- [ ] External security audit of the image
 - [ ] Deployment guide: kiosk placement, user procedure, associated USB policy
+- [ ] Fuzzing of entry points (mounting, metadata parsing)
+- [ ] External security audit of the image
 - [ ] Mapping to NIS2 and ISO 27001 requirements (control 7.10 "Storage media")
 
 ---
