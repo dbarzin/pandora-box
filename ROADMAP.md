@@ -27,14 +27,15 @@ The open tasks of the phases below, by priority.
 4. Deployment guide: kiosk placement, user procedure, associated USB policy (phase 6)
 5. Physical hardening and assembly guide (phase 2)
 
-**2. User features**
+**2. Hardening and user features**
 
-1. File transfer stations: signed key identifier, then inbound station, then outbound station (phase 4); they need the `online` profile, a firewall opening to the server and SFTP/SMB clients in the image, to cover in the threat model
-2. Selective copy of clean files to a second device, sharing the selection of the inbound station (phase 4)
-3. Office documents with `oletools` (phase 4)
-4. Scan receipt for the user (phase 5)
-5. German and Dutch texts, security awareness messages, accessibility (phase 3)
-6. Protected administrator mode (phase 3)
+1. Devices mounted outside the kernel of the kiosk: FUSE or lklfuse in the sandbox of the engines, or a disposable micro-VM (phase 2)
+2. File transfer stations: signed key identifier, then inbound station, then outbound station (phase 4); they need the `online` profile, a firewall opening to the server and SFTP/SMB clients in the image, to cover in the threat model
+3. Selective copy of clean files to a second device, sharing the selection of the inbound station, and the reformatting option, which writes back the clean files too (phase 4)
+4. Office documents with `oletools` (phase 4)
+5. Scan receipt for the user (phase 5)
+6. German and Dutch texts, accessibility (phase 3)
+7. Protected administrator mode (phase 3)
 
 **3. Later**
 
@@ -188,6 +189,7 @@ Tasks:
 - [x] No boot loader menu: systemd-boot does not read the keyboard (a keyboard works in the firmware, before USBGuard starts)
 - [x] Devices mounted with `ro,noexec,nosuid,nodev` by the kiosk, no automount (no udisks in the image)
 - [x] Limited set of supported filesystems (vfat, exfat, ntfs3, ext4): the kiosk refuses to mount any other
+- [ ] Devices mounted outside the kernel of the kiosk: today its kernel parses the filesystem structures given by the device (read-only, `noexec`, four filesystems, root filesystem on dm-verity), which limits the damage without removing the risk; mount them with FUSE or lklfuse (the Linux filesystem drivers in user space) in the sandbox of the engines, or in a disposable micro-VM
 - [x] Hardened systemd services (`ProtectSystem`, `NoNewPrivileges`, seccomp filters; `PrivateNetwork` and `MemoryDenyWriteExecute` for clamd), exposure measured by `systemd-analyze security` in the virtual machine test
 - [x] Each scan worker runs in a `bubblewrap` sandbox, without network, under a dedicated user without capabilities, with a system call filter; the kiosk opens the files and passes their descriptors, and only accepts validated JSON from the workers
 - [x] One worker per engine, so that a compromised engine cannot forge the results of another one: the kiosk hashes the files itself, hash engines never get the file, the kiosk combines the results
@@ -236,7 +238,6 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [x] Customization by the administrator: theme folder built into the image (logo, colors, texts of every screen, images, fonts), checked at build time, `pandora-box-theme preview` to see the screens without a kiosk
 - [x] Internationalization: FR and EN built in, chosen with `display.language`, a theme can add a language
 - [ ] German and Dutch texts built in
-- [ ] Security awareness messages during the scan
 - [ ] Accessibility (contrast, font size)
 - [ ] Protected administrator mode (curses or web): scan reports, signature status
 
@@ -250,6 +251,7 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [ ] Copy of the clean files of the key to a network share (SFTP, SCP over SSH or SMB), configured on the kiosk: only clean files are copied, never suspicious, malicious or unscanned ones; one directory per key, named after its identifier, with one subdirectory per scan named after the `report_id` of the report. With this option, the kiosk becomes an inbound file transfer station: the key is not cleaned, the identifier file is the only file written on it
 - [ ] Outbound file transfer station: copy files from a network share (SFTP, SCP over SSH or SMB), configured on the kiosk, to the inserted key; the key is scanned first and must stay in the kiosk from the scan to the end of the copy (removed, it is scanned again at its next insertion), the files are scanned before being written. After the scan, the kiosk compares the outbound directory of the key on the server (named after its identifier) with the key: the files that are new or modified since (size, modification time) are copied from the server to the key. The free space of the key is checked before the copy, and the differences between filesystems are handled: maximum file size (4 GiB on vfat), forbidden characters, name length and case-insensitive names (vfat, exfat, ntfs3); a file that cannot be written is reported, never renamed silently
 - [ ] Selective copy of clean files only to a second device
+- [ ] Reformatting option for the cleaning: the kiosk recreates the filesystem of the key and writes back only the clean files, so that the next computer no longer mounts a structure made by the attacker
 - [ ] Office documents: `oletools` (olevba, mraptor); documents with macros are already suspicious (ClamAV `AlertOLE2Macros`)
 - [ ] Executables: `capa` (optional, can be disabled for performance)
 - [ ] **Content disarm and reconstruction (CDR)** to a trusted device using Dangerzone
