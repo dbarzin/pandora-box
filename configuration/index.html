@@ -1296,7 +1296,7 @@ with every key, its default value and its meaning:</p>
 <span class="c1"># group is not enough. Run the kiosk as root (systemd service), or set</span>
 <span class="c1"># use_sudo = true to run mount/umount through "sudo -n", with a sudoers rule</span>
 <span class="c1"># limited to these commands, for instance:</span>
-<span class="c1">#   pandora-box ALL=(root) NOPASSWD: /usr/bin/mount, /usr/bin/umount, /usr/bin/eject</span>
+<span class="c1">#   pandora-box ALL=(root) NOPASSWD: /usr/bin/mount, /usr/bin/umount, /usr/bin/eject, /usr/sbin/blockdev</span>
 <span class="n">use_sudo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 
 <span class="c1"># Filesystems that may be mounted; any other device is rejected</span>
