@@ -606,6 +606,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reproducing-a-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduire une version
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#verifying-a-release" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1230,6 +1241,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reproducing-a-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproduire une version
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#verifying-a-release" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1379,11 +1401,12 @@ image/release.sh<span class="w"> </span>v1.0.0
    développement n'entre dans l'image ;</li>
 <li>construit l'image sans profil, signée avec la clé Secure Boot
    (<code>image/build.sh --release</code>), qui fait confiance à
-   <code>image/release/update.pem</code> ;</li>
+   <code>image/release/update.pem</code>, avec les entrées d'une
+   <a href="#reproducing-a-release">construction reproductible</a> ;</li>
 <li>vérifie la signature de l'image noyau unifiée, construit la mise à jour
-   signée de l'image, compresse l'image disque, signe les sommes de contrôle
-   avec la clé de mise à jour, et vérifie chaque signature avec les clés
-   publiques du tag ;</li>
+   signée de l'image, compresse l'image disque, écrit la nomenclature
+   logicielle, signe les sommes de contrôle avec la clé de mise à jour, et
+   vérifie chaque signature avec les clés publiques du tag ;</li>
 <li>crée un <strong>brouillon</strong> de version du tag sur GitHub avec les fichiers de
    <code>release/v1.0.0/assets/</code>.</li>
 </ol>
@@ -1404,8 +1427,8 @@ image/release.sh<span class="w"> </span>v1.0.0
 <td>mise à jour signée de l'image : <code>pandora-box-image/</code>, à extraire à la racine d'une clé USB (<a href="../update/">Mises à jour du système</a>)</td>
 </tr>
 <tr>
-<td><code>pandora-box-v1.0.0.manifest</code></td>
-<td>paquets de l'image</td>
+<td><code>pandora-box-v1.0.0.cdx.json</code></td>
+<td>nomenclature logicielle (SBOM, CycloneDX 1.5) : les paquets Debian et Python de l'image, avec leurs versions</td>
 </tr>
 <tr>
 <td><code>secure-boot.crt</code>, <code>update.pem</code></td>
@@ -1428,6 +1451,74 @@ test dans les emplacements et sous les noms de la YubiKey :</p>
 cp<span class="w"> </span>/tmp/token/secure-boot.crt<span class="w"> </span>/tmp/token/update.pem<span class="w"> </span>image/release/<span class="w">   </span><span class="c1"># dans un clone de test seulement</span>
 <span class="nb">echo</span><span class="w"> </span><span class="m">123456</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">PANDORA_BOX_SOFTHSM</span><span class="o">=</span>/tmp/token<span class="w"> </span>image/release.sh<span class="w"> </span>v0.0.0-test<span class="w"> </span>--no-publish
 </code></pre></div>
+<h2 id="reproducing-a-release">Reproduire une version<a class="headerlink" href="#reproducing-a-release" title="Permanent link">&para;</a></h2>
+<p>L'image d'une version ne dépend que de son tag : chacun peut la construire à
+nouveau et vérifier qu'elle est faite du code source et des paquets Debian
+publiés. <code>image/reproducible.sh</code> déduit du tag chaque entrée de la
+construction :</p>
+<table>
+<thead>
+<tr>
+<th>Entrée</th>
+<th>Valeur</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Paquets Debian, et outils du conteneur de construction</td>
+<td><a href="https://snapshot.debian.org/">snapshot.debian.org</a> à la date du tag</td>
+</tr>
+<tr>
+<td>Date des fichiers (<code>SOURCE_DATE_EPOCH</code>), version de l'image</td>
+<td>la date du tag</td>
+</tr>
+<tr>
+<td>UUID des partitions, sel dm-verity</td>
+<td>une graine déduite du commit</td>
+</tr>
+<tr>
+<td>Paquets Python</td>
+<td>figés avec leurs empreintes (<code>image/requirements.txt</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>Pour vérifier une version, téléchargez ses fichiers et construisez à nouveau
+son tag :</p>
+<div class="highlight"><pre><span></span><code>gh<span class="w"> </span>release<span class="w"> </span>download<span class="w"> </span>v1.0.0<span class="w"> </span>-D<span class="w"> </span>/tmp/v1.0.0
+image/reproduce.sh<span class="w"> </span>v1.0.0<span class="w"> </span>/tmp/v1.0.0
+</code></pre></div>
+<p><code>image/reproduce.sh</code> vérifie les fichiers avec leurs sommes de contrôle
+signées, construit le tag avec les mêmes entrées, en faisant confiance à la
+même clé de mise à jour, mais signé avec des clés de développement, puis
+compare :</p>
+<table>
+<thead>
+<tr>
+<th>Partie</th>
+<th>Attendu</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>système de fichiers racine, arbre de hachage dm-verity</td>
+<td>identiques</td>
+</tr>
+<tr>
+<td>image noyau unifiée</td>
+<td>chaque section identique, le noyau sans sa signature Secure Boot</td>
+</tr>
+<tr>
+<td>nomenclature logicielle</td>
+<td>identique</td>
+</tr>
+</tbody>
+</table>
+<p>Les signatures ne peuvent pas être comparées : elles demandent les clés de
+publication, et contiennent la date à laquelle elles ont été faites. Elles
+sont vérifiées avec les clés publiques
+(<a href="#verifying-a-release">Vérifier une version</a>). mkosi 25.3 est corrigé dans le
+conteneur de construction (<code>image/patch-mkosi.py</code>) pour que le microcode de
+l'image noyau soit reproductible.</p>
 <h2 id="verifying-a-release">Vérifier une version<a class="headerlink" href="#verifying-a-release" title="Permanent link">&para;</a></h2>
 <p>Téléchargez les fichiers de la version, puis vérifiez la signature des
 sommes de contrôle avec la clé de mise à jour du projet, et les fichiers avec

@@ -606,6 +606,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reproducing-a-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducing a release
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#verifying-a-release" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1230,6 +1241,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reproducing-a-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reproducing a release
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#verifying-a-release" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1372,10 +1394,12 @@ image/release.sh<span class="w"> </span>v1.0.0
 <li>extracts the files of the tag only (<code>git archive</code>) to <code>release/v1.0.0/src/</code>:
    no local theme, credentials or development keys get into the image;</li>
 <li>builds the image without profile, signed with the Secure Boot key
-   (<code>image/build.sh --release</code>), trusting <code>image/release/update.pem</code>;</li>
+   (<code>image/build.sh --release</code>), trusting <code>image/release/update.pem</code>, with
+   the inputs of a <a href="#reproducing-a-release">reproducible build</a>;</li>
 <li>checks the signature of the unified kernel image, builds the signed image
-   update, compresses the disk image, signs the checksums with the update key,
-   and checks every signature with the public keys of the tag;</li>
+   update, compresses the disk image, writes the software bill of materials,
+   signs the checksums with the update key, and checks every signature with
+   the public keys of the tag;</li>
 <li>creates a <strong>draft</strong> release of the tag on GitHub with the files of
    <code>release/v1.0.0/assets/</code>.</li>
 </ol>
@@ -1396,8 +1420,8 @@ image/release.sh<span class="w"> </span>v1.0.0
 <td>signed image update: <code>pandora-box-image/</code>, to extract at the root of a USB key (<a href="../update/">System updates</a>)</td>
 </tr>
 <tr>
-<td><code>pandora-box-v1.0.0.manifest</code></td>
-<td>packages of the image</td>
+<td><code>pandora-box-v1.0.0.cdx.json</code></td>
+<td>software bill of materials (SBOM, CycloneDX 1.5): the Debian and Python packages of the image, with their versions</td>
 </tr>
 <tr>
 <td><code>secure-boot.crt</code>, <code>update.pem</code></td>
@@ -1419,6 +1443,70 @@ the slots and labels of the YubiKey:</p>
 cp<span class="w"> </span>/tmp/token/secure-boot.crt<span class="w"> </span>/tmp/token/update.pem<span class="w"> </span>image/release/<span class="w">   </span><span class="c1"># in a test clone only</span>
 <span class="nb">echo</span><span class="w"> </span><span class="m">123456</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="nv">PANDORA_BOX_SOFTHSM</span><span class="o">=</span>/tmp/token<span class="w"> </span>image/release.sh<span class="w"> </span>v0.0.0-test<span class="w"> </span>--no-publish
 </code></pre></div>
+<h2 id="reproducing-a-release">Reproducing a release<a class="headerlink" href="#reproducing-a-release" title="Permanent link">&para;</a></h2>
+<p>The image of a release only depends on its tag: anyone can build it again
+and check that it is made of the published source code and Debian packages.
+<code>image/reproducible.sh</code> derives every input of the build from the tag:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Debian packages, and the tools of the build container</td>
+<td><a href="https://snapshot.debian.org/">snapshot.debian.org</a> at the time of the tag</td>
+</tr>
+<tr>
+<td>Time of the files (<code>SOURCE_DATE_EPOCH</code>), image version</td>
+<td>the time of the tag</td>
+</tr>
+<tr>
+<td>Partition UUIDs, dm-verity salt</td>
+<td>a seed derived from the commit</td>
+</tr>
+<tr>
+<td>Python packages</td>
+<td>pinned with their hashes (<code>image/requirements.txt</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>To check a release, download its files and build its tag again:</p>
+<div class="highlight"><pre><span></span><code>gh<span class="w"> </span>release<span class="w"> </span>download<span class="w"> </span>v1.0.0<span class="w"> </span>-D<span class="w"> </span>/tmp/v1.0.0
+image/reproduce.sh<span class="w"> </span>v1.0.0<span class="w"> </span>/tmp/v1.0.0
+</code></pre></div>
+<p><code>image/reproduce.sh</code> checks the files with their signed checksums, builds the
+tag with the same inputs, trusting the same update key, but signed with
+development keys, then compares:</p>
+<table>
+<thead>
+<tr>
+<th>Part</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>root filesystem, dm-verity hash tree</td>
+<td>identical</td>
+</tr>
+<tr>
+<td>unified kernel image</td>
+<td>every section identical, the kernel without its Secure Boot signature</td>
+</tr>
+<tr>
+<td>software bill of materials</td>
+<td>identical</td>
+</tr>
+</tbody>
+</table>
+<p>The signatures cannot be compared: they need the release keys, and hold the
+time they were made. They are checked with the public keys instead
+(<a href="#verifying-a-release">Verifying a release</a>). mkosi 25.3 is patched in the
+build container (<code>image/patch-mkosi.py</code>) so that the microcode of the kernel
+image is reproducible.</p>
 <h2 id="verifying-a-release">Verifying a release<a class="headerlink" href="#verifying-a-release" title="Permanent link">&para;</a></h2>
 <p>Download the files of the release, then check the signature of the checksums
 with the update key of the project, and the files with the checksums:</p>
