@@ -3,12 +3,13 @@
 # (docs/release.md):
 #   image/release.sh TAG [--no-publish]
 # TAG: a tag of the repository, pushed to GitHub. The image is built from the
-# files of the tag only (git archive: no local theme, credential or key), and
-# signed with the keys of the release token (image/pkcs11.sh), whose PIN is
-# asked once. release/TAG/assets/ then holds:
+# files of the tag only (git archive: no local theme, credential or key), with
+# the inputs of image/reproducible.sh (anyone can build it again and compare,
+# image/reproduce.sh), and signed with the keys of the release token
+# (image/pkcs11.sh), whose PIN is asked once. release/TAG/assets/ then holds:
 #   pandora-box-TAG.raw.xz        disk image, to write to the kiosk
 #   pandora-box-image-TAG.tar     signed image update (pandora-box-image/)
-#   pandora-box-TAG.manifest      packages of the image
+#   pandora-box-TAG.cdx.json      software bill of materials (CycloneDX)
 #   secure-boot.crt, update.pem   public release keys
 #   SHA256SUMS, SHA256SUMS.sig    checksums, signed with the update key
 # A draft release of the tag is created with them (gh), to check and publish
@@ -16,7 +17,7 @@
 set -eu
 
 usage() {
-    sed -n '2,17p' "$0" >&2
+    sed -n '2,19p' "$0" >&2
     exit 2
 }
 
@@ -55,9 +56,11 @@ for key in secure-boot.crt update.pem; do
 done
 
 . "$out/src/image/pkcs11.sh"
+. "$out/src/image/reproducible.sh"
+reproducible_options "$tag"
 pin=$(pkcs11_read_pin)
-version=$(date -u +%Y%m%d%H%M%S)
-printf '%s\n' "$pin" | "$out/src/image/build.sh" --release --image-version="$version"
+# shellcheck disable=SC2086  # options: several words
+printf '%s\n' "$pin" | "$out/src/image/build.sh" --release $options
 
 # Image update, compressed disk image and checksums, signed with the update
 # key; every signature is verified with the public keys of the tag
@@ -65,7 +68,7 @@ printf '%s\n' "$pin" | "$out/src/image/build.sh" --release --image-version="$ver
 printf '%s\n' "$pin" | docker run --rm $(pkcs11_docker_options) \
     -v "$PWD/$out:/release" -w /release/src \
     -e PYTHONPATH=/release/src/src -e PYTHONDONTWRITEBYTECODE=1 \
-    -e TAG="$tag" -e HOST_IDS="$(id -u):$(id -g)" \
+    -e TAG="$tag" -e COMMIT="$commit" -e EPOCH="$epoch" -e HOST_IDS="$(id -u):$(id -g)" \
     pandora-box-builder bash -c '
         set -euo pipefail
         . image/pkcs11.sh
@@ -80,11 +83,12 @@ printf '%s\n' "$pin" | docker run --rm $(pkcs11_docker_options) \
             -rawin -in "$update/manifest.json" -sigfile "$update/manifest.json.sig" >/dev/null
         tar -C /release/update -cf "$assets/pandora-box-image-$TAG.tar" pandora-box-image
         xz -T0 -c "$output/pandora-box.raw" >"$assets/pandora-box-$TAG.raw.xz"
-        cp "$output/pandora-box.manifest" "$assets/pandora-box-$TAG.manifest"
+        python3 image/sbom.py "$output/pandora-box.manifest" "$assets/pandora-box-$TAG.cdx.json" \
+            --commit "$COMMIT" --epoch "$EPOCH" >/dev/null
         cp image/release/secure-boot.crt image/release/update.pem "$assets/"
         cd "$assets"
         sha256sum "pandora-box-$TAG.raw.xz" "pandora-box-image-$TAG.tar" \
-            "pandora-box-$TAG.manifest" secure-boot.crt update.pem >SHA256SUMS
+            "pandora-box-$TAG.cdx.json" secure-boot.crt update.pem >SHA256SUMS
         openssl pkeyutl -sign -inkey "$PANDORA_BOX_UPDATE_KEY" -rawin \
             -in SHA256SUMS -out SHA256SUMS.sig
         OPENSSL_CONF=/dev/null openssl pkeyutl -verify -pubin -inkey update.pem \
@@ -99,7 +103,6 @@ for asset in "$out"/assets/*; do
     fi
 done
 
-commit=$(git rev-parse "$tag^{commit}")
 cat >"$out/notes.md" <<EOF
 PandoraBox $tag, image version $version (commit $commit).
 
@@ -107,7 +110,7 @@ PandoraBox $tag, image version $version (commit $commit).
 |---|---|
 | \`pandora-box-$tag.raw.xz\` | disk image, to write to the disk of the kiosk ([Initial installation](https://sourcentis.github.io/pandora-box/install/)) |
 | \`pandora-box-image-$tag.tar\` | signed image update, to extract at the root of a USB key ([System updates](https://sourcentis.github.io/pandora-box/update/)) |
-| \`pandora-box-$tag.manifest\` | packages of the image |
+| \`pandora-box-$tag.cdx.json\` | software bill of materials (CycloneDX): Debian and Python packages of the image |
 | \`secure-boot.crt\`, \`update.pem\` | public release keys |
 | \`SHA256SUMS\`, \`SHA256SUMS.sig\` | checksums, signed with the update key |
 
@@ -119,6 +122,8 @@ sha256sum -c SHA256SUMS
 \`\`\`
 
 The key \`update.pem\` must be the one of the repository and of the documentation, not only the one of this release.
+
+The build is reproducible: Debian packages of snapshot.debian.org at $snapshot, \`SOURCE_DATE_EPOCH=$epoch\`. Build it again from the tag and compare it with these files: \`image/reproduce.sh $tag DIR\` ([Reproducing a release](https://sourcentis.github.io/pandora-box/release/#reproducing-a-release)).
 EOF
 echo "release $tag (image version $version): $out/assets"
 ls -l "$out/assets"

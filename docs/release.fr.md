@@ -106,11 +106,12 @@ image/release.sh v1.0.0
    développement n'entre dans l'image ;
 2. construit l'image sans profil, signée avec la clé Secure Boot
    (`image/build.sh --release`), qui fait confiance à
-   `image/release/update.pem` ;
+   `image/release/update.pem`, avec les entrées d'une
+   [construction reproductible](#reproducing-a-release) ;
 3. vérifie la signature de l'image noyau unifiée, construit la mise à jour
-   signée de l'image, compresse l'image disque, signe les sommes de contrôle
-   avec la clé de mise à jour, et vérifie chaque signature avec les clés
-   publiques du tag ;
+   signée de l'image, compresse l'image disque, écrit la nomenclature
+   logicielle, signe les sommes de contrôle avec la clé de mise à jour, et
+   vérifie chaque signature avec les clés publiques du tag ;
 4. crée un **brouillon** de version du tag sur GitHub avec les fichiers de
    `release/v1.0.0/assets/`.
 
@@ -118,7 +119,7 @@ image/release.sh v1.0.0
 |---|---|
 | `pandora-box-v1.0.0.raw.xz` | image disque, à écrire sur le disque de la borne |
 | `pandora-box-image-v1.0.0.tar` | mise à jour signée de l'image : `pandora-box-image/`, à extraire à la racine d'une clé USB ([Mises à jour du système](update.md)) |
-| `pandora-box-v1.0.0.manifest` | paquets de l'image |
+| `pandora-box-v1.0.0.cdx.json` | nomenclature logicielle (SBOM, CycloneDX 1.5) : les paquets Debian et Python de l'image, avec leurs versions |
 | `secure-boot.crt`, `update.pem` | clés publiques de publication |
 | `SHA256SUMS`, `SHA256SUMS.sig` | sommes de contrôle, signées avec la clé de mise à jour |
 
@@ -137,6 +138,46 @@ image/softhsm-keys.sh /tmp/token
 cp /tmp/token/secure-boot.crt /tmp/token/update.pem image/release/   # dans un clone de test seulement
 echo 123456 | PANDORA_BOX_SOFTHSM=/tmp/token image/release.sh v0.0.0-test --no-publish
 ```
+
+## Reproduire une version { #reproducing-a-release }
+
+L'image d'une version ne dépend que de son tag : chacun peut la construire à
+nouveau et vérifier qu'elle est faite du code source et des paquets Debian
+publiés. `image/reproducible.sh` déduit du tag chaque entrée de la
+construction :
+
+| Entrée | Valeur |
+|---|---|
+| Paquets Debian, et outils du conteneur de construction | [snapshot.debian.org](https://snapshot.debian.org/) à la date du tag |
+| Date des fichiers (`SOURCE_DATE_EPOCH`), version de l'image | la date du tag |
+| UUID des partitions, sel dm-verity | une graine déduite du commit |
+| Paquets Python | figés avec leurs empreintes (`image/requirements.txt`) |
+
+Pour vérifier une version, téléchargez ses fichiers et construisez à nouveau
+son tag :
+
+```sh
+gh release download v1.0.0 -D /tmp/v1.0.0
+image/reproduce.sh v1.0.0 /tmp/v1.0.0
+```
+
+`image/reproduce.sh` vérifie les fichiers avec leurs sommes de contrôle
+signées, construit le tag avec les mêmes entrées, en faisant confiance à la
+même clé de mise à jour, mais signé avec des clés de développement, puis
+compare :
+
+| Partie | Attendu |
+|---|---|
+| système de fichiers racine, arbre de hachage dm-verity | identiques |
+| image noyau unifiée | chaque section identique, le noyau sans sa signature Secure Boot |
+| nomenclature logicielle | identique |
+
+Les signatures ne peuvent pas être comparées : elles demandent les clés de
+publication, et contiennent la date à laquelle elles ont été faites. Elles
+sont vérifiées avec les clés publiques
+([Vérifier une version](#verifying-a-release)). mkosi 25.3 est corrigé dans le
+conteneur de construction (`image/patch-mkosi.py`) pour que le microcode de
+l'image noyau soit reproductible.
 
 ## Vérifier une version { #verifying-a-release }
 

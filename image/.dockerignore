@@ -1,2 +1,3 @@
-# Build context of the builder image: nothing is copied into it
+# Build context of the builder image: only the patch of mkosi
 *
+!patch-mkosi.py

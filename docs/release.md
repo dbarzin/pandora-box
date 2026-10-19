@@ -99,10 +99,12 @@ image/release.sh v1.0.0
 1. extracts the files of the tag only (`git archive`) to `release/v1.0.0/src/`:
    no local theme, credentials or development keys get into the image;
 2. builds the image without profile, signed with the Secure Boot key
-   (`image/build.sh --release`), trusting `image/release/update.pem`;
+   (`image/build.sh --release`), trusting `image/release/update.pem`, with
+   the inputs of a [reproducible build](#reproducing-a-release);
 3. checks the signature of the unified kernel image, builds the signed image
-   update, compresses the disk image, signs the checksums with the update key,
-   and checks every signature with the public keys of the tag;
+   update, compresses the disk image, writes the software bill of materials,
+   signs the checksums with the update key, and checks every signature with
+   the public keys of the tag;
 4. creates a **draft** release of the tag on GitHub with the files of
    `release/v1.0.0/assets/`.
 
@@ -110,7 +112,7 @@ image/release.sh v1.0.0
 |---|---|
 | `pandora-box-v1.0.0.raw.xz` | disk image, to write to the disk of the kiosk |
 | `pandora-box-image-v1.0.0.tar` | signed image update: `pandora-box-image/`, to extract at the root of a USB key ([System updates](update.md)) |
-| `pandora-box-v1.0.0.manifest` | packages of the image |
+| `pandora-box-v1.0.0.cdx.json` | software bill of materials (SBOM, CycloneDX 1.5): the Debian and Python packages of the image, with their versions |
 | `secure-boot.crt`, `update.pem` | public release keys |
 | `SHA256SUMS`, `SHA256SUMS.sig` | checksums, signed with the update key |
 
@@ -128,6 +130,42 @@ image/softhsm-keys.sh /tmp/token
 cp /tmp/token/secure-boot.crt /tmp/token/update.pem image/release/   # in a test clone only
 echo 123456 | PANDORA_BOX_SOFTHSM=/tmp/token image/release.sh v0.0.0-test --no-publish
 ```
+
+## Reproducing a release
+
+The image of a release only depends on its tag: anyone can build it again
+and check that it is made of the published source code and Debian packages.
+`image/reproducible.sh` derives every input of the build from the tag:
+
+| Input | Value |
+|---|---|
+| Debian packages, and the tools of the build container | [snapshot.debian.org](https://snapshot.debian.org/) at the time of the tag |
+| Time of the files (`SOURCE_DATE_EPOCH`), image version | the time of the tag |
+| Partition UUIDs, dm-verity salt | a seed derived from the commit |
+| Python packages | pinned with their hashes (`image/requirements.txt`) |
+
+To check a release, download its files and build its tag again:
+
+```sh
+gh release download v1.0.0 -D /tmp/v1.0.0
+image/reproduce.sh v1.0.0 /tmp/v1.0.0
+```
+
+`image/reproduce.sh` checks the files with their signed checksums, builds the
+tag with the same inputs, trusting the same update key, but signed with
+development keys, then compares:
+
+| Part | Expected |
+|---|---|
+| root filesystem, dm-verity hash tree | identical |
+| unified kernel image | every section identical, the kernel without its Secure Boot signature |
+| software bill of materials | identical |
+
+The signatures cannot be compared: they need the release keys, and hold the
+time they were made. They are checked with the public keys instead
+([Verifying a release](#verifying-a-release)). mkosi 25.3 is patched in the
+build container (`image/patch-mkosi.py`) so that the microcode of the kernel
+image is reproducible.
 
 ## Verifying a release
 

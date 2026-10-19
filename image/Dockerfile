@@ -4,7 +4,20 @@
 # YubiKey (image/release.sh); SoftHSM and OpenSC test it without one.
 FROM debian:trixie-slim
 
-RUN apt-get update \
+# Debian packages of snapshot.debian.org at that time, YYYYMMDDTHHMMSSZ: the
+# tools of a reproducible build (image/build.sh --snapshot)
+ARG SNAPSHOT=
+RUN if [ -n "$SNAPSHOT" ]; then \
+        for archive in "debian trixie trixie-updates" "debian-security trixie-security"; do \
+            set -- $archive; name=$1; shift; \
+            printf '%s\n' "Types: deb" \
+                "URIs: http://snapshot.debian.org/archive/$name/$SNAPSHOT/" \
+                "Suites: $*" "Components: main" \
+                "Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg" \
+                "Check-Valid-Until: no" ""; \
+        done >/etc/apt/sources.list.d/debian.sources; \
+    fi \
+    && apt-get update \
     && apt-get install -y --no-install-recommends \
         mkosi systemd-container systemd-ukify systemd-boot-efi systemd-repart \
         apt debian-archive-keyring dpkg-dev \
@@ -17,3 +30,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     # p11-kit loads the PKCS#11 module of the token only (image/pkcs11.sh)
     && rm -f /usr/share/p11-kit/modules/*.module
+
+# Reproducible microcode initrd (image/patch-mkosi.py)
+COPY patch-mkosi.py /tmp/
+RUN python3 /tmp/patch-mkosi.py && rm /tmp/patch-mkosi.py

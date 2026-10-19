@@ -3,6 +3,8 @@
 #   image/build.sh                 production image
 #   image/build.sh --profile test  test image (test signatures, root shell on hvc0)
 #   image/build.sh --release       production image signed with the release keys
+#   --snapshot=YYYYMMDDTHHMMSSZ    Debian packages of snapshot.debian.org at that
+#                                  time, for a reproducible build (image/release.sh)
 # Other arguments are passed to mkosi. An existing image is replaced. The
 # image is written to image/mkosi.output/. Its version is the date and time
 # of the build (UTC, YYYYMMDDHHMMSS, like the serial of a signature set),
@@ -18,13 +20,22 @@ set -eu
 
 cd "$(dirname "$0")"
 release=""
+snapshot=""
 for arg do
     shift
     case "$arg" in
     --release) release=yes ;;
+    --snapshot=*) snapshot=${arg#--snapshot=} ;;
     *) set -- "$@" "$arg" ;;
     esac
 done
+case "$snapshot" in
+"" | [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]T[0-9][0-9][0-9][0-9][0-9][0-9]Z) ;;
+*)
+    echo "error: --snapshot=YYYYMMDDTHHMMSSZ" >&2
+    exit 2
+    ;;
+esac
 docker_options=""
 pin=""
 if [ -n "$release" ]; then
@@ -59,7 +70,7 @@ if [ -n "$crlf" ]; then
     echo "Clone the repository again with LF line endings (git config --global core.autocrlf input)." >&2
     exit 1
 fi
-docker build -q -t pandora-box-builder . >/dev/null
+docker build -q -t pandora-box-builder --build-arg SNAPSHOT="$snapshot" . >/dev/null
 mkdir -p mkosi.output
 # Privileged: mkosi creates namespaces and mounts to build the image. Its
 # workspace and caches (packages, incremental build) are in a volume:
@@ -74,9 +85,24 @@ printf '%s\n' "$pin" | docker run --rm --privileged $docker_options \
     -v "$PWD/..:/src" -w /src/image \
     -v pandora-box-mkosi:/var/tmp \
     -e HOST_IDS="$(id -u):$(id -g)" -e KEY_NAME="PandoraBox development key ($(id -un)@$(hostname))" \
-    -e RELEASE="$release" \
+    -e RELEASE="$release" -e SNAPSHOT="$snapshot" \
     pandora-box-builder bash -c '
         mkdir -p /var/tmp/cache/images /var/tmp/cache/packages
+        if [ -n "$SNAPSHOT" ]; then
+            # The repositories of mkosi (Repositories= of mkosi.conf) at that
+            # time; no incremental build, whose cache holds other packages
+            tree=/tmp/snapshot
+            mkdir -p "$tree/etc/apt/sources.list.d"
+            for archive in "debian trixie trixie-updates" "debian-security trixie-security"; do
+                read -r name suites <<<"$archive"
+                printf "%s\n" "Types: deb" \
+                    "URIs: http://snapshot.debian.org/archive/$name/$SNAPSHOT/" \
+                    "Suites: $suites" "Components: main non-free-firmware" \
+                    "Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg" \
+                    "Check-Valid-Until: no" ""
+            done >"$tree/etc/apt/sources.list.d/mkosi.sources"
+            set -- "$@" --sandbox-tree="$tree" --incremental=no
+        fi
         if [ -n "$RELEASE" ]; then
             . ./pkcs11.sh
             pkcs11_setup
