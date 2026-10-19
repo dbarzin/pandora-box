@@ -34,8 +34,9 @@ mkdir -p mkosi.output
 # workspace and caches (packages, incremental build) are in a volume:
 # overlayfs cannot use the container overlay filesystem. The volume is not
 # the device of mkosi.output/: mkosi copies the outputs instead of renaming
-# them, and its message about it for each output is filtered out. The image is
-# given back to the calling user.
+# them, and its message about it for each output is filtered out, as those of
+# systemctl preset-all about the masked units (masked on purpose, by Debian or
+# by the image). The image is given back to the calling user.
 exec docker run --rm --privileged \
     -v "$PWD/..:/src" -w /src/image \
     -v pandora-box-mkosi:/var/tmp \
@@ -55,7 +56,10 @@ exec docker run --rm --privileged \
         fi
         mkosi --force --cache-directory=/var/tmp/cache/images \
             --package-cache-dir=/var/tmp/cache/packages "$@" build 2>&1 |
-            grep --line-buffered -v "as they are located on different devices, falling back to copying$"
+            grep --line-buffered -v \
+                -e "as they are located on different devices, falling back to copying$" \
+                -e "^Unit /buildroot/.* is masked, ignoring\.$" \
+                -e "^Failed to preset unit: Unit /buildroot/.* is masked$"
         status=${PIPESTATUS[0]}
         chown -R "$HOST_IDS" mkosi.output
         exit $status' \
