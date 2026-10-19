@@ -32,13 +32,15 @@ docker build -q -t pandora-box-builder . >/dev/null
 mkdir -p mkosi.output
 # Privileged: mkosi creates namespaces and mounts to build the image. Its
 # workspace and caches (packages, incremental build) are in a volume:
-# overlayfs cannot use the container overlay filesystem. The image is given
-# back to the calling user.
+# overlayfs cannot use the container overlay filesystem. The volume is not
+# the device of mkosi.output/: mkosi copies the outputs instead of renaming
+# them, and its message about it for each output is filtered out. The image is
+# given back to the calling user.
 exec docker run --rm --privileged \
     -v "$PWD/..:/src" -w /src/image \
     -v pandora-box-mkosi:/var/tmp \
     -e HOST_IDS="$(id -u):$(id -g)" -e KEY_NAME="PandoraBox development key ($(id -un)@$(hostname))" \
-    pandora-box-builder sh -c '
+    pandora-box-builder bash -c '
         mkdir -p /var/tmp/cache/images /var/tmp/cache/packages
         if [ ! -e mkosi.key ] && [ ! -e mkosi.crt ]; then
             mkosi --genkey-common-name="$KEY_NAME" --genkey-valid-days=3650 genkey
@@ -51,9 +53,10 @@ exec docker run --rm --privileged \
             chown "$HOST_IDS" update.key update.pem
             chmod 0600 update.key
         fi
-        status=0
         mkosi --force --cache-directory=/var/tmp/cache/images \
-            --package-cache-dir=/var/tmp/cache/packages "$@" build || status=$?
+            --package-cache-dir=/var/tmp/cache/packages "$@" build 2>&1 |
+            grep --line-buffered -v "as they are located on different devices, falling back to copying$"
+        status=${PIPESTATUS[0]}
         chown -R "$HOST_IDS" mkosi.output
         exit $status' \
     mkosi "$@"
