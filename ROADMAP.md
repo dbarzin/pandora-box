@@ -21,29 +21,27 @@ The open tasks of the phases below, by priority.
 
 **1. First public release**
 
-1. Release keys of the project: create them in two YubiKeys and publish their fingerprints; the signing tools are ready (phase 2, [docs/release.md](docs/release.md))
-2. Documented threat model (phase 6)
-3. Deployment guide: kiosk placement, user procedure, associated USB policy (phase 6)
+1. Create the release keys and publish their fingerprints (phase 2)
+2. Write the threat model (phase 6)
+3. Write the deployment guide (phase 6)
 4. Physical hardening and assembly guide (phase 2)
 
 **2. Hardening and user features**
 
-1. Filesystems of the devices parsed outside the kernel of the kiosk: NTFS, exFAT and ext4 through FUSE in the sandbox of the engines, vfat in the kernel (phase 2)
-2. File transfer stations: signed key identifier, then inbound station, then outbound station (phase 4); they need the `online` profile, a firewall opening to the server and SFTP/SMB clients in the image, to cover in the threat model
-3. Selective copy of clean files to a second device, sharing the selection of the inbound station, and the reformatting option, which writes back the clean files too (phase 4)
-4. Office documents with `oletools` (phase 4)
-5. Scan receipt for the user (phase 5)
-6. German and Dutch texts, accessibility (phase 3)
-7. Protected administrator mode (phase 3)
+1. Mount NTFS, exFAT and ext4 through FUSE in a sandbox (phase 2)
+2. File transfer stations: key identifier, then inbound, then outbound station (phase 4)
+3. Scan receipt for the user (phase 5)
+4. German and Dutch texts, accessibility (phase 3)
+5. Protected administrator mode (phase 3)
 
 **3. Later**
 
-1. Fleet management: central server, centralized distribution of updates, dashboard (phase 5)
-2. Fuzzing of the entry points, then external security audit (phase 6)
+1. Fleet management: central server, update distribution, dashboard (phase 5)
+2. Fuzzing, then external security audit (phase 6)
 3. Mapping to NIS2 and ISO 27001 (phase 6)
 4. Executables with `capa`, content disarm and reconstruction with Dangerzone (phase 4)
 5. Software TPM, once measured boot is used (phase 2)
-6. Maintenance console or SSH, to reconsider: it goes against the absence of any login while the maintenance device is enough (phase 2)
+6. Maintenance console or SSH, to reconsider (phase 2)
 
 ---
 
@@ -114,17 +112,17 @@ Goal: replace Pandora with an equivalent or better local pipeline.
 
 - [x] Common plugin interface: `scan(file) -> Verdict` (clean, suspicious, malicious, error, skipped)
 - [x] Device inventory and hash computation (SHA-256, SHA-1, MD5)
-- [x] **Hashlookup (CIRCL)** as an offline Bloom filter: skip the content engines for known files (known does not mean benign)
+- [x] **Hashlookup (CIRCL)** as an offline Bloom filter of known files
 - [x] **MalwareBazaar**: offline list of malicious hashes
 - [x] **ClamAV** through `clamd` (Unix socket) + third-party signatures
 - [x] **YARA-X** + YARA Forge and signature-base rules
 - [x] Real file type identification (`libmagic`)
 - [x] Parallel scan in supervised worker processes, timeout per file and per engine
-- [x] Verdict aggregation with a configurable policy (one positive engine is enough, etc.); `scan.suspicious` and `scan.on_error` policies (`block` / `warn`)
+- [x] Verdict aggregation with a configurable policy
 - [x] Limits: maximum file size, number of files, directory depth
-- [x] Keys with several partitions: every filesystem scanned in turn, one verdict, report and confirmation for the key; an encrypted or unknown partition makes the key not verified
-- [x] JSON scan report (device, files, verdicts, engines, signature versions) with a JSON Schema
-- [x] Test set: EICAR, harmless samples, known false positives (`tests/corpus/`)
+- [x] Keys with several partitions
+- [x] JSON scan report with a JSON Schema
+- [x] Test set of samples and known false positives (`tests/corpus/`)
 
 See [docs/engines.md](docs/engines.md) for the engines and the verdict policy.
 
@@ -144,9 +142,9 @@ image/vm.sh test      # end-to-end test in a virtual machine
 ### Build
 
 - [x] Image based on Debian 13 (trixie), built with `mkosi`
-- [x] Single target: x86_64 (`Architecture=x86-64` in `image/mkosi.conf`, see reference hardware); ARM64 is not targeted, as the Raspberry Pi proved too slow
-- [x] Signed image and published checksums: `image/release.sh` builds a tag only, signs the image with the release keys of a YubiKey, and publishes the compressed disk image, the signed image update and the checksums signed with the update key as a draft GitHub release ([docs/release.md](docs/release.md))
-- [x] Reproducible builds and an SBOM generated for every release: inputs derived from the tag (Debian snapshot, `SOURCE_DATE_EPOCH`, seed), `image/reproduce.sh` builds a release again and compares everything but the signatures, CycloneDX SBOM published with the release ([docs/release.md](docs/release.md#reproducing-a-release))
+- [x] Single target: x86_64
+- [x] Signed image and published checksums ([docs/release.md](docs/release.md))
+- [x] Reproducible builds and an SBOM for every release
 
 ### Reference hardware
 
@@ -159,54 +157,55 @@ Validated hardware and its settings: [docs/hardware.md](docs/hardware.md); BIOS 
 
 Tasks:
 
-- [x] List of validated ThinkCentre models (CPU, RAM, USB ports, Secure Boot support): ThinkCentre M720q Tiny (10T7, Core i5-9400T, Intel UHD 630)
-- [x] Touchscreen model selection and driver support: Waveshare 7-inch HDMI LCD (C), mode of the screen on the kernel command line, touch controller allowed by USBGuard
-- [ ] Physical hardening: only the scanning USB ports reachable from the outside, other ports and BIOS access protected
-- [ ] Assembly guide (bill of materials, printing settings, wiring, USB port layout for the user)
-- [x] Enclosure design published in the repository (source files + STL), under an open hardware license: the STL of the 7-inch and 10-inch models and the OpenSCAD source of the 7-inch model are in [3D/](3D/), under the CERN-OHL-S v2; the source of the 10-inch model remains to be added
-- [x] BIOS configuration guide (password, boot order locked, Secure Boot with the image key enrolled from setup mode, VT-d, restart after a power failure)
+- [x] List of validated ThinkCentre models
+- [x] Touchscreen model selection and driver support
+- [ ] Physical hardening of the enclosure
+- [ ] Assembly guide
+- [x] Enclosure design published under an open hardware license ([3D/](3D/))
+- [x] BIOS configuration guide
 
 ### System integrity
 
 - [x] Read-only root filesystem, variable data on a separate partition
 - [x] `dm-verity` on the system partition
-- [x] Unified Kernel Image (UKI) and Secure Boot (development keys, or the release keys of a YubiKey with `image/build.sh --release`)
-- [x] Atomic A/B partition updates (`systemd-sysupdate`), installed from a signed image update device, with boot assessment and automatic rollback
-- [x] Online image updates (`updates.image_url`): downloaded by the update service, installed without network, the idle kiosk restarts on the new version
-- [x] Smaller UKI: 40 MB instead of 130 MB, the initrd only holds the kernel modules needed to mount the root filesystem
+- [x] Unified Kernel Image (UKI) and Secure Boot
+- [x] Atomic A/B updates with automatic rollback
+- [x] Online image updates
+- [x] Smaller UKI
 
 ### Hardening
 
-- [x] No interactive account by default, no SSH: no `login` program, no root password, no login console, Ctrl-Alt-Del masked
-- [x] Maintenance device: a USB key with a request signed with the update key (valid 7 days) brings back the logs of the kiosk, without login or network access
+- [x] No interactive account and no SSH
+- [x] Maintenance device that brings back the logs
 - [ ] Maintenance console or SSH, if the logs are not enough
-- [x] Hardened kernel settings (`sysctl`, `lockdown=confidentiality`, memory initialization, IOMMU, unused modules removed)
+- [x] Hardened kernel settings
 - [x] `nftables` firewall: deny all by default
-- [x] **USBGuard**: only mass-storage devices (and hubs) are allowed (BadUSB protection), no device is authorized before USBGuard starts (`usbcore.authorized_default=0`)
-- [x] No USB network, wireless, Bluetooth, USB serial and modem drivers in the image; USB HID is kept for the touchscreen, keyboards and mice are blocked by USBGuard
-- [x] USBGuard rule allowing the touchscreen of the reference hardware (Waveshare `0eef:0005`, its serial, HID interface only, internal port), touch tested in the virtual machine
-- [x] No boot loader menu: systemd-boot does not read the keyboard (a keyboard works in the firmware, before USBGuard starts)
-- [x] Devices mounted with `ro,noexec,nosuid,nodev` by the kiosk, no automount (no udisks in the image); the block device is read-only while it is scanned (`blockdev --setro`), so the kernel writes nothing to it, and an ext4 filesystem whose journal needs a replay is not mounted (device not verified) rather than scanned without its journal
-- [x] Limited set of supported filesystems (vfat, exfat, ntfs3, ext4): the kiosk refuses to mount any other
-- [ ] Filesystems of the devices parsed outside the kernel of the kiosk: today its kernel parses the structures given by the device, and a flaw of a filesystem driver (ext4, ntfs3 and exfat get regular fuzzing findings on crafted images) runs code in the kernel, before any sandbox; the read-only block device, `noexec`, the four filesystems and the root filesystem on dm-verity limit the damage without removing the risk. Hybrid approach: NTFS, exFAT and ext4 mounted through FUSE (ntfs-3g, exfat-fuse, fuse2fs, Debian packages), the driver running in the sandbox of the engines (dedicated user, no network, system call filter, only the block device and `/dev/fuse` passed by the kiosk), with a watchdog for a crashed or stuck driver; vfat stays in the kernel, its simplest and oldest driver, as fusefat is experimental and lklfuse is not packaged in Debian. A compromised FUSE driver no longer takes over the kiosk, but can still hide files from the scan: the reformatting option remains the answer to a forged structure. A disposable micro-VM reading the device through virtio-blk would also cover vfat, at a much higher cost
-- [x] Hardened systemd services (`ProtectSystem`, `NoNewPrivileges`, seccomp filters; `PrivateNetwork` and `MemoryDenyWriteExecute` for clamd), exposure measured by `systemd-analyze security` in the virtual machine test
-- [x] Each scan worker runs in a `bubblewrap` sandbox, without network, under a dedicated user without capabilities, with a system call filter; the kiosk opens the files and passes their descriptors, and only accepts validated JSON from the workers
-- [x] One worker per engine, so that a compromised engine cannot forge the results of another one: the kiosk hashes the files itself, hash engines never get the file, the kiosk combines the results
+- [x] **USBGuard**: only mass-storage devices allowed
+- [x] No USB network, wireless, Bluetooth, serial or modem drivers
+- [x] USBGuard rule for the touchscreen of the reference hardware
+- [x] No boot loader menu
+- [x] Devices mounted read-only on a read-only block device, no automount
+- [x] Four supported filesystems: vfat, exfat, ntfs3, ext4
+- [ ] Mount NTFS, exFAT and ext4 through FUSE in a sandbox
+- [x] Hardened systemd services
+- [x] Each scan worker runs in a sandbox
+- [x] One worker per engine
 - [x] Audit log (`auditd`) for sensitive operations
-- [x] Assessment with `lynis` and the ANSSI configuration recommendations for GNU/Linux systems
+- [x] Assessment with `lynis` and the ANSSI recommendations
 
 ### Signature updates
 
 See [docs/signatures.md](docs/signatures.md).
 
-- [x] Signed signature sets (Ed25519, verified with `openssl`): no rollback, atomic installation, previous set kept
-- [x] Signature verification before loading databases: the installed set is verified at each start, the engines (and clamd) only read it
+- [x] Signed signature sets
+- [x] Signature set verified at each start
 - [x] Offline updates from a signed USB device, for air-gapped kiosks
-- [x] Publication: `pandora-box-signatures publish` downloads the sources (ClamAV, YARA Forge, MalwareBazaar, Hashlookup) with a cache, checks the set with the kiosk engines, then signs it; container `publish/`
-- [x] Online updates through a dedicated channel: image profile `online`, update service as the only user allowed out by the firewall, HTTP(S) and proxy, only the changed files downloaded, new set loaded when the kiosk is idle
-- [x] Online updates from the sources themselves (freshclam, YARA Forge, MalwareBazaar, Hashlookup): the abuse.ch Auth-Key is a systemd credential of the image (`image/credentials.toml`, outside git), the set is signed with a key generated on the kiosk
-- [ ] Release keys of the project: stored in two YubiKeys 5 (Secure Boot key RSA 2048, update key Ed25519), used through PKCS#11 by the build ([docs/release.md](docs/release.md)); the keys remain to be created and their fingerprints published, and the publication schedule to define
-- [x] Time synchronization of online kiosks: systemd-timesyncd, NTP servers of the organization or from DHCP, only timesyncd allowed to send NTP requests by the firewall
+- [x] Publication of signature sets from the sources
+- [x] Online updates through a dedicated channel
+- [x] Online updates from the sources themselves
+- [ ] Create the release keys and publish their fingerprints
+- [ ] Define the publication schedule
+- [x] Time synchronization of online kiosks
 
 ### Testing in a virtual machine
 
@@ -214,15 +213,15 @@ The container end-to-end tests (`tests/e2e/run.sh`) cover the scan workflow, but
 
 Tasks:
 
-- [x] Test image profile: test-only signatures that detect the test corpus, root shell on the virtio console
-- [x] Automated end-to-end test in the virtual machine: insertion through QMP, verdicts of every engine, cleaning confirmed on the kiosk screen, quarantine, report, eject, removal, clean key inserted again
+- [x] Test image profile
+- [x] Automated end-to-end test in the virtual machine
 - [x] Read-only root filesystem, data partition grown to fill the disk, data kept after a reboot
-- [x] OVMF with the image signing keys enrolled: Secure Boot enabled, kernel lockdown, root filesystem on dm-verity; a modified root block cannot be read; firmware trusting another key refuses the image
-- [x] USB key images for every supported filesystem (vfat, exfat, ntfs3, ext4), plus partitioned, unsupported and corrupted filesystems
-- [x] An emulated keyboard (`usb-kbd`) and network adapter (`usb-net`) are blocked by USBGuard: no input device, no network interface
+- [x] Secure Boot and dm-verity tested in the virtual machine
+- [x] Test keys for every supported filesystem and the refused cases
+- [x] Emulated keyboard and network adapter blocked by USBGuard
 - [x] No outgoing network outside the update channel
 - [x] A/B update and rollback tested in the virtual machine
-- [x] Run in continuous integration (KVM when nested virtualization is available, TCG emulation otherwise)
+- [x] Run in continuous integration
 - [ ] Software TPM (`swtpm`), once measured boot is used
 
 ## Phase 3 — Kiosk interface
@@ -231,33 +230,33 @@ Tasks:
 
 The kiosk draws a graphical interface on its touch screen: waiting for a key, scan progress (files scanned, threats found, latest files and their verdict), the dangerous files listed before they are removed, a touch anywhere on the screen to clean, then the result. It is drawn with Pillow straight into the framebuffer, without a display server or a browser. An administrator customizes it with a theme built into the image: logo, colors, texts and images. See [docs/interface.md](docs/interface.md).
 
-- [x] Graphical interface drawn into the framebuffer (Pillow), console in graphics mode: no display server, browser or local web server (the earlier plan, FastAPI + htmx in `cage` + Chromium, would have added a browser and a socket to the image)
-- [x] User flow: insertion, progress, dangerous files listed, cleaning on a touch of the screen (no buttons), verdict
-- [x] Touch-first interface designed for the 7-inch screen (1024x600), drawn for the size of any screen
-- [x] Customization by the administrator: theme folder built into the image (logo, colors, texts of every screen, images, fonts), checked at build time, `pandora-box-theme preview` to see the screens without a kiosk
-- [x] Internationalization: FR and EN built in, chosen with `display.language`, a theme can add a language
+- [x] Graphical interface drawn into the framebuffer
+- [x] User flow: insertion, progress, dangerous files, cleaning, verdict
+- [x] Touch-first interface for any screen size
+- [x] Theme customization by the administrator
+- [x] Internationalization: French and English
 - [ ] German and Dutch texts built in
-- [ ] Accessibility (contrast, font size)
-- [ ] Protected administrator mode (curses or web): scan reports, signature status
+- [ ] Accessibility: contrast and font size
+- [ ] Protected administrator mode
 
 ## Phase 4 — Advanced analysis
 
-- [x] PDF: JavaScript and Launch actions are suspicious, automatic actions, embedded files and forms reported (like `pdfid`, `engines.heuristics`)
-- [x] Archives: unpacked and scanned by ClamAV within its limits; beyond them (decompression bombs) the file is not fully scanned
-- [x] Encrypted archives and documents flagged as unscannable (ClamAV `AlertEncrypted`)
-- [x] Detection of programs disguised as documents: extension / real type mismatch, double extension (`engines.heuristics`)
-- [ ] Unique identifier of each key for the file transfer stations: the USB serial number is missing or shared on some keys, so at the first insertion of a verified key the kiosk writes a token, a random identifier (UUID) signed with a key of the kiosks of the organization (Ed25519, systemd credential of the image), in a hidden file `.pandora-box` at the root of the key (with the hidden attribute where the filesystem and its Linux driver allow it), if the file does not exist; on a key with several partitions, on the first supported one. The file is read as hostile data (size limit, strict format) and its signature is verified: when the token is malformed or not signed by the kiosks, the error is logged and the kiosk replaces it with a new token (a new identifier, with an empty outbound directory). The signature prevents forging an identifier, not copying the file to another key
-- [ ] Copy of the clean files of the key to a network share (SFTP, SCP over SSH or SMB), configured on the kiosk: only a verified key is handled (see Decisions); from it, only the clean files are copied, never the malicious or suspicious ones; one directory per key, named after its identifier, with one subdirectory per scan named after the `report_id` of the report. With this option, the kiosk becomes an inbound file transfer station: the key is not cleaned, the identifier file is the only file written on it
-- [ ] Outbound file transfer station: copy files from a network share (SFTP, SCP over SSH or SMB), configured on the kiosk, to the inserted key; the key is scanned first, only a verified key without malicious files, nor suspicious files when they are removed (`scan.suspicious = "block"`), receives files (see Decisions), and it must stay in the kiosk from the scan to the end of the copy (removed, it is scanned again at its next insertion), the files are scanned before being written. After the scan, the kiosk compares the outbound directory of the key on the server (named after its identifier) with the key: the files that are new or modified since (size, modification time) are copied from the server to the key. The free space of the key is checked before the copy, and the differences between filesystems are handled: maximum file size (4 GiB on vfat), forbidden characters, name length and case-insensitive names (vfat, exfat, ntfs3); a file that cannot be written is reported, never renamed silently
-- [-] Selective copy of clean files only to a second device (rejected option)
-- [-] Reformatting option for the cleaning: the kiosk recreates the filesystem of the key and writes back only the clean files, so that the next computer no longer mounts a structure made by the attacker (rejected option)
-- [-] Office documents: `oletools` (olevba, mraptor); (rejected option) documents with macros are already suspicious (ClamAV `AlertOLE2Macros`)
-- [ ] Executables: `capa` (optional, can be disabled for performance)
-- [ ] **Content disarm and reconstruction (CDR)** to a trusted device using Dangerzone
+- [x] PDF analysis: active content is suspicious
+- [x] Archives unpacked and scanned within limits
+- [x] Encrypted archives and documents flagged as unscannable
+- [x] Detection of programs disguised as documents
+- [ ] Signed identifier of each key for the file transfer stations
+- [ ] Inbound file transfer station: copy the clean files of a key to a network share
+- [ ] Outbound file transfer station: copy files from a network share to a key
+- [-] Selective copy of clean files to a second device (rejected)
+- [-] Reformatting option for the cleaning (rejected)
+- [-] Office documents with `oletools` (rejected)
+- [ ] Executables analyzed with `capa`, optional
+- [ ] Content disarm and reconstruction (CDR) with Dangerzone
 
 ## Phase 5 — Fleet management and traceability
 
-- [x] Log export as syslog / JSON to a SIEM (Wazuh, etc.): `pandora-box-siem` service of the image profile `online`, syslog RFC 5424 or JSON over TLS, TCP or UDP, the log file as queue ([docs/siem.md](docs/siem.md))
+- [x] Log export to a SIEM ([docs/siem.md](docs/siem.md))
 - [ ] Printed or exported scan receipt for the user
 - [ ] Optional central server: kiosk inventory, reports, signature status
 - [ ] Centralized distribution of signed updates
@@ -265,10 +264,10 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 
 ## Phase 6 — Assurance and compliance
 
-- [x] Detection regression test corpus (`tests/corpus/`): checked with the fake engine in every test run, with the real engines in the integration tests
-- [ ] Documented threat model
-- [ ] Deployment guide: kiosk placement, user procedure, associated USB policy
-- [ ] Fuzzing of entry points (mounting, metadata parsing)
+- [x] Detection regression test corpus
+- [ ] Write the threat model
+- [ ] Write the deployment guide
+- [ ] Fuzzing of the entry points
 - [ ] External security audit of the image
 - [ ] Mapping to NIS2 and ISO 27001 requirements (control 7.10 "Storage media")
 
@@ -284,11 +283,63 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 
 ## Decisions
 
-- Policy for a "suspicious" verdict: configurable with `scan.suspicious`, `block` (default) or `warn`.
+### Scan
+
+- Policy for a "suspicious" verdict: configurable with `scan.suspicious`, `block` (default, suspicious files removed like malicious ones) or `warn` (kept, with a warning).
 - Policy for files that could not be fully scanned (engine error or timeout, limits): configurable with `scan.on_error`. `block` (default) reports the device as not verified; unscanned files are listed but never removed, since they are not known to be malicious.
 - A Hashlookup hit means "known file", not "benign file": content engines also scan known files by default (the CIRCL filter lists the EICAR test file, tools and malware; `engines.hashlookup.skip_content_engines` skips them, opt-in), a malicious hash always wins, and the decision is recorded in the scan report.
 - YARA Forge already includes signature-base: only YARA Forge `core` is configured by default, signature-base is opt-in.
-- The file transfer stations (inbound and outbound) only handle a verified key: a key the kiosk could scan entirely. From such a key, the inbound station copies the clean files only, never the malicious or suspicious ones; the outbound station refuses it as long as it holds a file the cleaning would remove: a malicious file, or a suspicious file when the suspicious files are removed (`scan.suspicious = "block"`, the default; with `"warn"`, they stay on the key and do not prevent the copy). The key must be cleaned first (by a kiosk that cleans, not an inbound station, which never cleans), then inserted again. A key not verified is refused, without copy in either direction and without identifier written on it. An ext4 key whose journal needs a replay (removed without being ejected) is not verified: the kiosk never mounts it, neither read-only to scan it (it would see other files than a computer that replays the journal) nor read-write to write files on it (the kernel would replay a journal given by the device); the kiosk asks to eject it properly from a computer, then to insert it again. Reformatting such a key is not offered: its identifier could not be read, and the key would lose its outbound files.
+- A key with several partitions is scanned filesystem by filesystem, with one verdict, report and confirmation for the key; an encrypted or unknown partition makes the key not verified.
+- Archives are unpacked and scanned by ClamAV within its limits; beyond them (decompression bombs) the file is not fully scanned. Encrypted archives and documents are unscannable (ClamAV `AlertEncrypted`).
+- PDF: JavaScript and Launch actions are suspicious; automatic actions, embedded files and forms are reported (`engines.heuristics`, like `pdfid`). A program disguised as a document (extension and real type mismatch, double extension) is detected.
+- Office documents: `oletools` is not added, as documents with macros are already suspicious (ClamAV `AlertOLE2Macros`).
+
+### Build and releases
+
+- Single target x86_64: ARM64 is not targeted, the Raspberry Pi proved too slow.
+- The release keys are kept in two YubiKeys 5: the Secure Boot key (RSA 2048, slot 9c) and the update key (Ed25519, slot 82), used through PKCS#11 by the build ([docs/release.md](docs/release.md)).
+- `image/release.sh` builds a tag only, signs the image with the release keys, and publishes the compressed disk image, the signed image update, the SBOM (CycloneDX) and the checksums signed with the update key as a draft GitHub release. Only the image without profile is published: the profile `online` holds the credentials of an organization.
+- A release is reproducible: its inputs come from the tag (Debian packages and build tools from snapshot.debian.org at the time of the tag, that time as `SOURCE_DATE_EPOCH` and image version, a seed derived from the commit), and `image/reproduce.sh` builds it again and compares everything but the signatures, which hold the time they were made.
+- The unified kernel image only holds the kernel modules needed to mount the root filesystem: 40 MB instead of 130 MB.
+
+### Hardware
+
+- Validated computer: ThinkCentre M720q Tiny (10T7, Core i5-9400T, Intel UHD 630). Touchscreen: Waveshare 7-inch HDMI LCD (C), its mode on the kernel command line, its touch controller (`0eef:0005`, serial, HID interface only, internal port) allowed by USBGuard.
+- Physical hardening: only the scanning USB ports reachable from the outside, the other ports and the BIOS access protected.
+- Enclosure under the CERN-OHL-S v2: STL of the 7-inch and 10-inch models, OpenSCAD source of the 7-inch model; the source of the 10-inch model remains to be added.
+
+### Hardening
+
+- No `login` program, no root password, no login console, Ctrl-Alt-Del masked. The maintenance device (a request signed with the update key, valid 7 days) brings back the logs without login or network; a maintenance console or SSH goes against the absence of any login, and is only reconsidered if the logs are not enough.
+- Kernel: `lockdown=confidentiality`, memory initialization, IOMMU, unused modules removed. USBGuard authorizes no device before it starts (`usbcore.authorized_default=0`); USB HID is kept for the touchscreen, keyboards and mice are blocked; systemd-boot does not read the keyboard.
+- systemd services: `ProtectSystem`, `NoNewPrivileges`, seccomp filters, `PrivateNetwork` and `MemoryDenyWriteExecute` for clamd, exposure measured by `systemd-analyze security` in the virtual machine test.
+- Scan workers: one per engine, each in a `bubblewrap` sandbox without network, under a dedicated user without capabilities, with a system call filter. The kiosk opens the files and passes their descriptors, hashes the files itself (hash engines never get the file), only accepts validated JSON from the workers and combines the results.
+
+### Devices and mounting
+
+- Devices are mounted `ro,noexec,nosuid,nodev` by the kiosk, without automount (no udisks); only vfat, exfat, ntfs3 and ext4 are mounted. The block device is read-only while it is scanned (`blockdev --setro`): the kernel writes nothing to it.
+- An ext4 key whose journal needs a replay (removed without being ejected) is not verified and never mounted: read-only, the kiosk would see other files than a computer that replays the journal; read-write, the kernel would replay a journal given by the device. The kiosk asks to eject it properly from a computer, then to insert it again.
+- The kernel of the kiosk parses the filesystem structures given by the device: a flaw of a driver (ext4, ntfs3 and exfat get regular fuzzing findings on crafted images) runs code in the kernel, before any sandbox. NTFS, exFAT and ext4 will be mounted through FUSE (ntfs-3g, exfat-fuse, fuse2fs, Debian packages), the driver running in the sandbox of the engines with only the block device and `/dev/fuse`, and a watchdog for a crashed or stuck driver. vfat stays in the kernel, its simplest and oldest driver: fusefat is experimental, lklfuse is not packaged in Debian. A compromised FUSE driver no longer takes over the kiosk, but can still hide files from the scan; a disposable micro-VM would also cover vfat, at a much higher cost.
+
+### Signatures
+
+- Signature sets are signed with Ed25519 and verified with `openssl`: no rollback, atomic installation, previous set kept; the installed set is verified at each start, and the engines (and clamd) only read it.
+- `pandora-box-signatures publish` downloads the sources (ClamAV, YARA Forge, MalwareBazaar, Hashlookup) with a cache, checks the set with the kiosk engines, then signs it (container `publish/`).
+- Online (image profile `online`): the update service is the only user allowed out by the firewall (HTTP(S), proxy), only the changed files are downloaded, the new set is loaded when the kiosk is idle. Built from the sources, the set is signed with a key generated on the kiosk; the abuse.ch Auth-Key is a systemd credential of the image (`image/credentials.toml`, outside git).
+- Online kiosks synchronize their clock with systemd-timesyncd (NTP servers of the organization or from DHCP); only timesyncd may send NTP requests.
+
+### File transfer stations
+
+- The stations only handle a verified key: a key the kiosk could scan entirely. A key not verified is refused, without copy in either direction and without identifier written on it.
+- Inbound station: from a verified key, only the clean files are copied, never the malicious or suspicious ones, to a network share (SFTP, SCP over SSH or SMB) configured on the kiosk: one directory per key, named after its identifier, one subdirectory per scan, named after the `report_id` of the report. The key is not cleaned; the identifier file is the only file written on it.
+- Outbound station: a key holding a file the cleaning would remove (a malicious file, or a suspicious file with `scan.suspicious = "block"`) is refused until it is cleaned by a kiosk that cleans (an inbound station never cleans), then inserted again. The key must stay in the kiosk from the scan to the end of the copy; removed, it is scanned again. The files of the outbound directory of the key on the server that are new or modified (size, modification time) are scanned, then copied to the key, after a check of its free space; the limits of each filesystem are handled (4 GiB files on vfat, forbidden characters, name length, case-insensitive names), and a file that cannot be written is reported, never renamed silently.
+- Identifier: the USB serial number is missing or shared on some keys, so at the first insertion of a verified key the kiosk writes a token in a hidden file `.pandora-box` at its root (on the first supported partition): a random UUID signed with a key of the kiosks of the organization (Ed25519, systemd credential of the image). The file is read as hostile data (size limit, strict format); a malformed or unsigned token is logged and replaced with a new one (new identifier, empty outbound directory). The signature prevents forging an identifier, not copying the file to another key.
+- An ext4 key with a journal to replay is not reformatted to receive files: its identifier could not be read, and it would lose its outbound files.
+
+### Interface
+
+- The interface is drawn with Pillow into the framebuffer, without display server, browser or local web server: the earlier plan (FastAPI and htmx in `cage` with Chromium) would have added a browser and a socket to the image. Cleaning is confirmed by a touch anywhere on the screen, without buttons.
+- An administrator customizes it with a theme folder built into the image (logo, colors, texts of every screen, images, fonts), checked at build time; `pandora-box-theme preview` shows the screens without a kiosk. French and English are built in (`display.language`), a theme can add a language.
 
 ## Contributing
 
