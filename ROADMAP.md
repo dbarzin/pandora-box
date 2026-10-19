@@ -219,6 +219,8 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [x] Detection of programs disguised as documents: extension / real type mismatch, double extension (`engines.heuristics`)
 - [ ] **Content disarm and reconstruction (CDR)** to a trusted device using Dangerzone
 - [ ] Selective copy of clean files only to a second device
+- [ ] Copy of the clean files of the key to a network share (SFTP, SCP over SSH or SMB), configured on the kiosk: only clean files are copied, never suspicious, malicious or unscanned ones; one directory per key, named after its USB identity (vendor, model, serial number), with one subdirectory per scan named after the `report_id` of the report, since the serial number is missing or shared on some keys and set by the key itself. With this option, the kiosk becomes an inbound file transfer station: the key is not cleaned, it is only read
+- [ ] Outbound file transfer station: copy files from a network share (SFTP, SCP over SSH or SMB), configured on the kiosk, to the inserted key; the key is scanned first and must stay in the kiosk from the scan to the end of the copy (removed, it is scanned again at its next insertion), the files are scanned before being written, the choice of the files to copy (outbound directory, user identification) remains to define
 
 ## Phase 5 — Fleet management and traceability
 
