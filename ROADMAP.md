@@ -164,7 +164,7 @@ Tasks:
 - [x] Touchscreen model selection and driver support: Waveshare 7-inch HDMI LCD (C), mode of the screen on the kernel command line, touch controller allowed by USBGuard
 - [ ] Physical hardening: only the scanning USB ports reachable from the outside, other ports and BIOS access protected
 - [ ] Assembly guide (bill of materials, printing settings, wiring, USB port layout for the user)
-- [ ] Enclosure design published in the repository (source files + STL), under an open hardware license: the STL of the 7-inch and 10-inch models and the OpenSCAD source of the 7-inch model are in [3D/](3D/), under the CERN-OHL-S v2; the source of the 10-inch model remains to be added
+- [x] Enclosure design published in the repository (source files + STL), under an open hardware license: the STL of the 7-inch and 10-inch models and the OpenSCAD source of the 7-inch model are in [3D/](3D/), under the CERN-OHL-S v2; the source of the 10-inch model remains to be added
 - [x] BIOS configuration guide (password, boot order locked, Secure Boot with the image key enrolled from setup mode, VT-d, restart after a power failure)
 
 ### System integrity
