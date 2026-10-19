@@ -2,6 +2,7 @@
 # Build the PandoraBox image with mkosi, in a Debian 13 container.
 #   image/build.sh                 production image
 #   image/build.sh --profile test  test image (test signatures, root shell on hvc0)
+#   image/build.sh --release       production image signed with the release keys
 # Other arguments are passed to mkosi. An existing image is replaced. The
 # image is written to image/mkosi.output/. Its version is the date and time
 # of the build (UTC, YYYYMMDDHHMMSS, like the serial of a signature set),
@@ -9,10 +10,40 @@
 # The image is signed with image/mkosi.key and image/mkosi.crt, and trusts the
 # signature sets signed with image/update.key (public key image/update.pem):
 # development key pairs are generated when they do not exist (never use them
-# for a kiosk).
+# for a kiosk). With --release, the image is signed with the keys of the
+# release token instead, and trusts the public keys of image/release/
+# (image/pkcs11.sh, docs/release.md): its PIN is asked on the terminal, or
+# read from the standard input.
 set -eu
 
 cd "$(dirname "$0")"
+release=""
+for arg do
+    shift
+    case "$arg" in
+    --release) release=yes ;;
+    *) set -- "$@" "$arg" ;;
+    esac
+done
+docker_options=""
+pin=""
+if [ -n "$release" ]; then
+    case " $* " in
+    *" --profile"* | *" -p"*)
+        echo "error: a release image has no profile" >&2
+        exit 2
+        ;;
+    esac
+    for key in release/secure-boot.crt release/update.pem; do
+        if [ ! -f "$key" ]; then
+            echo "error: no image/$key (docs/release.md)" >&2
+            exit 1
+        fi
+    done
+    . ./pkcs11.sh
+    docker_options=$(pkcs11_docker_options)
+    pin=$(pkcs11_read_pin)
+fi
 case " $* " in
 *" --image-version="*) ;;
 *) set -- --image-version="$(date -u +%Y%m%d%H%M%S)" "$@" ;;
@@ -37,18 +68,35 @@ mkdir -p mkosi.output
 # them, and its message about it for each output is filtered out, as those of
 # systemctl preset-all about the masked units (masked on purpose, by Debian or
 # by the image). The image is given back to the calling user.
-exec docker run --rm --privileged \
+# Release: the keys are in the token, the PIN comes on the standard input.
+# shellcheck disable=SC2086  # docker_options: several words
+printf '%s\n' "$pin" | docker run --rm --privileged $docker_options \
     -v "$PWD/..:/src" -w /src/image \
     -v pandora-box-mkosi:/var/tmp \
     -e HOST_IDS="$(id -u):$(id -g)" -e KEY_NAME="PandoraBox development key ($(id -un)@$(hostname))" \
+    -e RELEASE="$release" \
     pandora-box-builder bash -c '
         mkdir -p /var/tmp/cache/images /var/tmp/cache/packages
-        if [ ! -e mkosi.key ] && [ ! -e mkosi.crt ]; then
+        if [ -n "$RELEASE" ]; then
+            . ./pkcs11.sh
+            pkcs11_setup
+            set -- "$@" \
+                --secure-boot-key-source=provider:pkcs11 \
+                --secure-boot-key="$PANDORA_BOX_SECURE_BOOT_KEY" \
+                --secure-boot-certificate=release/secure-boot.crt \
+                --verity-key-source=provider:pkcs11 \
+                --verity-key="$PANDORA_BOX_SECURE_BOOT_KEY" \
+                --verity-certificate=release/secure-boot.crt \
+                --sign-expected-pcr-key-source=provider:pkcs11 \
+                --sign-expected-pcr-key="$PANDORA_BOX_SECURE_BOOT_KEY" \
+                --sign-expected-pcr-certificate=release/secure-boot.crt \
+                --environment=UPDATE_PUBLIC_KEY=release/update.pem
+        elif [ ! -e mkosi.key ] && [ ! -e mkosi.crt ]; then
             mkosi --genkey-common-name="$KEY_NAME" --genkey-valid-days=3650 genkey
             chown "$HOST_IDS" mkosi.key mkosi.crt
             chmod 0600 mkosi.key
         fi
-        if [ ! -e update.key ] && [ ! -e update.pem ]; then
+        if [ -z "$RELEASE" ] && [ ! -e update.key ] && [ ! -e update.pem ]; then
             openssl genpkey -algorithm ed25519 -out update.key
             openssl pkey -in update.key -pubout -out update.pem
             chown "$HOST_IDS" update.key update.pem

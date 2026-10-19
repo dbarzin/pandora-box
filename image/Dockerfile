@@ -1,6 +1,7 @@
 # Image build and test environment: mkosi, QEMU/KVM and OVMF from Debian 13
 # (trixie), so that the developer only needs Docker. Used by image/build.sh
-# and image/vm.sh.
+# and image/vm.sh. The PKCS#11 tools sign a release with the keys of a
+# YubiKey (image/release.sh); SoftHSM and OpenSC test it without one.
 FROM debian:trixie-slim
 
 RUN apt-get update \
@@ -11,4 +12,8 @@ RUN apt-get update \
         python3 python3-venv python3-pip git ca-certificates \
         qemu-system-x86 qemu-utils ovmf swtpm swtpm-tools \
         openssl sbsigntool python3-virt-firmware \
-    && rm -rf /var/lib/apt/lists/*
+        pkcs11-provider p11-kit p11-kit-modules ykcs11 yubico-piv-tool pcscd libccid \
+        softhsm2 opensc \
+    && rm -rf /var/lib/apt/lists/* \
+    # p11-kit loads the PKCS#11 module of the token only (image/pkcs11.sh)
+    && rm -f /usr/share/p11-kit/modules/*.module

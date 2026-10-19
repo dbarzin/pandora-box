@@ -6,10 +6,12 @@ Everything runs in a Debian 13 container (`image/Dockerfile`: mkosi, QEMU,
 OVMF): the build computer only needs Docker.
 
 > [!WARNING]
-> The image and the signature sets are signed with development keys only.
-> The production image has no signature set: the kiosk scans nothing until a
-> signature update device is inserted (see [Signatures](signatures.md)).
-> See the phase 2 tasks in the [roadmap](https://github.com/sourcentis/pandora-box/blob/main/ROADMAP.md#phase-2--minimal-hardened-image).
+> The image and the signature sets are signed with development keys,
+> generated on the build computer; an image signed with the release keys of
+> the project is built with `image/build.sh --release` (see
+> [Releases](release.md)). The production image has no signature set: the
+> kiosk scans nothing until a signature update device is inserted (see
+> [Signatures](signatures.md)).
 
 ## In short
 
@@ -65,9 +67,12 @@ its public key `image/update.pem` is installed in the image.
 When they do not exist, `image/build.sh` generates a **development** pair of
 each, valid 10 years, that never leaves the build computer (ignored by git).
 Keep them: a kiosk only accepts the updates signed with the keys of its
-image. A kiosk must only trust the release keys of the project, which are not
-defined yet: they will be kept out of the repository, and mkosi can sign with
-a key in a hardware token (`--secure-boot-key-source=provider:pkcs11`).
+image.
+
+`image/build.sh --release` signs the image with the release keys of the
+project instead, kept in a YubiKey, and makes it trust their public keys,
+`image/release/secure-boot.crt` and `image/release/update.pem`: see
+[Releases](release.md).
 
 ## Build
 
@@ -75,6 +80,7 @@ a key in a hardware token (`--secure-boot-key-source=provider:pkcs11`).
 image/build.sh                  # production image
 image/build.sh --profile online # production image with network
 image/build.sh --profile test   # test image, for the virtual machine only
+image/build.sh --release        # production image signed with the release keys (Releases)
 ```
 
 The image is written to `image/mkosi.output/`: `pandora-box.raw` (or
@@ -160,6 +166,8 @@ After a change of the dependencies in `pyproject.toml`, regenerate it with
 | `image/build.sh`, `image/vm.sh` | Build and run in the container |
 | `image/build-test.sh`, `image/package-update.sh` | Build the images of the virtual machine test; build a signed image update |
 | `image/maintenance-key.sh` | Prepare a maintenance device |
+| `image/release.sh`, `image/pkcs11.sh`, `image/release/` | Build and publish a release signed with the keys of a YubiKey ([Releases](release.md)) |
+| `image/softhsm-keys.sh` | Test release keys in a SoftHSM token |
 
 What the image contains and how it is protected: see
 [Image internals](image.md).

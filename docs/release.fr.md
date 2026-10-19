@@ -1,0 +1,165 @@
+# Versions publiées
+
+Une version publiée de PandoraBox est une image prête à écrire, publiée sur
+[GitHub](https://github.com/sourcentis/pandora-box/releases), signée avec les
+clés de publication du projet. Une borne installée à partir d'elle ne démarre
+que des images signées avec la même clé Secure Boot, et n'installe que les
+jeux de signatures, mises à jour de l'image et demandes de maintenance signés
+avec la même clé de mise à jour.
+
+Une organisation qui veut ses propres clés construit son image elle-même
+([Construction de l'image](build.md)) : ses bornes font alors confiance à ses
+clés, pas à celles du projet.
+
+## Clés de publication { #release-keys }
+
+| Clé | Algorithme | Emplacement YubiKey | Signe | Partie publique |
+|---|---|---|---|---|
+| Clé Secure Boot | RSA 2048 | 9c | systemd-boot, l'image noyau unifiée, le hash racine dm-verity ; inscrite dans le firmware de la borne | `image/release/secure-boot.crt` |
+| Clé de mise à jour | Ed25519 | 82 | jeux de signatures, mises à jour de l'image, demandes de maintenance, sommes de contrôle d'une version | `image/release/update.pem` |
+
+Les clés privées ne quittent jamais une **YubiKey 5** (application PIV,
+firmware 5.7 ou plus récent pour Ed25519). Le conteneur de construction les
+utilise par `ykcs11` et le fournisseur PKCS#11 d'OpenSSL
+(`image/pkcs11.sh`). Il atteint la YubiKey par le démon PC/SC de
+l'ordinateur de construction quand il en fait tourner un (`/run/pcscd`),
+sinon il démarre le sien.
+
+Les parties publiques sont dans le dépôt, dans `image/release/`. Leurs
+empreintes sont aussi publiées ici, pour vérifier une version avec une autre
+source qu'elle-même :
+
+```sh
+openssl x509 -in image/release/secure-boot.crt -noout -fingerprint -sha256
+openssl pkey -pubin -in image/release/update.pem -outform DER | sha256sum
+```
+
+> [!IMPORTANT]
+> Les clés de publication ne sont pas encore créées : leurs empreintes
+> seront données ici.
+
+### Créer les clés { #creating-the-keys }
+
+Une seule fois, sur un ordinateur hors ligne. Les clés sont créées en
+mémoire, importées dans **deux** YubiKeys, la seconde gardée dans un coffre,
+puis effacées. Une clé Secure Boot perdue signifie que les bornes ne peuvent
+plus qu'être réinstallées, à la main ; une clé de mise à jour perdue, qu'elles
+ne reçoivent plus de jeux de signatures.
+
+Dans le conteneur de construction, avec les fichiers en mémoire seulement :
+
+```sh
+docker run --rm -it -v /run/pcscd:/run/pcscd -v "$PWD/image/release:/release" \
+    --tmpfs /keys:mode=0700 pandora-box-builder bash
+cd /keys
+openssl req -new -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=PandoraBox release Secure Boot key/" \
+    -keyout secure-boot.key -out secure-boot.crt
+openssl genpkey -algorithm ed25519 -out update.key
+openssl req -new -x509 -key update.key -days 3650 -subj "/CN=PandoraBox release update key/" -out update.crt
+openssl pkey -in update.key -pubout -out update.pem
+```
+
+Puis pour chaque YubiKey (`-k` demande sa clé de gestion ; changez d'abord
+le PIN, le PUK et la clé de gestion par défaut d'une YubiKey neuve) :
+
+```sh
+yubico-piv-tool -k -a import-key -s 9c -i secure-boot.key --pin-policy=once --touch-policy=never
+yubico-piv-tool -k -a import-certificate -s 9c -i secure-boot.crt
+yubico-piv-tool -k -a import-key -s 82 -i update.key --pin-policy=once --touch-policy=never
+yubico-piv-tool -k -a import-certificate -s 82 -i update.crt
+pkcs11-tool --module /usr/lib/x86_64-linux-gnu/libykcs11.so --login --list-objects
+```
+
+`ykcs11` ne montre que la clé d'un emplacement qui contient un certificat. La
+politique de PIN `once` permet à une construction de signer toutes les
+parties de l'image avec un seul PIN ; la politique de toucher `never`, sans
+toucher la YubiKey à chaque signature.
+
+Enfin, publiez les clés publiques et quittez le conteneur, ce qui efface les
+clés privées :
+
+```sh
+cp secure-boot.crt update.pem /release/
+exit
+git add image/release/secure-boot.crt image/release/update.pem
+```
+
+Avec d'autres emplacements ou un autre jeton, donnez les URI PKCS#11 des clés
+et le module : `PANDORA_BOX_SECURE_BOOT_KEY`, `PANDORA_BOX_UPDATE_KEY` et
+`PANDORA_BOX_PKCS11_MODULE` (voir `image/pkcs11.sh`).
+
+## Publier une version { #making-a-release }
+
+Sur l'ordinateur de construction, avec la YubiKey branchée et
+[gh](https://cli.github.com/) connecté à GitHub :
+
+```sh
+git tag -a v1.0.0 -m "PandoraBox 1.0.0"
+git push origin v1.0.0
+image/release.sh v1.0.0
+```
+
+`image/release.sh` demande une fois le PIN de la YubiKey, puis :
+
+1. extrait les seuls fichiers du tag (`git archive`) dans
+   `release/v1.0.0/src/` : aucun thème local, identifiant ou clé de
+   développement n'entre dans l'image ;
+2. construit l'image sans profil, signée avec la clé Secure Boot
+   (`image/build.sh --release`), qui fait confiance à
+   `image/release/update.pem` ;
+3. vérifie la signature de l'image noyau unifiée, construit la mise à jour
+   signée de l'image, compresse l'image disque, signe les sommes de contrôle
+   avec la clé de mise à jour, et vérifie chaque signature avec les clés
+   publiques du tag ;
+4. crée un **brouillon** de version du tag sur GitHub avec les fichiers de
+   `release/v1.0.0/assets/`.
+
+| Fichier | Contenu |
+|---|---|
+| `pandora-box-v1.0.0.raw.xz` | image disque, à écrire sur le disque de la borne |
+| `pandora-box-image-v1.0.0.tar` | mise à jour signée de l'image : `pandora-box-image/`, à extraire à la racine d'une clé USB ([Mises à jour du système](update.md)) |
+| `pandora-box-v1.0.0.manifest` | paquets de l'image |
+| `secure-boot.crt`, `update.pem` | clés publiques de publication |
+| `SHA256SUMS`, `SHA256SUMS.sig` | sommes de contrôle, signées avec la clé de mise à jour |
+
+Vérifiez le brouillon sur GitHub, puis publiez-le. `--no-publish` s'arrête
+avant GitHub. L'image d'une version n'a pas de profil : le profil `online`
+contient les identifiants et réglages d'une organisation, et n'est pas
+publié.
+
+### Tester sans YubiKey { #testing-without-a-yubikey }
+
+`image/softhsm-keys.sh` crée un jeton SoftHSM, un dossier, avec des clés de
+test dans les emplacements et sous les noms de la YubiKey :
+
+```sh
+image/softhsm-keys.sh /tmp/token
+cp /tmp/token/secure-boot.crt /tmp/token/update.pem image/release/   # dans un clone de test seulement
+echo 123456 | PANDORA_BOX_SOFTHSM=/tmp/token image/release.sh v0.0.0-test --no-publish
+```
+
+## Vérifier une version { #verifying-a-release }
+
+Téléchargez les fichiers de la version, puis vérifiez la signature des
+sommes de contrôle avec la clé de mise à jour du projet, et les fichiers avec
+les sommes de contrôle :
+
+```sh
+openssl pkeyutl -verify -pubin -inkey update.pem -rawin -in SHA256SUMS -sigfile SHA256SUMS.sig
+sha256sum -c SHA256SUMS
+openssl pkey -pubin -in update.pem -outform DER | sha256sum
+```
+
+La dernière empreinte doit être celle donnée [plus haut](#release-keys) : le
+`update.pem` d'une version ne prouve rien à lui seul, car quiconque
+publierait une fausse version donnerait le sien. Écrivez ensuite l'image
+([Installation initiale](install.md#writing-the-image)) :
+
+```sh
+xz -dc pandora-box-v1.0.0.raw.xz | sudo dd of=/dev/sdX bs=4M conv=fsync status=progress
+```
+
+À son premier démarrage, la borne inscrit `secure-boot.crt` dans son
+firmware. Une borne installée avec des clés de développement n'accepte pas
+les mises à jour d'une version publiée : écrivez à nouveau l'image de la
+version sur son disque.

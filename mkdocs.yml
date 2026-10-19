@@ -61,6 +61,7 @@ plugins:
             -- Hardware: -- Matériel
             INSTALLATION: INSTALLATION
             -- Building the image: -- Construction de l'image
+            -- Releases: -- Versions publiées
             -- Testing with QEMU: -- Test avec QEMU
             -- Initial installation: -- Installation initiale
             MAINTENANCE: MAINTENANCE
@@ -103,6 +104,7 @@ nav:
       - -- Hardware: hardware.md
   - INSTALLATION:
       - -- Building the image: build.md
+      - -- Releases: release.md
       - -- Testing with QEMU: vm.md
       - -- Initial installation: install.md
   - MAINTENANCE:

@@ -6,11 +6,13 @@ La borne est une image système complète, construite avec
 mkosi, QEMU, OVMF) : l'ordinateur de construction n'a besoin que de Docker.
 
 > [!WARNING]
-> L'image et les jeux de signatures ne sont signés qu'avec des clés de
-> développement. L'image de production n'a pas de jeu de signatures : la
-> borne n'analyse rien tant qu'une clé de mise à jour des signatures n'a pas
-> été insérée (voir [Signatures](signatures.md)).
-> Voir les tâches de la phase 2 dans la [feuille de route](https://github.com/sourcentis/pandora-box/blob/main/ROADMAP.md#phase-2--minimal-hardened-image).
+> L'image et les jeux de signatures sont signés avec des clés de
+> développement, générées sur l'ordinateur de construction ; une image signée
+> avec les clés de publication du projet se construit avec
+> `image/build.sh --release` (voir [Versions publiées](release.md)). L'image
+> de production n'a pas de jeu de signatures : la borne n'analyse rien tant
+> qu'une clé de mise à jour des signatures n'a pas été insérée (voir
+> [Signatures](signatures.md)).
 
 ## En bref { #in-short }
 
@@ -68,11 +70,12 @@ demandes de maintenance signés avec `image/update.key` : sa clé publique
 Quand elles n'existent pas, `image/build.sh` génère une paire de
 **développement** pour chacune, valable 10 ans, qui ne quitte jamais
 l'ordinateur de construction (ignorée par git). Conservez-les : une borne
-n'accepte que les mises à jour signées avec les clés de son image. Une borne
-ne doit faire confiance qu'aux clés de publication du projet, qui ne sont
-pas encore définies : elles seront gardées hors du dépôt, et mkosi peut
-signer avec une clé dans un jeton matériel
-(`--secure-boot-key-source=provider:pkcs11`).
+n'accepte que les mises à jour signées avec les clés de son image.
+
+`image/build.sh --release` signe plutôt l'image avec les clés de
+publication du projet, gardées dans une YubiKey, et lui fait confiance à
+leurs clés publiques, `image/release/secure-boot.crt` et
+`image/release/update.pem` : voir [Versions publiées](release.md).
 
 ## Construction { #build }
 
@@ -80,6 +83,7 @@ signer avec une clé dans un jeton matériel
 image/build.sh                  # image de production
 image/build.sh --profile online # image de production en réseau
 image/build.sh --profile test   # image de test, pour la machine virtuelle uniquement
+image/build.sh --release        # image de production signée avec les clés de publication
 ```
 
 L'image est écrite dans `image/mkosi.output/` : `pandora-box.raw` (ou
@@ -170,6 +174,8 @@ reconstruisez le cache (`image/build.sh -f`).
 | `image/build.sh`, `image/vm.sh` | Construire et exécuter dans le conteneur |
 | `image/build-test.sh`, `image/package-update.sh` | Construire les images du test en machine virtuelle ; construire une mise à jour signée de l'image |
 | `image/maintenance-key.sh` | Préparer une clé de maintenance |
+| `image/release.sh`, `image/pkcs11.sh`, `image/release/` | Construire et publier une version signée avec les clés d'une YubiKey ([Versions publiées](release.md)) |
+| `image/softhsm-keys.sh` | Clés de publication de test dans un jeton SoftHSM |
 
 Ce que contient l'image et comment elle est protégée : voir
 [Fonctionnement de l'image](image.md).

@@ -21,12 +21,11 @@ The open tasks of the phases below, by priority.
 
 **1. First public release**
 
-1. Release signing key of the project and release Secure Boot keys, stored on a hardware token (phase 2)
-2. Signed image and published checksums (phase 2)
-3. Reproducible builds and an SBOM for every release (phase 2)
-4. Documented threat model (phase 6)
-5. Deployment guide: kiosk placement, user procedure, associated USB policy (phase 6)
-6. Physical hardening and assembly guide (phase 2)
+1. Release keys of the project: create them in two YubiKeys and publish their fingerprints; the signing tools are ready (phase 2, [docs/release.md](docs/release.md))
+2. Reproducible builds and an SBOM for every release (phase 2)
+3. Documented threat model (phase 6)
+4. Deployment guide: kiosk placement, user procedure, associated USB policy (phase 6)
+5. Physical hardening and assembly guide (phase 2)
 
 **2. User features**
 
@@ -146,7 +145,7 @@ image/vm.sh test      # end-to-end test in a virtual machine
 
 - [x] Image based on Debian 13 (trixie), built with `mkosi`
 - [x] Single target: x86_64 (`Architecture=x86-64` in `image/mkosi.conf`, see reference hardware); ARM64 is not targeted, as the Raspberry Pi proved too slow
-- [ ] Signed image and published checksums
+- [x] Signed image and published checksums: `image/release.sh` builds a tag only, signs the image with the release keys of a YubiKey, and publishes the compressed disk image, the signed image update and the checksums signed with the update key as a draft GitHub release ([docs/release.md](docs/release.md))
 - [ ] Reproducible builds and an SBOM generated for every release
 
 ### Reference hardware
@@ -171,7 +170,7 @@ Tasks:
 
 - [x] Read-only root filesystem, variable data on a separate partition
 - [x] `dm-verity` on the system partition
-- [x] Unified Kernel Image (UKI) and Secure Boot (development keys; release keys and their storage still to define)
+- [x] Unified Kernel Image (UKI) and Secure Boot (development keys, or the release keys of a YubiKey with `image/build.sh --release`)
 - [x] Atomic A/B partition updates (`systemd-sysupdate`), installed from a signed image update device, with boot assessment and automatic rollback
 - [x] Online image updates (`updates.image_url`): downloaded by the update service, installed without network, the idle kiosk restarts on the new version
 - [x] Smaller UKI: 40 MB instead of 130 MB, the initrd only holds the kernel modules needed to mount the root filesystem
@@ -205,7 +204,7 @@ See [docs/signatures.md](docs/signatures.md).
 - [x] Publication: `pandora-box-signatures publish` downloads the sources (ClamAV, YARA Forge, MalwareBazaar, Hashlookup) with a cache, checks the set with the kiosk engines, then signs it; container `publish/`
 - [x] Online updates through a dedicated channel: image profile `online`, update service as the only user allowed out by the firewall, HTTP(S) and proxy, only the changed files downloaded, new set loaded when the kiosk is idle
 - [x] Online updates from the sources themselves (freshclam, YARA Forge, MalwareBazaar, Hashlookup): the abuse.ch Auth-Key is a systemd credential of the image (`image/credentials.toml`, outside git), the set is signed with a key generated on the kiosk
-- [ ] Release signing key of the project, its storage (hardware token) and the publication schedule
+- [ ] Release keys of the project: stored in two YubiKeys 5 (Secure Boot key RSA 2048, update key Ed25519), used through PKCS#11 by the build ([docs/release.md](docs/release.md)); the keys remain to be created and their fingerprints published, and the publication schedule to define
 - [x] Time synchronization of online kiosks: systemd-timesyncd, NTP servers of the organization or from DHCP, only timesyncd allowed to send NTP requests by the firewall
 
 ### Testing in a virtual machine
