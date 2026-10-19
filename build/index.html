@@ -16,7 +16,7 @@
         <link rel="prev" href="../hardware/">
       
       
-        <link rel="next" href="../vm/">
+        <link rel="next" href="../release/">
       
       
         
@@ -408,6 +408,8 @@
       
         
       
+        
+      
     
     
     
@@ -634,6 +636,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Releases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1338,10 +1368,12 @@ Everything runs in a Debian 13 container (<code>image/Dockerfile</code>: mkosi, 
 OVMF): the build computer only needs Docker.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>The image and the signature sets are signed with development keys only.
-The production image has no signature set: the kiosk scans nothing until a
-signature update device is inserted (see <a href="../signatures/">Signatures</a>).
-See the phase 2 tasks in the <a href="https://github.com/sourcentis/pandora-box/blob/main/ROADMAP.md#phase-2--minimal-hardened-image">roadmap</a>.</p>
+<p>The image and the signature sets are signed with development keys,
+generated on the build computer; an image signed with the release keys of
+the project is built with <code>image/build.sh --release</code> (see
+<a href="../release/">Releases</a>). The production image has no signature set: the
+kiosk scans nothing until a signature update device is inserted (see
+<a href="../signatures/">Signatures</a>).</p>
 </div>
 <h2 id="in-short">In short<a class="headerlink" href="#in-short" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>image/build.sh<span class="w">                     </span><span class="c1"># offline kiosk</span>
@@ -1415,13 +1447,16 @@ its public key <code>image/update.pem</code> is installed in the image.</p>
 <p>When they do not exist, <code>image/build.sh</code> generates a <strong>development</strong> pair of
 each, valid 10 years, that never leaves the build computer (ignored by git).
 Keep them: a kiosk only accepts the updates signed with the keys of its
-image. A kiosk must only trust the release keys of the project, which are not
-defined yet: they will be kept out of the repository, and mkosi can sign with
-a key in a hardware token (<code>--secure-boot-key-source=provider:pkcs11</code>).</p>
+image.</p>
+<p><code>image/build.sh --release</code> signs the image with the release keys of the
+project instead, kept in a YubiKey, and makes it trust their public keys,
+<code>image/release/secure-boot.crt</code> and <code>image/release/update.pem</code>: see
+<a href="../release/">Releases</a>.</p>
 <h2 id="build">Build<a class="headerlink" href="#build" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>image/build.sh<span class="w">                  </span><span class="c1"># production image</span>
 image/build.sh<span class="w"> </span>--profile<span class="w"> </span>online<span class="w"> </span><span class="c1"># production image with network</span>
 image/build.sh<span class="w"> </span>--profile<span class="w"> </span><span class="nb">test</span><span class="w">   </span><span class="c1"># test image, for the virtual machine only</span>
+image/build.sh<span class="w"> </span>--release<span class="w">        </span><span class="c1"># production image signed with the release keys (Releases)</span>
 </code></pre></div>
 <p>The image is written to <code>image/mkosi.output/</code>: <code>pandora-box.raw</code> (or
 <code>pandora-box-test.raw</code>, a GPT disk image), the unified kernel image (<code>.efi</code>)
@@ -1536,6 +1571,14 @@ After a change of the dependencies in <code>pyproject.toml</code>, regenerate it
 <tr>
 <td><code>image/maintenance-key.sh</code></td>
 <td>Prepare a maintenance device</td>
+</tr>
+<tr>
+<td><code>image/release.sh</code>, <code>image/pkcs11.sh</code>, <code>image/release/</code></td>
+<td>Build and publish a release signed with the keys of a YubiKey (<a href="../release/">Releases</a>)</td>
+</tr>
+<tr>
+<td><code>image/softhsm-keys.sh</code></td>
+<td>Test release keys in a SoftHSM token</td>
 </tr>
 </tbody>
 </table>

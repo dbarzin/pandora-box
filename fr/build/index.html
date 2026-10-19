@@ -16,7 +16,7 @@
         <link rel="prev" href="../hardware/">
       
       
-        <link rel="next" href="../vm/">
+        <link rel="next" href="../release/">
       
       
         
@@ -408,6 +408,8 @@
       
         
       
+        
+      
     
     
     
@@ -634,6 +636,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Versions publiées
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1338,11 +1368,13 @@
 mkosi, QEMU, OVMF) : l'ordinateur de construction n'a besoin que de Docker.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>L'image et les jeux de signatures ne sont signés qu'avec des clés de
-développement. L'image de production n'a pas de jeu de signatures : la
-borne n'analyse rien tant qu'une clé de mise à jour des signatures n'a pas
-été insérée (voir <a href="../signatures/">Signatures</a>).
-Voir les tâches de la phase 2 dans la <a href="https://github.com/sourcentis/pandora-box/blob/main/ROADMAP.md#phase-2--minimal-hardened-image">feuille de route</a>.</p>
+<p>L'image et les jeux de signatures sont signés avec des clés de
+développement, générées sur l'ordinateur de construction ; une image signée
+avec les clés de publication du projet se construit avec
+<code>image/build.sh --release</code> (voir <a href="../release/">Versions publiées</a>). L'image
+de production n'a pas de jeu de signatures : la borne n'analyse rien tant
+qu'une clé de mise à jour des signatures n'a pas été insérée (voir
+<a href="../signatures/">Signatures</a>).</p>
 </div>
 <h2 id="in-short">En bref<a class="headerlink" href="#in-short" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>image/build.sh<span class="w">                     </span><span class="c1"># borne hors ligne</span>
@@ -1418,15 +1450,16 @@ demandes de maintenance signés avec <code>image/update.key</code> : sa clé pub
 <p>Quand elles n'existent pas, <code>image/build.sh</code> génère une paire de
 <strong>développement</strong> pour chacune, valable 10 ans, qui ne quitte jamais
 l'ordinateur de construction (ignorée par git). Conservez-les : une borne
-n'accepte que les mises à jour signées avec les clés de son image. Une borne
-ne doit faire confiance qu'aux clés de publication du projet, qui ne sont
-pas encore définies : elles seront gardées hors du dépôt, et mkosi peut
-signer avec une clé dans un jeton matériel
-(<code>--secure-boot-key-source=provider:pkcs11</code>).</p>
+n'accepte que les mises à jour signées avec les clés de son image.</p>
+<p><code>image/build.sh --release</code> signe plutôt l'image avec les clés de
+publication du projet, gardées dans une YubiKey, et lui fait confiance à
+leurs clés publiques, <code>image/release/secure-boot.crt</code> et
+<code>image/release/update.pem</code> : voir <a href="../release/">Versions publiées</a>.</p>
 <h2 id="build">Construction<a class="headerlink" href="#build" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>image/build.sh<span class="w">                  </span><span class="c1"># image de production</span>
 image/build.sh<span class="w"> </span>--profile<span class="w"> </span>online<span class="w"> </span><span class="c1"># image de production en réseau</span>
 image/build.sh<span class="w"> </span>--profile<span class="w"> </span><span class="nb">test</span><span class="w">   </span><span class="c1"># image de test, pour la machine virtuelle uniquement</span>
+image/build.sh<span class="w"> </span>--release<span class="w">        </span><span class="c1"># image de production signée avec les clés de publication</span>
 </code></pre></div>
 <p>L'image est écrite dans <code>image/mkosi.output/</code> : <code>pandora-box.raw</code> (ou
 <code>pandora-box-test.raw</code>, une image disque GPT), l'image noyau unifiée
@@ -1546,6 +1579,14 @@ reconstruisez le cache (<code>image/build.sh -f</code>).</p>
 <tr>
 <td><code>image/maintenance-key.sh</code></td>
 <td>Préparer une clé de maintenance</td>
+</tr>
+<tr>
+<td><code>image/release.sh</code>, <code>image/pkcs11.sh</code>, <code>image/release/</code></td>
+<td>Construire et publier une version signée avec les clés d'une YubiKey (<a href="../release/">Versions publiées</a>)</td>
+</tr>
+<tr>
+<td><code>image/softhsm-keys.sh</code></td>
+<td>Clés de publication de test dans un jeton SoftHSM</td>
 </tr>
 </tbody>
 </table>
