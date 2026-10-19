@@ -21,6 +21,7 @@ _FS_DRIVERS = {"vfat": "vfat", "exfat": "exfat", "ntfs": "ntfs3", "ext4": "ext4"
 _NO_UNIX_PERMISSIONS = {"vfat", "exfat", "ntfs"}
 # Absolute paths: commands are never looked up in PATH
 MOUNT = "/usr/bin/mount"
+BLOCKDEV = "/usr/sbin/blockdev"
 UMOUNT = "/usr/bin/umount"
 EJECT = "/usr/bin/eject"
 SUDO = "/usr/bin/sudo"
@@ -123,15 +124,29 @@ class Mounter:
         options = mount_options(
             device.fs_type, read_only, os.getuid(), os.getgid(), self.reader_gid
         )
-        self._run(
-            MOUNT,
-            "-t",
-            _FS_DRIVERS[device.fs_type],
-            "-o",
-            ",".join(options),
-            device.node,
-            str(self.mount_point),
-        )
+        # The block device itself is read-only while it is scanned: the
+        # kernel writes nothing to it, not even an ext4 journal replay. An
+        # ext4 filesystem whose journal needs a replay is then not mounted
+        # (not verified): mounted without it (noload), its files would not be
+        # those a computer sees once it has replayed the journal.
+        self._run(BLOCKDEV, "--setro" if read_only else "--setrw", device.node)
+        try:
+            self._run(
+                MOUNT,
+                "-t",
+                _FS_DRIVERS[device.fs_type],
+                "-o",
+                ",".join(options),
+                device.node,
+                str(self.mount_point),
+            )
+        except DeviceError as ex:
+            if read_only and device.fs_type == "ext4" and "read-only" in str(ex):
+                raise DeviceError(
+                    "ext4 journal to replay (not cleanly unmounted): eject the device"
+                    " properly from the computer, then scan it again"
+                ) from ex
+            raise
         self.device = device
         log_event(logger, "device_mounted", node=device.node, options=",".join(options))
 

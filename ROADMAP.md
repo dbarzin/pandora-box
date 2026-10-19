@@ -28,7 +28,7 @@ The open tasks of the phases below, by priority.
 
 **2. Hardening and user features**
 
-1. Devices mounted outside the kernel of the kiosk: FUSE or lklfuse in the sandbox of the engines, or a disposable micro-VM (phase 2)
+1. Filesystems of the devices parsed outside the kernel of the kiosk: user-space readers or FUSE in the sandbox of the engines, or a disposable micro-VM (phase 2)
 2. File transfer stations: signed key identifier, then inbound station, then outbound station (phase 4); they need the `online` profile, a firewall opening to the server and SFTP/SMB clients in the image, to cover in the threat model
 3. Selective copy of clean files to a second device, sharing the selection of the inbound station, and the reformatting option, which writes back the clean files too (phase 4)
 4. Office documents with `oletools` (phase 4)
@@ -87,7 +87,7 @@ The PandoraBox v1 code has been ported to the `pandora_box` package (`src/pandor
 | `config.py` | TOML configuration, validated at startup |
 | `statemachine.py`, `kiosk.py` | State machine and kiosk workflow |
 | `monitor.py` | USB detection with udev |
-| `device.py` | Hardened mounting (`ro,noexec,nosuid,nodev`, read-write only to clean) |
+| `device.py` | Hardened mounting (`ro,noexec,nosuid,nodev` on a read-only block device, read-write only to clean) |
 | `inventory.py` | Device inventory: never follows links, never leaves the device, limits |
 | `scanner.py`, `workers.py`, `worker.py` | Scan in supervised worker processes, timeouts and watchdog |
 | `sigsets.py`, `publish.py` | Signed signature sets: verification, installation, publication from the sources, `pandora-box-signatures` command |
@@ -186,9 +186,9 @@ Tasks:
 - [x] No USB network, wireless, Bluetooth, USB serial and modem drivers in the image; USB HID is kept for the touchscreen, keyboards and mice are blocked by USBGuard
 - [x] USBGuard rule allowing the touchscreen of the reference hardware (Waveshare `0eef:0005`, its serial, HID interface only, internal port), touch tested in the virtual machine
 - [x] No boot loader menu: systemd-boot does not read the keyboard (a keyboard works in the firmware, before USBGuard starts)
-- [x] Devices mounted with `ro,noexec,nosuid,nodev` by the kiosk, no automount (no udisks in the image)
+- [x] Devices mounted with `ro,noexec,nosuid,nodev` by the kiosk, no automount (no udisks in the image); the block device is read-only while it is scanned (`blockdev --setro`), so the kernel writes nothing to it, and an ext4 filesystem whose journal needs a replay is not mounted (device not verified) rather than scanned without its journal
 - [x] Limited set of supported filesystems (vfat, exfat, ntfs3, ext4): the kiosk refuses to mount any other
-- [ ] Devices mounted outside the kernel of the kiosk: today its kernel parses the filesystem structures given by the device (read-only, `noexec`, four filesystems, root filesystem on dm-verity), which limits the damage without removing the risk; mount them with FUSE or lklfuse (the Linux filesystem drivers in user space) in the sandbox of the engines, or in a disposable micro-VM
+- [ ] Filesystems of the devices parsed outside the kernel of the kiosk: today its kernel parses the structures given by the device, and a flaw of a filesystem driver (ext4, ntfs3 and exfat get regular fuzzing findings on crafted images) runs code in the kernel, before any sandbox; the read-only block device, `noexec`, the four filesystems and the root filesystem on dm-verity limit the damage without removing the risk. Options, by cost: user-space readers without mounting (The Sleuth Kit, 7-Zip) extracting the files to a tmpfs in the sandbox of the engines; FUSE drivers (ntfs-3g, fuse2fs, exfat-fuse) in that sandbox; a disposable micro-VM reading the device through virtio-blk. With the reformatting option, the kiosk no longer mounts read-write a structure given by the device either
 - [x] Hardened systemd services (`ProtectSystem`, `NoNewPrivileges`, seccomp filters; `PrivateNetwork` and `MemoryDenyWriteExecute` for clamd), exposure measured by `systemd-analyze security` in the virtual machine test
 - [x] Each scan worker runs in a `bubblewrap` sandbox, without network, under a dedicated user without capabilities, with a system call filter; the kiosk opens the files and passes their descriptors, and only accepts validated JSON from the workers
 - [x] One worker per engine, so that a compromised engine cannot forge the results of another one: the kiosk hashes the files itself, hash engines never get the file, the kiosk combines the results

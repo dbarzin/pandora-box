@@ -37,7 +37,7 @@ mount_point = "/media/pandora-box"
 # group is not enough. Run the kiosk as root (systemd service), or set
 # use_sudo = true to run mount/umount through "sudo -n", with a sudoers rule
 # limited to these commands, for instance:
-#   pandora-box ALL=(root) NOPASSWD: /usr/bin/mount, /usr/bin/umount, /usr/bin/eject
+#   pandora-box ALL=(root) NOPASSWD: /usr/bin/mount, /usr/bin/umount, /usr/bin/eject, /usr/sbin/blockdev
 use_sudo = false
 
 # Filesystems that may be mounted; any other device is rejected

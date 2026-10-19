@@ -10,7 +10,7 @@ The code is in the `pandora_box` package (`src/pandora_box/`):
 | `config.py` | TOML configuration, validated at startup |
 | `statemachine.py`, `kiosk.py` | State machine and kiosk workflow |
 | `monitor.py` | USB detection with udev |
-| `device.py` | Hardened mounting (`ro,noexec,nosuid,nodev`, read-write only to clean) |
+| `device.py` | Hardened mounting (`ro,noexec,nosuid,nodev` on a read-only block device, read-write only to clean) |
 | `inventory.py` | Device inventory: never follows links, never leaves the device, limits |
 | `scanner.py`, `workers.py`, `worker.py` | Scan in supervised worker processes, timeouts and watchdog |
 | `sigsets.py`, `publish.py` | Signed signature sets: verification, installation, publication from the sources, `pandora-box-signatures` command |

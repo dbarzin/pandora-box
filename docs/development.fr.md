@@ -10,7 +10,7 @@ Le code est dans le paquet `pandora_box` (`src/pandora_box/`) :
 | `config.py` | Configuration TOML, validée au démarrage |
 | `statemachine.py`, `kiosk.py` | Machine à états et déroulement de la borne |
 | `monitor.py` | Détection USB avec udev |
-| `device.py` | Montage durci (`ro,noexec,nosuid,nodev`, lecture-écriture seulement pour nettoyer) |
+| `device.py` | Montage durci (`ro,noexec,nosuid,nodev` sur un périphérique bloc en lecture seule, lecture-écriture seulement pour nettoyer) |
 | `inventory.py` | Inventaire de la clé : ne suit jamais les liens, ne quitte jamais la clé, limites |
 | `scanner.py`, `workers.py`, `worker.py` | Analyse dans des processus surveillés, délais et chien de garde |
 | `sigsets.py`, `publish.py` | Jeux de signatures signés : vérification, installation, publication depuis les sources, commande `pandora-box-signatures` |

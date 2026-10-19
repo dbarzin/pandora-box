@@ -55,11 +55,23 @@ def test_mount_command(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(subprocess, "run", fake_run)
     mounter = Mounter(tmp_path, ["ntfs"], use_sudo=True)
     mounter.mount(UsbDevice("/dev/sdb1", "ntfs"))
-    argv = calls[0]
+    # The block device is read-only first
+    assert calls[0] == ["/usr/bin/sudo", "-n", "/usr/sbin/blockdev", "--setro", "/dev/sdb1"]
+    argv = calls[1]
     assert argv[:5] == ["/usr/bin/sudo", "-n", "/usr/bin/mount", "-t", "ntfs3"]
     assert argv[5] == "-o"
     assert argv[6].startswith("ro,noexec,nosuid,nodev,")
     assert argv[7:] == ["/dev/sdb1", str(tmp_path)]
+
+
+def test_mount_read_write(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """To clean, the block device is writable again before the mount."""
+    calls: list[list[str]] = []
+    monkeypatch.setattr(subprocess, "run", lambda argv, **kwargs: calls.append(argv))
+    Mounter(tmp_path, ["vfat"]).mount(UsbDevice("/dev/sdb1", "vfat"), read_only=False)
+    assert calls[0] == ["/usr/sbin/blockdev", "--setrw", "/dev/sdb1"]
+    assert calls[1][:4] == ["/usr/bin/mount", "-t", "vfat", "-o"]
+    assert calls[1][4].startswith("rw,noexec,")
 
 
 def test_mount_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -69,6 +81,20 @@ def test_mount_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(subprocess, "run", fake_run)
     with pytest.raises(DeviceError, match="wrong fs type"):
         Mounter(tmp_path, ["vfat"]).mount(UsbDevice("/dev/sdb1", "vfat"))
+
+
+def test_ext4_journal_to_replay(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """An ext4 journal to replay cannot be mounted on a read-only block device."""
+
+    def fake_run(argv: list[str], **kwargs: Any) -> None:
+        if argv[0] == "/usr/bin/mount":
+            raise subprocess.CalledProcessError(
+                32, argv, stderr="mount: /media/k: cannot mount /dev/sdb1 read-only."
+            )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(DeviceError, match="ext4 journal to replay"):
+        Mounter(tmp_path, ["ext4"]).mount(UsbDevice("/dev/sdb1", "ext4"))
 
 
 def test_missing_mount_point(tmp_path: Path) -> None:
