@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import dataclasses
+import itertools
 import os
 import threading
 import time
@@ -26,7 +28,7 @@ from pandora_box.ui.framebuffer import (
 from pandora_box.ui.preview import main as theme_main
 from pandora_box.ui.preview import sample_states
 from pandora_box.ui.screens import Renderer, ViewState
-from pandora_box.ui.theme import ThemeError, load_theme, theme_languages
+from pandora_box.ui.theme import ThemeError, contrast, load_theme, theme_languages
 
 # -- configuration -----------------------------------------------------------
 
@@ -132,11 +134,35 @@ def test_theme_folder_without_theme_file(tmp_path: Path) -> None:
         ('logo = "theme.toml"\n', "cannot read the image"),
         ("[images]\ninsert = []\n", "list of file names"),
         ("[images\n", "invalid TOML"),
+        ("text_scale = 2\n", "text_scale must be a number from 1 to 1.5"),
+        ('text_scale = "large"\n', "text_scale must be a number"),
+        (
+            '[colors]\nmuted = "#aaaaaa"\n',
+            r"colors.muted on colors.background: 2.32:1, at least 4.5:1",
+        ),
+        ('[colors]\nheader = "#ff9999"\n', "colors.header_text on colors.header"),
     ],
 )
 def test_invalid_theme(tmp_path: Path, toml: str, error: str) -> None:
     with pytest.raises(ThemeError, match=error):
         load_theme(make_theme(tmp_path / "theme", toml), "fr")
+
+
+def test_contrast() -> None:
+    assert contrast((0, 0, 0), (255, 255, 255)) == pytest.approx(21)
+    assert contrast((255, 255, 255), (255, 255, 255)) == pytest.approx(1)
+    # The built-in colors pass the WCAG 2.1 AA level
+    theme = load_theme(None, "en")
+    assert contrast(theme.colors["clean"], theme.colors["background"]) >= 4.5
+    assert theme.text_scale == 1.0
+
+
+def test_text_scale(tmp_path: Path) -> None:
+    theme = load_theme(make_theme(tmp_path, "text_scale = 1.25\n"), "en")
+    assert theme.text_scale == 1.25
+    normal = Renderer(load_theme(None, "en"), (1024, 600)).font(20)
+    large = Renderer(theme, (1024, 600)).font(20)
+    assert getattr(large, "size", 0) == 25 and getattr(normal, "size", 0) == 20
 
 
 def test_theme_language_missing(tmp_path: Path) -> None:
@@ -158,6 +184,32 @@ def test_every_screen(size: tuple[int, int], language: str) -> None:
         assert frame.base.size == size
         assert frame.image(1.5).size == size
         assert frame.lines
+
+
+@pytest.mark.parametrize("scale", [1.0, 1.25, 1.5])
+@pytest.mark.parametrize("size", [(1024, 600), (800, 480), (1280, 800)])
+@pytest.mark.parametrize("language", ["en", "fr"])
+def test_texts_fit_the_screen(scale: float, size: tuple[int, int], language: str) -> None:
+    """Every text inside the screen, never over another one, whatever their size."""
+    theme = dataclasses.replace(load_theme(None, language), text_scale=scale)
+    renderer = Renderer(theme, size)
+    for name, state in sample_states(language).items():
+        frame = renderer.render(state)
+        texts = list(zip(frame.lines, frame.boxes, strict=True))
+        for line, (left, top, right, bottom) in texts:
+            assert left >= 0 and top >= 0, (name, line)
+            assert right <= size[0] and bottom <= size[1], (name, line)
+        for (first, a), (second, b) in itertools.combinations(texts, 2):
+            overlap = a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
+            assert not overlap, (name, first, second)
+
+
+def test_large_texts_keep_a_threat_listed() -> None:
+    theme = dataclasses.replace(load_theme(None, "fr"), text_scale=1.5)
+    state = sample_states("fr")["threats"]
+    lines = Renderer(theme, (800, 480)).render(state).lines
+    assert state.files[0].rel_path in lines
+    assert any(line.startswith("... et ") for line in lines)
 
 
 def scanned(path: str, verdict: Verdict = Verdict.MALICIOUS) -> FileResult:
@@ -221,6 +273,11 @@ def test_preview(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     with Image.open(tmp_path / "fr-threats.png") as image:
         assert image.size == (800, 480)
     assert len(list(tmp_path.glob("*.png"))) == len(sample_states())
+    large = tmp_path / "large"
+    assert theme_main(["preview", "--language", "en", "--text-scale", "1.5", str(large)]) == 0
+    assert len(list(large.glob("*.png"))) == len(sample_states())
+    with pytest.raises(SystemExit):
+        theme_main(["preview", "--text-scale", "3", str(large)])
     bad = make_theme(tmp_path / "bad", '[colors]\nheader = "red"\n')
     assert theme_main(["check", str(bad)]) == 2
 

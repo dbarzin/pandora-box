@@ -96,6 +96,8 @@ logo = "logo.png"
 # Polices TrueType, fichiers du dossier (par défaut : DejaVu Sans)
 # font = "OpenSans-Regular.ttf"
 # font_bold = "OpenSans-Bold.ttf"
+# Textes plus grands, de 1 (par défaut) à 1,5
+# text_scale = 1.25
 
 [colors]
 header = "#003366"
@@ -133,7 +135,8 @@ l'administrateur, et ne font pas partie du thème.
 
 `header`, `header_text`, `background`, `text`, `muted` (aide, détails),
 `clean`, `threat`, `warning`, `progress`, `progress_background` :
-`"#rrggbb"`.
+`"#rrggbb"`. Un thème dont les textes seraient difficiles à lire est refusé
+(voir [Accessibilité](#accessibility)).
 
 #### Images { #images }
 
@@ -142,6 +145,31 @@ seconde), `busy` (animation pendant que la borne travaille), `clean`,
 `threat`, `error` (icônes des résultats). PNG (avec transparence) ou JPEG,
 4096 pixels au maximum. Les images intégrées viennent de la première version
 de PandoraBox.
+
+### Accessibilité { #accessibility }
+
+- **Contraste** : chaque texte doit se détacher de son fond au niveau AA des
+  WCAG 2.1, sinon le thème est refusé avec les couleurs et le rapport en
+  cause : 4,5:1 pour `text`, `muted`, `clean`, `threat` et `warning` sur
+  `background` ; 3:1 pour `header_text` sur `header`, `threat` et
+  `progress` (grands textes en gras : titre, bandeau, pourcentage) et pour
+  `progress` sur `progress_background` (la barre de progression). Le thème
+  intégré les respecte.
+- **Taille des textes** : `text_scale` agrandit tous les textes, de 1 (par
+  défaut) à 1,5 ; les lignes, rangées et barres suivent, les icônes et
+  l'animation de l'écran d'attente rétrécissent pour faire de la place. Le
+  plus petit texte intégré fait 16 pixels sur l'écran de 7 pouces
+  (1024x600). Les titres longs passent à la ligne ; quand la place manque,
+  une liste montre toujours son premier fichier et le nombre des autres.
+  Les tests vérifient chaque écran en anglais et en français, sur trois
+  tailles d'écran et trois tailles de texte : aucun texte ne sort de l'écran
+  ni n'en chevauche un autre.
+- **Jamais la couleur seule** : chaque résultat a son titre, son icône et,
+  pour chaque fichier, son verdict en toutes lettres ; tout l'écran est le
+  bouton de nettoyage.
+
+Pour essayer une taille de texte sans modifier le thème :
+`pandora-box-theme preview image/theme /tmp/preview --text-scale 1.5`.
 
 ### Vérifier et prévisualiser un thème { #check-and-preview-a-theme }
 

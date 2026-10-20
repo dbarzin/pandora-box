@@ -92,6 +92,8 @@ logo = "logo.png"
 # TrueType fonts, files of the folder (default: DejaVu Sans)
 # font = "OpenSans-Regular.ttf"
 # font_bold = "OpenSans-Bold.ttf"
+# Larger texts, from 1 (default) to 1.5
+# text_scale = 1.25
 
 [colors]
 header = "#003366"
@@ -128,6 +130,8 @@ administrator, and are not part of the theme.
 
 `header`, `header_text`, `background`, `text`, `muted` (help, details),
 `clean`, `threat`, `warning`, `progress`, `progress_background`: `"#rrggbb"`.
+A theme whose texts would be hard to read is refused (see
+[Accessibility](#accessibility)).
 
 #### Images
 
@@ -135,6 +139,27 @@ administrator, and are not part of the theme.
 `busy` (animation while the kiosk works), `clean`, `threat`, `error` (icons of
 the results). PNG (with transparency) or JPEG, at most 4096 pixels. The
 built-in images come from the first version of PandoraBox.
+
+### Accessibility
+
+- **Contrast**: every text must stand out from its background at the WCAG
+  2.1 AA level, or the theme is refused with the colors and ratio at fault:
+  4.5:1 for `text`, `muted`, `clean`, `threat` and `warning` on
+  `background`; 3:1 for `header_text` on `header`, `threat` and `progress`
+  (large bold texts: title, banner, percentage) and for `progress` on
+  `progress_background` (the progress bar). The built-in theme passes.
+- **Text size**: `text_scale` enlarges every text, from 1 (default) to 1.5;
+  the lines, rows and bars follow, the icons and the animation of the
+  waiting screen shrink to make room. The smallest built-in text is 16
+  pixels on the 7-inch screen (1024x600). Long titles wrap; when space runs
+  short, a list always shows its first file and the number of the others.
+  The tests check every screen in English and French, at three screen sizes
+  and three text sizes: no text leaves the screen or overlaps another one.
+- **No color alone**: each result has its title, its icon and, for each
+  file, its verdict in words; the whole screen is the button to clean.
+
+To try a text size without changing the theme:
+`pandora-box-theme preview image/theme /tmp/preview --text-scale 1.5`.
 
 ### Check and preview a theme
 

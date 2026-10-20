@@ -66,6 +66,8 @@ class Frame:
     base: Image.Image
     animation: Animation | None = None
     lines: list[str] = field(default_factory=list)
+    # Box of each text drawn, for the layout checks
+    boxes: list[tuple[int, int, int, int]] = field(default_factory=list)
 
     def image(self, now: float = 0.0) -> Image.Image:
         """The screen at that time (seconds), with the animation image of the time."""
@@ -99,6 +101,7 @@ class Renderer:
         self.theme = theme
         self.width, self.height = size
         self.scale = min(self.width / REFERENCE[0], self.height / REFERENCE[1])
+        self.text_scale = theme.text_scale
         self._resized: dict[tuple[int, tuple[int, int]], Image.Image] = {}
 
     # -- helpers -------------------------------------------------------------
@@ -106,8 +109,12 @@ class Renderer:
     def px(self, value: float) -> int:
         return max(1, round(value * self.scale))
 
+    def tx(self, value: float) -> int:
+        """A size that follows the texts: font sizes, lines, rows (theme text_scale)."""
+        return self.px(value * self.text_scale)
+
     def font(self, size: float, bold: bool = False) -> Font:
-        return self.theme.font(self.px(size), bold)
+        return self.theme.font(self.tx(size), bold)
 
     def color(self, name: str) -> Color:
         return self.theme.colors[name]
@@ -134,7 +141,7 @@ class Renderer:
         return frame
 
     def _header(self, canvas: _Canvas) -> int:
-        height = self.px(80)
+        height = max(self.px(80), self.tx(64))
         canvas.draw.rectangle((0, 0, self.width, height), fill=self.color("header"))
         left = self.px(16)
         logo = self.theme.logo
@@ -155,10 +162,10 @@ class Renderer:
         footer = self.theme.text("footer")
         if not footer:
             return self.height
-        height = self.px(30)
+        height = self.tx(30)
         top = self.height - height
         canvas.draw.line((0, top, self.width, top), fill=self.color("progress_background"))
-        font = self.font(15)
+        font = self.font(16)
         text = canvas.fit(footer, font, self.width - self.px(32))
         canvas.text((self.px(16), top + height // 2), text, font, self.color("muted"), anchor="lm")
         return top
@@ -166,10 +173,13 @@ class Renderer:
     def _ready(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
         left, top, right, bottom = body
         info = state.info[:4]
-        info_font = self.font(14)
-        info_top = bottom - len(info) * self.px(19)
+        info_font = self.font(16)
+        info_row = self.tx(21)
+        info_top = bottom - len(info) * info_row
+        # Larger texts leave less room to the animation
         frames = tuple(
-            self.resized(image, (self.px(430), self.px(240))) for image in self.theme.insert
+            self.resized(image, (self.px(430), self.px(240 / self.text_scale)))
+            for image in self.theme.insert
         )
         x = (self.width - frames[0].width) // 2
         canvas.frame.animation = Animation((x, top), frames, INSERT_INTERVAL)
@@ -179,7 +189,7 @@ class Renderer:
         canvas.paragraph(self.theme.text("insert_help"), self.font(18), "muted", y, body, True)
         for i, line in enumerate(info):
             text = canvas.fit(line, info_font, right - left)
-            canvas.text((left, info_top + i * self.px(19)), text, info_font, self.color("muted"))
+            canvas.text((left, info_top + i * info_row), text, info_font, self.color("muted"))
 
     def _unavailable(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
         y = self._result(canvas, body, "error", "threat", "unavailable", "unavailable_help")
@@ -195,7 +205,7 @@ class Renderer:
             y = canvas.paragraph(device, self.font(18), "text", y, body)
         y += self.px(12)
         # Progress bar, the percentage inside
-        bar_height = self.px(34)
+        bar_height = self.tx(34)
         radius = bar_height // 2
         canvas.draw.rounded_rectangle(
             (left, y, right, y + bar_height), radius, fill=self.color("progress_background")
@@ -225,13 +235,13 @@ class Renderer:
         threats = self.theme.text("scan_threats", count=state.threats)
         color = self.color("threat") if state.threats else self.color("muted")
         canvas.text((right, y), threats, font, color, anchor="ra")
-        y += self.px(36)
+        y += self.tx(36)
         self._file_list(canvas, state.recent, (left, y, right, bottom), recent=True)
 
     def _threats(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
         left, top, right, bottom = body
         # The whole screen is the button: a banner tells to touch it
-        banner = self.px(64)
+        banner = self.tx(64)
         canvas.draw.rounded_rectangle(
             (left, bottom - banner, right, bottom), self.px(12), fill=self.color("threat")
         )
@@ -243,7 +253,7 @@ class Renderer:
             self.color("header_text"),
             anchor="mm",
         )
-        warning_y = bottom - banner - self.px(32)
+        warning_y = bottom - banner - self.tx(32)
         warning = canvas.fit(self.theme.text("threats_warning"), self.font(18, True), right - left)
         canvas.text(
             ((left + right) // 2, warning_y),
@@ -288,7 +298,7 @@ class Renderer:
     def _service(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
         font = self.font(30, bold=True)
         canvas.text((body[0], body[1]), self.theme.text("service"), font, self.color("text"))
-        top = body[1] + self.px(52)
+        top = body[1] + self.tx(52)
         self._messages(canvas, state.messages, (body[0], top, body[2], body[3]))
 
     # -- parts ---------------------------------------------------------------
@@ -305,7 +315,8 @@ class Renderer:
     ) -> int:
         """Icon on the left, title and help on its right; return the top of the rest."""
         left, top, right, _ = body
-        size = self.px(150)
+        # Larger texts leave less room to the icon
+        size = self.px(150 / self.text_scale)
         image = self.resized(self.theme.icons[icon], (size, size))
         canvas.frame.base.paste(image, (left, top), image)
         text_box = (left + size + self.px(28), top, right, body[3])
@@ -323,14 +334,14 @@ class Renderer:
         canvas.frame.animation = Animation((left, top), frames, BUSY_INTERVAL)
         font = self.font(30, bold=True)
         x = left + size + self.px(16)
-        canvas.text(
-            (x, top + size // 2),
-            canvas.fit(title, font, right - x),
-            font,
-            self.color("text"),
-            anchor="lm",
-        )
-        return top + size + self.px(8)
+        lines = canvas.wrap(title, font, right - x)
+        height = canvas.line_height(font)
+        # Centered on the spinner, wrapped below it when too long
+        y = top + max(0, (size - height * len(lines)) // 2)
+        for line in lines:
+            canvas.text((x, y), line, font, self.color("text"))
+            y += height
+        return max(y, top + size) + self.px(8)
 
     def _device_line(self, state: ViewState) -> str:
         d = state.device
@@ -349,10 +360,12 @@ class Renderer:
     ) -> None:
         """Files with their verdict, as many as fit; the path on its line, the reason below."""
         left, top, right, bottom = box
-        name_font, detail_font = self.font(18), self.font(15)
-        row = self.px(24) if recent else self.px(46)
-        rows = max(0, (bottom - top) // row)
-        if rows == 0 or not files:
+        name_font, detail_font = self.font(18), self.font(16)
+        row = self.tx(26) if recent else self.tx(48)
+        # At least one file and the count of the others, even when the room
+        # is short (large texts): the files matter more than the space below
+        rows = max(2 if len(files) > 1 else 1, (bottom - top) // row)
+        if not files:
             return
         shown = list(files) if len(files) <= rows else list(files)[: rows - 1]
         y = top
@@ -360,13 +373,13 @@ class Renderer:
             label = self.theme.text(f"verdict_{result.verdict.value}")
             label_width = canvas.text_width(label, detail_font) + self.px(16)
             color = self.color(_VERDICT_COLORS[result.verdict])
-            canvas.text((right, y + self.px(2)), label, detail_font, color, anchor="ra")
+            canvas.text((right, y + self.tx(2)), label, detail_font, color, anchor="ra")
             name = result.display_path or result.path.name
             path = canvas.fit_path(printable(name), name_font, right - left - label_width)
             canvas.text((left, y), path, name_font, self.color("text"))
             if not recent:
                 reason = canvas.fit(printable(detection(result)), detail_font, right - left)
-                canvas.text((left, y + self.px(22)), reason, detail_font, self.color("muted"))
+                canvas.text((left, y + self.tx(23)), reason, detail_font, self.color("muted"))
             y += row
         if len(shown) < len(files):
             more = self.theme.text("more_files", count=len(files) - len(shown))
@@ -376,7 +389,7 @@ class Renderer:
         """The latest kiosk messages that fit, the oldest first."""
         left, top, right, bottom = box
         font = self.font(17)
-        row = self.px(24)
+        row = self.tx(24)
         lines: list[str] = []
         for message in messages:
             lines += canvas.wrap(printable(message), font, right - left)
@@ -415,6 +428,8 @@ class _Canvas:
         if text:
             self.draw.text(xy, text, font=font, fill=color, anchor=anchor)
             self.frame.lines.append(text)
+            box = self.draw.textbbox(xy, text, font=font, anchor=anchor)
+            self.frame.boxes.append(tuple(round(v) for v in box))  # type: ignore[arg-type]
 
     def text_width(self, text: str, font: Font) -> int:
         return round(self.draw.textlength(text, font=font))

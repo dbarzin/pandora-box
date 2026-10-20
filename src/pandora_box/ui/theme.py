@@ -34,6 +34,22 @@ COLORS = (
     "progress",
     "progress_background",
 )
+# Contrast ratios required between a color and the color it is drawn on
+# (WCAG 2.1 level AA): 4.5 for text, 3 for large bold text (titles, banner,
+# percentage) and for the progress bar
+CONTRASTS = (
+    ("text", "background", 4.5),
+    ("muted", "background", 4.5),
+    ("clean", "background", 4.5),
+    ("threat", "background", 4.5),
+    ("warning", "background", 4.5),
+    ("header_text", "header", 3.0),
+    ("header_text", "threat", 3.0),
+    ("header_text", "progress", 3.0),
+    ("progress", "progress_background", 3.0),
+)
+# Size of the texts, relative to the built-in layout
+TEXT_SCALES = (1.0, 1.5)
 ANIMATIONS = ("insert", "busy")
 ICONS = ("clean", "threat", "error")
 # Texts and their placeholders
@@ -102,6 +118,7 @@ class Theme:
     icons: dict[str, Image.Image]
     font_path: Path | None = None
     bold_path: Path | None = None
+    text_scale: float = 1.0
     _fonts: dict[tuple[int, bool], ImageFont.FreeTypeFont | ImageFont.ImageFont] = field(
         default_factory=dict, compare=False, repr=False
     )
@@ -149,17 +166,20 @@ def load_theme(folder: Path | None, language: str) -> Theme:
     except OSError as ex:
         raise ThemeError(f"cannot load the font: {ex}") from ex
 
+    colors = {name: _color(name, merged["colors"][name]) for name in COLORS}
+    _check_contrasts(colors)
     images = merged["images"]
     return Theme(
         language=language,
         texts=language_texts,
-        colors={name: _color(name, merged["colors"][name]) for name in COLORS},
+        colors=colors,
         logo=None if merged["logo"] is None else _image(merged["logo"]),
         insert=tuple(_image(path) for path in images["insert"]),
         busy=tuple(_image(path) for path in images["busy"]),
         icons={name: _image(images[name]) for name in ICONS},
         font_path=font_path,
         bold_path=bold_path,
+        text_scale=merged["text_scale"],
     )
 
 
@@ -185,8 +205,19 @@ def _read(folder: Path) -> dict[str, Any]:
 def _resolve(data: dict[str, Any], folder: Path) -> dict[str, Any]:
     """Check the keys of a theme.toml; file names become paths in its folder."""
     where = folder / THEME_FILE
-    _reject_unknown(data, {"logo", "font", "font_bold", "colors", "images", "texts"}, where, "")
+    keys = {"logo", "font", "font_bold", "text_scale", "colors", "images", "texts"}
+    _reject_unknown(data, keys, where, "")
     out: dict[str, Any] = {"colors": {}, "images": {}, "texts": {}}
+    if "text_scale" in data:
+        scale = data["text_scale"]
+        low, high = TEXT_SCALES
+        if (
+            isinstance(scale, bool)
+            or not isinstance(scale, int | float)
+            or not (low <= scale <= high)
+        ):
+            raise ThemeError(f"{where}: text_scale must be a number from {low:g} to {high:g}")
+        out["text_scale"] = float(scale)
     for key in ("logo", "font", "font_bold"):
         if key in data:
             value = data[key]
@@ -223,7 +254,7 @@ def _resolve(data: dict[str, Any], folder: Path) -> dict[str, Any]:
 
 
 def _merge(base: dict[str, Any], custom: dict[str, Any]) -> None:
-    for key in ("logo", "font", "font_bold"):
+    for key in ("logo", "font", "font_bold", "text_scale"):
         if key in custom:
             base[key] = custom[key]
     base["colors"].update(custom["colors"])
@@ -275,6 +306,29 @@ def _color(name: str, value: object) -> Color:
     if not isinstance(value, str) or not _COLOR.match(value):
         raise ThemeError(f'colors.{name} must be a color like "#8b0019"')
     return int(value[1:3], 16), int(value[3:5], 16), int(value[5:7], 16)
+
+
+def contrast(first: Color, second: Color) -> float:
+    """Contrast ratio of two colors (WCAG 2.1), from 1 to 21."""
+
+    def luminance(color: Color) -> float:
+        channels = [c / 255 for c in color]
+        linear = [c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+    light, dark = sorted((luminance(first), luminance(second)), reverse=True)
+    return (light + 0.05) / (dark + 0.05)
+
+
+def _check_contrasts(colors: dict[str, Color]) -> None:
+    """Every text must be readable on its background (WCAG 2.1 level AA)."""
+    low = []
+    for front, back, minimum in CONTRASTS:
+        ratio = contrast(colors[front], colors[back])
+        if ratio < minimum:
+            low.append(f"colors.{front} on colors.{back}: {ratio:.2f}:1, at least {minimum:g}:1")
+    if low:
+        raise ThemeError("contrast too low (WCAG 2.1 AA): " + "; ".join(low))
 
 
 def _image(path: Path) -> Image.Image:

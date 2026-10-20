@@ -10,7 +10,14 @@ logo = ""
 # TrueType fonts; "" for DejaVu Sans (Debian package fonts-dejavu-core)
 font = ""
 font_bold = ""
+# Size of the texts: from 1 (the built-in layout) to 1.5, for readers who
+# need larger texts; images and icons keep their size
+text_scale = 1.0
 
+# Every text must be readable on its background: the theme is refused when a
+# contrast ratio is below the WCAG 2.1 AA level, 4.5:1 for text on
+# background, 3:1 for header_text on header, threat and progress, and for
+# progress on progress_background
 [colors]
 header = "#8b0019"
 header_text = "#ffffff"
@@ -18,7 +25,7 @@ background = "#ffffff"
 text = "#1e1e1e"
 # Secondary text: help, versions, file details
 muted = "#5f5f5f"
-clean = "#2e8b3e"
+clean = "#2a7f39"
 threat = "#c8102e"
 warning = "#b35c00"
 progress = "#8b0019"

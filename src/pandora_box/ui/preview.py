@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import re
 import sys
 from pathlib import Path
@@ -12,7 +13,7 @@ from pandora_box.engines import EngineResult, Verdict
 from pandora_box.results import FileResult
 from pandora_box.ui.base import Screen
 from pandora_box.ui.screens import REFERENCE, Renderer, ViewState
-from pandora_box.ui.theme import ThemeError, load_theme, theme_languages
+from pandora_box.ui.theme import TEXT_SCALES, ThemeError, load_theme, theme_languages
 
 # Made-up file names and device label, in French for the French texts and in
 # English for the others
@@ -120,6 +121,17 @@ def _size(value: str) -> tuple[int, int]:
     return int(match[1]), int(match[2])
 
 
+def _text_scale(value: str) -> float:
+    low, high = TEXT_SCALES
+    try:
+        scale = float(value)
+    except ValueError:
+        scale = 0.0
+    if not low <= scale <= high:
+        raise argparse.ArgumentTypeError(f"expected a number from {low:g} to {high:g}")
+    return scale
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="pandora-box-theme", description="Check a kiosk theme and draw its screens"
@@ -133,6 +145,11 @@ def main(argv: list[str] | None = None) -> int:
     preview.add_argument("output", type=Path, help="folder of the PNG files")
     preview.add_argument(
         "--size", type=_size, default=REFERENCE, help="screen size (default: 1024x600)"
+    )
+    preview.add_argument(
+        "--text-scale",
+        type=_text_scale,
+        help="size of the texts, in place of text_scale of the theme (1 to 1.5)",
     )
     args = parser.parse_args(argv)
 
@@ -149,6 +166,8 @@ def main(argv: list[str] | None = None) -> int:
 
     args.output.mkdir(parents=True, exist_ok=True)
     for theme in themes:
+        if args.text_scale is not None:
+            theme = dataclasses.replace(theme, text_scale=args.text_scale)
         renderer = Renderer(theme, args.size)
         for name, state in sample_states(theme.language).items():
             frame = renderer.render(state)

@@ -29,7 +29,7 @@ The open tasks of the phases below, by priority.
 
 1. File transfer stations: key identifier, then inbound, then outbound station (phase 4)
 2. Scan receipt for the user (phase 5)
-3. German and Dutch texts, accessibility (phase 3)
+3. German and Dutch texts (phase 3)
 4. Protected administrator mode (phase 3)
 
 **3. Later**
@@ -235,7 +235,7 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [x] Theme customization by the administrator
 - [x] Internationalization: French and English
 - [ ] German and Dutch texts built in
-- [ ] Accessibility: contrast and font size
+- [x] Accessibility: contrast and font size
 - [ ] Protected administrator mode
 
 ## Phase 4 — Advanced analysis
@@ -244,18 +244,18 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [x] Archives unpacked and scanned within limits
 - [x] Encrypted archives and documents flagged as unscannable
 - [x] Detection of programs disguised as documents
-- [ ] Signed identifier of each key for the file transfer stations
-- [ ] Inbound file transfer station: copy the clean files of a key to a network share
-- [ ] Outbound file transfer station: copy files from a network share to a key
+- [ ] Executables analyzed with `capa`, optional
+- [ ] Content disarm and reconstruction (CDR) with Dangerzone
 - [ ] ~~Selective copy of clean files to a second device~~ *(not retained)*
 - [ ] ~~Reformatting option for the cleaning~~ *(not retained)*
 - [ ] ~~Office documents with `oletools`~~ *(not retained)*
-- [ ] Executables analyzed with `capa`, optional
-- [ ] Content disarm and reconstruction (CDR) with Dangerzone
 
 ## Phase 5 — Fleet management and traceability
 
 - [x] Log export to a SIEM ([docs/siem.md](docs/siem.md))
+- [ ] Signed identifier of each key for the file transfer stations
+- [ ] Inbound file transfer station: copy the clean files of a key to a network share
+- [ ] Outbound file transfer station: copy files from a network share to a key
 - [ ] Printed or exported scan receipt for the user
 - [ ] Optional central server: kiosk inventory, reports, signature status
 - [ ] Centralized distribution of signed updates
@@ -341,6 +341,7 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 ### Interface
 
 - The interface is drawn with Pillow into the framebuffer, without display server, browser or local web server: the earlier plan (FastAPI and htmx in `cage` with Chromium) would have added a browser and a socket to the image. Cleaning is confirmed by a touch anywhere on the screen, without buttons.
+- Accessibility: a theme is refused when a text does not reach the WCAG 2.1 AA contrast with its background (4.5:1, 3:1 for large bold texts and the progress bar); `text_scale` enlarges every text up to 1.5 times, and the tests check that no text leaves the screen or overlaps another one, on every screen, language, screen size and text size. A user setting on the kiosk itself is not added: the screen has no buttons.
 - An administrator customizes it with a theme folder built into the image (logo, colors, texts of every screen, images, fonts), checked at build time; `pandora-box-theme preview` shows the screens without a kiosk. French and English are built in (`display.language`), a theme can add a language.
 
 ## Contributing
