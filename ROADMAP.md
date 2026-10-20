@@ -176,7 +176,6 @@ Tasks:
 
 - [x] No interactive account and no SSH
 - [x] Maintenance device that brings back the logs
-- [ ] Maintenance console or SSH, if the logs are not enough
 - [x] Hardened kernel settings
 - [x] `nftables` firewall: deny all by default
 - [x] **USBGuard**: only mass-storage devices allowed
@@ -191,6 +190,7 @@ Tasks:
 - [x] One worker per engine
 - [x] Audit log (`auditd`) for sensitive operations
 - [x] Assessment with `lynis` and the ANSSI recommendations
+- [ ] ~~Maintenance console or SSH, if the logs are not enough~~ *(not retained)*
 
 ### Signature updates
 
@@ -202,9 +202,9 @@ See [docs/signatures.md](docs/signatures.md).
 - [x] Publication of signature sets from the sources
 - [x] Online updates through a dedicated channel
 - [x] Online updates from the sources themselves
+- [x] Time synchronization of online kiosks
 - [ ] Create the release keys and publish their fingerprints
 - [ ] Define the publication schedule
-- [x] Time synchronization of online kiosks
 
 ### Testing in a virtual machine
 
@@ -247,9 +247,9 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [ ] Signed identifier of each key for the file transfer stations
 - [ ] Inbound file transfer station: copy the clean files of a key to a network share
 - [ ] Outbound file transfer station: copy files from a network share to a key
-- [-] Selective copy of clean files to a second device (rejected)
-- [-] Reformatting option for the cleaning (rejected)
-- [-] Office documents with `oletools` (rejected)
+- [ ] ~~Selective copy of clean files to a second device~~ *(not retained)*
+- [ ] ~~Reformatting option for the cleaning~~ *(not retained)*
+- [ ] ~~Office documents with `oletools`~~ *(not retained)*
 - [ ] Executables analyzed with `capa`, optional
 - [ ] Content disarm and reconstruction (CDR) with Dangerzone
 
