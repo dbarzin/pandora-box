@@ -92,6 +92,13 @@
         <xhtml:link rel="alternate" hreflang="fr" href="https://sourcentis.github.io/pandora-box/fr/signatures/"/>
     </url>
     <url>
+        <loc>https://sourcentis.github.io/pandora-box/threat-model/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sourcentis.github.io/pandora-box/threat-model/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://sourcentis.github.io/pandora-box/fr/threat-model/"/>
+    </url>
+    <url>
         <loc>https://sourcentis.github.io/pandora-box/update/</loc>
         <lastmod>2026-10-20</lastmod>
         <changefreq>daily</changefreq>
@@ -195,6 +202,13 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="fr" href="https://sourcentis.github.io/pandora-box/fr/signatures/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://sourcentis.github.io/pandora-box/signatures/"/>
+    </url>
+    <url>
+        <loc>https://sourcentis.github.io/pandora-box/fr/threat-model/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://sourcentis.github.io/pandora-box/fr/threat-model/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sourcentis.github.io/pandora-box/threat-model/"/>
     </url>
     <url>
         <loc>https://sourcentis.github.io/pandora-box/fr/update/</loc>
