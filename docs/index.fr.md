@@ -82,6 +82,7 @@ administrations. Elle tourne sur un petit ordinateur reconditionné avec un
 | [Configuration](configuration.md) | Tous les réglages de `pandora-box.toml` |
 | [Moteurs de détection](engines.md) | Moteurs, politique de verdict, rapport d'analyse |
 | [Fonctionnement de l'image](image.md) | Partitions, chaîne de démarrage, périphériques USB, durcissement, bac à sable |
+| [Modèle de menace](threat-model.md) | Ce que la borne protège, contre qui, et ce qu'elle ne couvre pas |
 | [Développement](development.md) | Lancer la borne depuis les sources, tests |
 
 L'avancement du projet est suivi dans la

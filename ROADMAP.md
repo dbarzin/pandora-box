@@ -22,9 +22,8 @@ The open tasks of the phases below, by priority.
 **1. First public release**
 
 1. Create the release keys and publish their fingerprints (phase 2)
-2. Write the threat model (phase 6)
-3. Write the deployment guide (phase 6)
-4. Physical hardening and assembly guide (phase 2)
+2. Write the deployment guide (phase 6)
+3. Physical hardening and assembly guide (phase 2)
 
 **2. Hardening and user features**
 
@@ -265,7 +264,7 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 ## Phase 6 — Assurance and compliance
 
 - [x] Detection regression test corpus
-- [ ] Write the threat model
+- [x] Threat model ([docs/threat-model.md](docs/threat-model.md))
 - [ ] Write the deployment guide
 - [ ] Fuzzing of the entry points
 - [ ] External security audit of the image

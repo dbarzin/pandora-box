@@ -74,6 +74,7 @@ plugins:
             -- Configuration: -- Configuration
             -- Detection engines: -- Moteurs de détection
             -- Image internals: -- Fonctionnement de l'image
+            -- Threat model: -- Modèle de menace
             DEVELOPMENT: DÉVELOPPEMENT
             -- Development: -- Développement
 
@@ -117,5 +118,6 @@ nav:
       - -- Configuration: configuration.md
       - -- Detection engines: engines.md
       - -- Image internals: image.md
+      - -- Threat model: threat-model.md
   - DEVELOPMENT:
       - -- Development: development.md

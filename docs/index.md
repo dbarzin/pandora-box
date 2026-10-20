@@ -76,6 +76,7 @@ and works without network.
 | [Configuration](configuration.md) | Every setting of `pandora-box.toml` |
 | [Detection engines](engines.md) | Engines, verdict policy, scan report |
 | [Image internals](image.md) | Partitions, boot chain, USB devices, hardening, sandbox |
+| [Threat model](threat-model.md) | What the kiosk protects, against whom, and what it does not cover |
 | [Development](development.md) | Run the kiosk from the sources, tests |
 
 The progress of the project is followed in the
