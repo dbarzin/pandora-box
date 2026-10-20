@@ -888,6 +888,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="The server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows server
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -909,6 +926,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-server-in-a-virtual-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows server in a virtual machine
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1330,6 +1364,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="The server">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows server
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1351,6 +1402,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Tests">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#windows-server-in-a-virtual-machine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Windows server in a virtual machine
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1390,7 +1458,7 @@
 <h1 id="copy-to-a-server-airgap">Copy to a server (airgap)<a class="headerlink" href="#copy-to-a-server-airgap" title="Permanent link">&para;</a></h1>
 <p>A kiosk can act as an inbound station: once a key is scanned and verified,
 the kiosk copies its clean files to a server of the organization (rsync over
-SSH, SFTP or SMB), where they are picked up from the protected network. The
+SSH or SFTP), where they are picked up from the protected network. The
 key itself is not cleaned and leaves with its files.</p>
 <h2 id="in-short">In short<a class="headerlink" href="#in-short" title="Permanent link">&para;</a></h2>
 <ol>
@@ -1443,26 +1511,26 @@ key itself is not cleaned and leaves with its files.</p>
   written file. The reports of the previous scans are kept.</li>
 <li><strong>Several partitions.</strong> The files of each partition go into
   <code>partition-1/</code>, <code>partition-2/</code>...</li>
-<li><strong>SMB names.</strong> A file whose name an SMB server refuses (<code>\ : * ? " &lt; &gt; |</code>,
-  a trailing space or dot), or that differs from another one only by its
-  case, is not copied and is listed as such.</li>
+<li><strong>Windows server.</strong> With <code>windows_names = true</code>, a file whose name Windows
+  refuses (<code>\ : * ? " &lt; &gt; |</code>, a trailing space or dot, <code>CON</code>, <code>NUL</code>,
+  <code>COM1</code>...), or that differs from another one only by its case, is not
+  copied and is listed as such.</li>
 </ul>
 <p>The screen shows the copy, then <strong>Files copied to the server</strong> with the
-files that were not copied (dangerous, suspicious, or refused by the server),
+files that were not copied (dangerous, suspicious, or that the server refused),
 or <strong>Copy to the server failed</strong>: the key is then neither cleaned nor
 copied, and can be inserted again later.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p><code>[airgap]</code> of <code>packaging/pandora-box.toml</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="k">[airgap]</span>
 <span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<span class="c1"># "rsync" (rsync over SSH), "sftp" or "smb"</span>
+<span class="c1"># "rsync" (rsync over SSH) or "sftp"</span>
 <span class="n">protocol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sftp"</span>
 <span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"files.example.org"</span>
-<span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w">                    </span><span class="c1"># 22 for rsync and sftp, 445 for smb</span>
+<span class="n">port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="w">                    </span><span class="c1"># 22</span>
 <span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"kiosk"</span>
-<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/srv/keys"</span><span class="w">          </span><span class="c1"># smb: a folder of the share</span>
-<span class="n">share</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="w">                  </span><span class="c1"># smb: the share</span>
-<span class="n">domain</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="w">                 </span><span class="c1"># smb: the domain of the account</span>
+<span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/srv/keys"</span>
+<span class="n">windows_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span><span class="w">       </span><span class="c1"># sftp to a Windows server: see below</span>
 <span class="n">known_hosts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/etc/pandora-box/airgap-known-hosts"</span>
 <span class="n">timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">60.0</span>
 </code></pre></div>
@@ -1482,12 +1550,7 @@ credentials in <code>/etc/credstore</code> of the image:</p>
 <tbody>
 <tr>
 <td><code>ssh_key</code></td>
-<td>the private SSH key of the account (rsync, sftp)</td>
-<td>the copy service</td>
-</tr>
-<tr>
-<td><code>password</code></td>
-<td>the password of the account (smb)</td>
+<td>the private SSH key of the account on the server</td>
 <td>the copy service</td>
 </tr>
 <tr>
@@ -1537,14 +1600,51 @@ ssh-keygen<span class="w"> </span>-lf<span class="w"> </span>image/airgap-known-
   <code>~kiosk/.ssh/authorized_keys</code>:</p>
 <div class="highlight"><pre><span></span><code>command="rrsync /srv/keys",restrict ssh-ed25519 AAAA... pandora-box-kiosk
 </code></pre></div>
-<p>then <code>path = "."</code>, paths being relative to the folder of <code>rrsync</code>.
-- <strong>SMB</strong>: a share and an account with write access; SMB 3 with encryption is
-  required by the kiosk (<code>server min protocol = SMB3</code>, <code>server smb encrypt =
-  required</code> on Samba).</p>
+<p>then <code>path = "."</code>, paths being relative to the folder of <code>rrsync</code>.</p>
 </li>
 </ul>
 <p>The folder of a key is deleted by nobody but the kiosks: archive or purge the
 old ones on the server.</p>
+<h3 id="windows-server">Windows server<a class="headerlink" href="#windows-server" title="Permanent link">&para;</a></h3>
+<p>Windows ships an OpenSSH server (Windows 10 1809 and Windows Server 2019 or
+later): use <code>protocol = "sftp"</code> (Windows has no rsync) and
+<code>windows_names = true</code>.</p>
+<ol>
+<li>
+<p>Install and start it, in PowerShell as administrator:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">Add-WindowsCapability</span> <span class="n">-Online</span> <span class="n">-Name</span> <span class="n">OpenSSH</span><span class="p">.</span><span class="n">Server</span><span class="p">~~~~</span><span class="n">0</span><span class="p">.</span><span class="n">0</span><span class="p">.</span><span class="n">1</span><span class="p">.</span><span class="n">0</span>
+<span class="nb">Set-Service</span> <span class="n">-Name</span> <span class="n">sshd</span> <span class="n">-StartupType</span> <span class="n">Automatic</span>
+<span class="nb">Start-Service</span> <span class="n">sshd</span>
+</code></pre></div>
+</li>
+<li>
+<p>Create a local account for the kiosks, <strong>not an administrator</strong> (the keys
+   of administrators are read from
+   <code>C:\ProgramData\ssh\administrators_authorized_keys</code> instead), and put the
+   public key of the kiosks in <code>C:\Users\kiosk\.ssh\authorized_keys</code>.</p>
+</li>
+<li>
+<p>Restrict it to SFTP in a folder, at the end of
+   <code>C:\ProgramData\ssh\sshd_config</code>, then restart the service
+   (<code>Restart-Service sshd</code>):</p>
+<div class="highlight"><pre><span></span><code>Match User kiosk
+    ChrootDirectory C:\PandoraBox
+    ForceCommand internal-sftp
+    AllowTcpForwarding no
+    PermitTTY no
+</code></pre></div>
+<p>with <code>path = "/keys"</code>, the folder <code>C:\PandoraBox\keys</code> writable by the
+account. Without a chroot, the paths are written <code>/C:/PandoraBox/keys</code>.
+4. The host key of the server, for <code>image/airgap-known-hosts</code>:
+   <code>ssh-keygen -lf C:\ProgramData\ssh\ssh_host_ed25519_key.pub</code> on the server
+   gives the fingerprint to compare with that of <code>ssh-keyscan</code>.</p>
+</li>
+</ol>
+<p>The copy sends each file to a temporary name, then renames it over the old
+one (SFTP extension <code>posix-rename</code>); a server without it gets the old file
+deleted first, then the new one renamed.</p>
+<p>A Windows server can be tested in a virtual machine: see
+<a href="#tests">Tests</a>.</p>
 <h2 id="scan-report">Scan report<a class="headerlink" href="#scan-report" title="Permanent link">&para;</a></h2>
 <p><code>actions.airgap</code> of the report (see <a href="../engines/#scan-report">Scan report</a>):</p>
 <table>
@@ -1591,16 +1691,45 @@ the service logs <code>airgap_done</code> and <code>airgap_failed</code> in its 
 (<code>journalctl -u pandora-box-airgap</code>).</p>
 <h2 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>tests/airgap/run.sh</code> copies to real servers in containers: OpenSSH with
-  rsync (SFTP, rsync over SSH, and rsync restricted by <code>rrsync</code> as above)
-  and Samba (SMB 3 with encryption), first a
-  copy, then a synchronization (changed, new and removed files), an unknown
-  host key and a wrong password refused, and the service over its socket.</li>
+<li><code>tests/airgap/run.sh</code> copies to a real OpenSSH server with rsync, in a
+  container (SFTP, rsync over SSH, and rsync restricted by <code>rrsync</code> as
+  above): first a copy, then a synchronization (changed, new and removed
+  files), an unknown host key refused, and the service over its socket.</li>
+<li><code>tests/windows/windows.sh</code> copies to a Windows Server in a QEMU virtual
+  machine, set up as above (see below).</li>
 <li>The <a href="../vm/">virtual machine test</a> enables the copy to an SFTP server of the
   test: a key is copied, then inserted again without one of its files, which
   is deleted from the server; the key keeps its malicious files and gets its
   identifier.</li>
 </ul>
+<h3 id="windows-server-in-a-virtual-machine">Windows server in a virtual machine<a class="headerlink" href="#windows-server-in-a-virtual-machine" title="Permanent link">&para;</a></h3>
+<p>The copy to a Windows server is checked against a real Windows Server 2025,
+in a QEMU virtual machine of the build container (with KVM):</p>
+<ol>
+<li>Download the ISO of <strong>Windows Server 2025 evaluation</strong> (English, 180 days,
+   no product key) from the
+   <a href="https://www.microsoft.com/en-us/evalcenter/download-windows-server-2025">Microsoft Evaluation Center</a>.
+   It stays out of the repository.</li>
+<li>
+<p>Install it once, unattended (20 to 40 minutes, to watch over VNC on
+   <code>localhost:5900</code>):</p>
+<div class="highlight"><pre><span></span><code>tests/windows/windows.sh<span class="w"> </span>prepare<span class="w"> </span>~/Downloads/windows-server-2025-eval.iso
+</code></pre></div>
+<p><code>tests/windows/autounattend.xml</code> installs image 1 of the ISO (Standard,
+Server Core; <code>--index 2</code> for the desktop), then <code>tests/windows/setup.ps1</code>
+sets up OpenSSH as described above (the account <code>kiosk</code>, its key, SFTP
+only in <code>C:\PandoraBox</code>) and shuts down. The disk is
+<code>tests/windows/work/windows.qcow2</code> (outside git).
+3. Copy keys to it, as often as needed (each run starts from the installed
+   disk):</p>
+<div class="highlight"><pre><span></span><code>tests/windows/windows.sh<span class="w"> </span><span class="nb">test</span>
+</code></pre></div>
+<p>A first copy (the names Windows refuses or confuses reported), a
+replacement, an addition and a deletion, dates kept, and a server with
+another host key refused.</p>
+</li>
+</ol>
+<p>The evaluation expires after 180 days: prepare a new disk then.</p>
 
 
 
