@@ -43,11 +43,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Load kernel modules
-        run: |
-          # exfat is shipped in the extra modules package on the Azure kernel
-          sudo apt-get update
-          sudo apt-get install -y "linux-modules-extra-$(uname -r)"
-          sudo modprobe -a loop vfat exfat ext4 fuse
+        # NTFS and exFAT are read by their FUSE drivers, in the kiosk as in
+        # the tests: no linux-modules-extra (not always published for the
+        # kernel of the runner)
+        run: sudo modprobe -a loop vfat ext4 fuse
       - name: Run tests in a privileged container (real clamd, YARA-X, hash engines)
         run: tests/e2e/run.sh
 

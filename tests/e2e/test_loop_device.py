@@ -46,9 +46,11 @@ MKFS = {
     # -F: a file, not a block device; -Q: quick format
     "ntfs": ["mkntfs", "-F", "-Q", "-L", "USBKEY"],
 }
-# Mount type that fills a key: NTFS with ntfs-3g, as root (the kernel of the
-# host may have no NTFS driver)
-POPULATE = {"ntfs": "ntfs-3g"}
+# Mount type that fills and reads a key, as root: the FUSE drivers for NTFS
+# and exFAT, whose kernel drivers the host may not have (on the GitHub
+# runners, exfat is in linux-modules-extra, not always published for the
+# running kernel)
+POPULATE = {"ntfs": "ntfs-3g", "exfat": "exfat-fuse"}
 
 
 def run(*argv: str) -> str:
@@ -119,7 +121,9 @@ def key_files(node: str, tmp_path: Path) -> list[str]:
     """Files left on the key, read from a fresh read-only mount."""
     check = tmp_path / "check"
     check.mkdir()
-    run("mount", "-o", "ro", node, str(check))
+    # -p: probe the device, never the cache (a loop device is reused)
+    fs_type = run("blkid", "-p", "-o", "value", "-s", "TYPE", node)
+    run("mount", "-t", POPULATE.get(fs_type, fs_type), "-o", "ro", node, str(check))
     try:
         files = sorted(str(p.relative_to(check)) for p in check.rglob("*") if p.is_file())
     finally:
