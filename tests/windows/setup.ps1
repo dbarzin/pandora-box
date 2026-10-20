@@ -21,6 +21,12 @@ $password = -join (1..24 | ForEach-Object { $chars | Get-Random }) + "!9a"
 New-LocalUser -Name kiosk -Password (ConvertTo-SecureString $password -AsPlainText -Force) `
     -PasswordNeverExpires -AccountNeverExpires -Description "PandoraBox kiosks (SFTP)"
 
+# Windows Server 2025: sshd only lets in the administrators and the local
+# group "OpenSSH Users" (AllowGroups of its sshd_config)
+if (Get-LocalGroup -Name "OpenSSH Users" -ErrorAction SilentlyContinue) {
+    Add-LocalGroupMember -Group "OpenSSH Users" -Member kiosk
+}
+
 New-Item -ItemType Directory -Force -Path C:\PandoraBox\keys | Out-Null
 icacls C:\PandoraBox\keys /grant "kiosk:(OI)(CI)M" | Out-Null
 
@@ -28,6 +34,12 @@ icacls C:\PandoraBox\keys /grant "kiosk:(OI)(CI)M" | Out-Null
 $keys = "C:\ProgramData\ssh\kiosk_authorized_keys"
 Copy-Item (Join-Path $source "kiosk.pub") $keys
 icacls $keys /inheritance:r /grant "SYSTEM:F" "Administrators:F" "kiosk:R" | Out-Null
+
+# Test machine only: a detailed log of sshd in C:\ProgramData\ssh\logs\sshd.log,
+# read from the disk by "tests/windows/windows.sh logs" (global options come
+# before the first Match block)
+$config = Get-Content C:\ProgramData\ssh\sshd_config
+Set-Content -Path C:\ProgramData\ssh\sshd_config -Value (@("SyslogFacility LOCAL0", "LogLevel DEBUG3") + $config)
 
 Add-Content -Path C:\ProgramData\ssh\sshd_config -Value @"
 
@@ -40,10 +52,21 @@ Match User kiosk
 "@
 Restart-Service sshd
 
-if (-not (Get-NetFirewallRule -Name OpenSSH-Server-In-TCP -ErrorAction SilentlyContinue)) {
+# The rule that comes with OpenSSH only allows the Private network profile:
+# the network of the virtual machine is not identified, hence Public
+if (Get-NetFirewallRule -Name OpenSSH-Server-In-TCP -ErrorAction SilentlyContinue) {
+    Set-NetFirewallRule -Name OpenSSH-Server-In-TCP -Enabled True -Profile Any
+} else {
     New-NetFirewallRule -Name OpenSSH-Server-In-TCP -DisplayName "OpenSSH Server (sshd)" `
-        -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 | Out-Null
+        -Enabled True -Profile Any -Direction Inbound -Protocol TCP -Action Allow `
+        -LocalPort 22 | Out-Null
 }
+
+# For the record (C:\pandora-box-setup.log)
+Get-Service sshd | Format-List Name, Status, StartType
+Get-NetFirewallRule -Name OpenSSH-Server-In-TCP | Format-List Name, Enabled, Profile, Action
+Get-NetConnectionProfile | Format-List InterfaceAlias, NetworkCategory
+Test-NetConnection -ComputerName localhost -Port 22 | Format-List TcpTestSucceeded
 
 Stop-Transcript
 Stop-Computer -Force

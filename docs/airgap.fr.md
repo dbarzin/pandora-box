@@ -180,7 +180,11 @@ ou plus récents) : utilisez `protocol = "sftp"` (Windows n'a pas rsync) et
    clés des administrateurs sont lues dans
    `C:\ProgramData\ssh\administrators_authorized_keys` à la place), et
    placez la clé publique des bornes dans
-   `C:\Users\kiosk\.ssh\authorized_keys`.
+   `C:\Users\kiosk\.ssh\authorized_keys`. Sur Windows Server 2025,
+   ajoutez-le au groupe local **OpenSSH Users** : sshd n'admet que ce groupe
+   et les administrateurs (`AllowGroups`), tout autre compte est refusé avant
+   même que sa clé soit lue
+   (`Add-LocalGroupMember -Group "OpenSSH Users" -Member kiosk`).
 3. Limitez-le à SFTP dans un répertoire, à la fin de
    `C:\ProgramData\ssh\sshd_config`, puis redémarrez le service
    (`Restart-Service sshd`) :
@@ -196,7 +200,11 @@ ou plus récents) : utilisez `protocol = "sftp"` (Windows n'a pas rsync) et
     avec `path = "/keys"`, le répertoire `C:\PandoraBox\keys` étant
     accessible en écriture au compte. Sans chroot, les chemins s'écrivent
     `/C:/PandoraBox/keys`.
-4. La clé d'hôte du serveur, pour `image/airgap-known-hosts` :
+4. Ouvrez le port 22 au réseau des bornes : la règle de pare-feu fournie
+   avec OpenSSH n'autorise que le profil réseau **Privé**, et un réseau non
+   identifié est Public. Par exemple :
+   `Set-NetFirewallRule -Name OpenSSH-Server-In-TCP -Profile Domain,Private,Public -RemoteAddress <adresses des bornes>`.
+5. La clé d'hôte du serveur, pour `image/airgap-known-hosts` :
    `ssh-keygen -lf C:\ProgramData\ssh\ssh_host_ed25519_key.pub` sur le
    serveur donne l'empreinte à comparer avec celle de `ssh-keyscan`.
 

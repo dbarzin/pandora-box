@@ -39,6 +39,8 @@ from pandora_box.remotes import REPORTS, Secrets, Server, TransferError, upload
 HERE = Path(__file__).resolve().parent
 WORK = HERE / "work"
 DISK = WORK / "windows.qcow2"
+# Changes of the last test, over DISK: read by the command logs
+OVERLAY = WORK / "test.qcow2"
 CLIENT_KEY = WORK / "kiosk"
 OVMF_CODE = Path("/usr/share/OVMF/OVMF_CODE_4M.fd")
 OVMF_VARS = Path("/usr/share/OVMF/OVMF_VARS_4M.fd")
@@ -48,6 +50,7 @@ SSH_PORT = 2222
 DEFAULT_INDEX = 1
 INSTALL_TIMEOUT = 2 * 3600
 BOOT_TIMEOUT = 900
+SHUTDOWN_TIMEOUT = 180
 
 
 class TestFailure(Exception):
@@ -75,7 +78,10 @@ def qemu(disk: Path, vars_file: Path, extra: list[str]) -> list[str]:
         "-drive", f"if=pflash,format=raw,file={vars_file}",
         "-device", "ahci,id=ahci",
         "-drive", f"file={disk},if=none,id=disk,format=qcow2",
-        "-device", "ide-hd,drive=disk,bus=ahci.0",
+        # The disk first: empty, the firmware goes on to the ISO; once
+        # Windows is installed, its reboots start it (the ISO alone in the
+        # boot order would end in the UEFI shell)
+        "-device", "ide-hd,drive=disk,bus=ahci.0,bootindex=0",
         "-device", "qemu-xhci",
         # Watch the machine: VNC on port 5900 of the container
         "-display", "none", "-vnc", ":0",
@@ -144,15 +150,25 @@ def prepare(iso: Path, index: int) -> int:
 
 @contextmanager
 def machine() -> Iterator[Path]:
-    """Boot the prepared Windows (snapshot: changes thrown away); known_hosts of its SSH."""
+    """Boot the prepared Windows; known_hosts of its SSH server.
+
+    Its changes go to OVERLAY, over the installed disk, kept until the next
+    test: tests/windows/windows.sh logs reads the logs of sshd in it.
+    """
     check(DISK.exists(), f"no {DISK}: run tests/windows/windows.sh prepare ISO first")
+    OVERLAY.unlink(missing_ok=True)
+    subprocess.run(
+        ["qemu-img", "create", "-q", "-f", "qcow2", "-b", DISK.name, "-F", "qcow2", str(OVERLAY)],
+        check=True,
+    )
     with tempfile.TemporaryDirectory() as tmp:
         vars_file = Path(tmp) / "ovmf-vars.fd"
         shutil.copy(WORK / "ovmf-vars.fd", vars_file)
-        argv = qemu(DISK, vars_file, [
-            "-snapshot",
+        monitor = Path(tmp) / "monitor.sock"
+        argv = qemu(OVERLAY, vars_file, [
             "-netdev", f"user,id=net,hostfwd=tcp:127.0.0.1:{SSH_PORT}-:22",
             "-device", "e1000e,netdev=net",
+            "-monitor", f"unix:{monitor},server,nowait",
         ])  # fmt: skip
         process = subprocess.Popen(argv)
         try:
@@ -171,8 +187,16 @@ def machine() -> Iterator[Path]:
                 time.sleep(5)
             yield known_hosts
         finally:
-            process.terminate()
-            process.wait(30)
+            # A clean shutdown (power button): Windows writes its caches,
+            # the logs among them, to the disk
+            with contextlib.suppress(OSError), socket.socket(socket.AF_UNIX) as sock:
+                sock.connect(str(monitor))
+                sock.sendall(b"system_powerdown\n")
+            try:
+                process.wait(SHUTDOWN_TIMEOUT)
+            except subprocess.TimeoutExpired:
+                process.terminate()
+                process.wait(30)
 
 
 def write(path: Path, content: bytes, mtime: int = 1_700_000_000) -> None:

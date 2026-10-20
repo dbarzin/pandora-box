@@ -174,7 +174,11 @@ later): use `protocol = "sftp"` (Windows has no rsync) and
 2. Create a local account for the kiosks, **not an administrator** (the keys
    of administrators are read from
    `C:\ProgramData\ssh\administrators_authorized_keys` instead), and put the
-   public key of the kiosks in `C:\Users\kiosk\.ssh\authorized_keys`.
+   public key of the kiosks in `C:\Users\kiosk\.ssh\authorized_keys`. On
+   Windows Server 2025, add it to the local group **OpenSSH Users**: sshd only
+   lets this group and the administrators in (`AllowGroups`), any other
+   account is refused before its key is read
+   (`Add-LocalGroupMember -Group "OpenSSH Users" -Member kiosk`).
 3. Restrict it to SFTP in a folder, at the end of
    `C:\ProgramData\ssh\sshd_config`, then restart the service
    (`Restart-Service sshd`):
@@ -189,7 +193,11 @@ later): use `protocol = "sftp"` (Windows has no rsync) and
 
     with `path = "/keys"`, the folder `C:\PandoraBox\keys` writable by the
     account. Without a chroot, the paths are written `/C:/PandoraBox/keys`.
-4. The host key of the server, for `image/airgap-known-hosts`:
+4. Open port 22 to the network of the kiosks: the firewall rule that comes
+   with OpenSSH only allows the **Private** network profile, and an
+   unidentified network is Public. For instance:
+   `Set-NetFirewallRule -Name OpenSSH-Server-In-TCP -Profile Domain,Private,Public -RemoteAddress <addresses of the kiosks>`.
+5. The host key of the server, for `image/airgap-known-hosts`:
    `ssh-keygen -lf C:\ProgramData\ssh\ssh_host_ed25519_key.pub` on the server
    gives the fingerprint to compare with that of `ssh-keyscan`.
 
