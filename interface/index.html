@@ -946,6 +946,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#accessibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#check-and-preview-a-theme" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1265,6 +1276,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#accessibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessibility
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#check-and-preview-a-theme" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1448,6 +1470,8 @@ kept.</p>
 <span class="c1"># TrueType fonts, files of the folder (default: DejaVu Sans)</span>
 <span class="c1"># font = "OpenSans-Regular.ttf"</span>
 <span class="c1"># font_bold = "OpenSans-Bold.ttf"</span>
+<span class="c1"># Larger texts, from 1 (default) to 1.5</span>
+<span class="c1"># text_scale = 1.25</span>
 
 <span class="k">[colors]</span>
 <span class="n">header</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"#003366"</span>
@@ -1493,12 +1517,34 @@ are those of the kiosk logs (in English): they are meant for the
 administrator, and are not part of the theme.</p>
 <h4 id="colors">Colors<a class="headerlink" href="#colors" title="Permanent link">&para;</a></h4>
 <p><code>header</code>, <code>header_text</code>, <code>background</code>, <code>text</code>, <code>muted</code> (help, details),
-<code>clean</code>, <code>threat</code>, <code>warning</code>, <code>progress</code>, <code>progress_background</code>: <code>"#rrggbb"</code>.</p>
+<code>clean</code>, <code>threat</code>, <code>warning</code>, <code>progress</code>, <code>progress_background</code>: <code>"#rrggbb"</code>.
+A theme whose texts would be hard to read is refused (see
+<a href="#accessibility">Accessibility</a>).</p>
 <h4 id="images">Images<a class="headerlink" href="#images" title="Permanent link">&para;</a></h4>
 <p><code>[images]</code>: <code>insert</code> (animation of the waiting screen, one image per second),
 <code>busy</code> (animation while the kiosk works), <code>clean</code>, <code>threat</code>, <code>error</code> (icons of
 the results). PNG (with transparency) or JPEG, at most 4096 pixels. The
 built-in images come from the first version of PandoraBox.</p>
+<h3 id="accessibility">Accessibility<a class="headerlink" href="#accessibility" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Contrast</strong>: every text must stand out from its background at the WCAG
+  2.1 AA level, or the theme is refused with the colors and ratio at fault:
+  4.5:1 for <code>text</code>, <code>muted</code>, <code>clean</code>, <code>threat</code> and <code>warning</code> on
+  <code>background</code>; 3:1 for <code>header_text</code> on <code>header</code>, <code>threat</code> and <code>progress</code>
+  (large bold texts: title, banner, percentage) and for <code>progress</code> on
+  <code>progress_background</code> (the progress bar). The built-in theme passes.</li>
+<li><strong>Text size</strong>: <code>text_scale</code> enlarges every text, from 1 (default) to 1.5;
+  the lines, rows and bars follow, the icons and the animation of the
+  waiting screen shrink to make room. The smallest built-in text is 16
+  pixels on the 7-inch screen (1024x600). Long titles wrap; when space runs
+  short, a list always shows its first file and the number of the others.
+  The tests check every screen in English and French, at three screen sizes
+  and three text sizes: no text leaves the screen or overlaps another one.</li>
+<li><strong>No color alone</strong>: each result has its title, its icon and, for each
+  file, its verdict in words; the whole screen is the button to clean.</li>
+</ul>
+<p>To try a text size without changing the theme:
+<code>pandora-box-theme preview image/theme /tmp/preview --text-scale 1.5</code>.</p>
 <h3 id="check-and-preview-a-theme">Check and preview a theme<a class="headerlink" href="#check-and-preview-a-theme" title="Permanent link">&para;</a></h3>
 <p>Without a kiosk, on the development computer:</p>
 <div class="highlight"><pre><span></span><code>pandora-box-theme<span class="w"> </span>check<span class="w"> </span>image/theme

@@ -946,6 +946,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#accessibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessibilité
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#check-and-preview-a-theme" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1265,6 +1276,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#accessibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Accessibilité
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#check-and-preview-a-theme" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1452,6 +1474,8 @@ autres sont conservées.</p>
 <span class="c1"># Polices TrueType, fichiers du dossier (par défaut : DejaVu Sans)</span>
 <span class="c1"># font = "OpenSans-Regular.ttf"</span>
 <span class="c1"># font_bold = "OpenSans-Bold.ttf"</span>
+<span class="c1"># Textes plus grands, de 1 (par défaut) à 1,5</span>
+<span class="c1"># text_scale = 1.25</span>
 
 <span class="k">[colors]</span>
 <span class="n">header</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"#003366"</span>
@@ -1499,13 +1523,38 @@ l'administrateur, et ne font pas partie du thème.</p>
 <h4 id="colors">Couleurs<a class="headerlink" href="#colors" title="Permanent link">&para;</a></h4>
 <p><code>header</code>, <code>header_text</code>, <code>background</code>, <code>text</code>, <code>muted</code> (aide, détails),
 <code>clean</code>, <code>threat</code>, <code>warning</code>, <code>progress</code>, <code>progress_background</code> :
-<code>"#rrggbb"</code>.</p>
+<code>"#rrggbb"</code>. Un thème dont les textes seraient difficiles à lire est refusé
+(voir <a href="#accessibility">Accessibilité</a>).</p>
 <h4 id="images">Images<a class="headerlink" href="#images" title="Permanent link">&para;</a></h4>
 <p><code>[images]</code> : <code>insert</code> (animation de l'écran d'attente, une image par
 seconde), <code>busy</code> (animation pendant que la borne travaille), <code>clean</code>,
 <code>threat</code>, <code>error</code> (icônes des résultats). PNG (avec transparence) ou JPEG,
 4096 pixels au maximum. Les images intégrées viennent de la première version
 de PandoraBox.</p>
+<h3 id="accessibility">Accessibilité<a class="headerlink" href="#accessibility" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Contraste</strong> : chaque texte doit se détacher de son fond au niveau AA des
+  WCAG 2.1, sinon le thème est refusé avec les couleurs et le rapport en
+  cause : 4,5:1 pour <code>text</code>, <code>muted</code>, <code>clean</code>, <code>threat</code> et <code>warning</code> sur
+  <code>background</code> ; 3:1 pour <code>header_text</code> sur <code>header</code>, <code>threat</code> et
+  <code>progress</code> (grands textes en gras : titre, bandeau, pourcentage) et pour
+  <code>progress</code> sur <code>progress_background</code> (la barre de progression). Le thème
+  intégré les respecte.</li>
+<li><strong>Taille des textes</strong> : <code>text_scale</code> agrandit tous les textes, de 1 (par
+  défaut) à 1,5 ; les lignes, rangées et barres suivent, les icônes et
+  l'animation de l'écran d'attente rétrécissent pour faire de la place. Le
+  plus petit texte intégré fait 16 pixels sur l'écran de 7 pouces
+  (1024x600). Les titres longs passent à la ligne ; quand la place manque,
+  une liste montre toujours son premier fichier et le nombre des autres.
+  Les tests vérifient chaque écran en anglais et en français, sur trois
+  tailles d'écran et trois tailles de texte : aucun texte ne sort de l'écran
+  ni n'en chevauche un autre.</li>
+<li><strong>Jamais la couleur seule</strong> : chaque résultat a son titre, son icône et,
+  pour chaque fichier, son verdict en toutes lettres ; tout l'écran est le
+  bouton de nettoyage.</li>
+</ul>
+<p>Pour essayer une taille de texte sans modifier le thème :
+<code>pandora-box-theme preview image/theme /tmp/preview --text-scale 1.5</code>.</p>
 <h3 id="check-and-preview-a-theme">Vérifier et prévisualiser un thème<a class="headerlink" href="#check-and-preview-a-theme" title="Permanent link">&para;</a></h3>
 <p>Sans borne, sur l'ordinateur de développement :</p>
 <div class="highlight"><pre><span></span><code>pandora-box-theme<span class="w"> </span>check<span class="w"> </span>image/theme
