@@ -57,7 +57,28 @@ transport = "tcp"
 port = 5514
 CONFIG
 
+# Copy of the verified keys to the SFTP server of the test (image/vm/
+# sftp_server.py, keys made by image/build-test.sh), enabled only by the test
+# of the copy: the kiosk and the service then read this configuration
+{
+    cat /etc/pandora-box/pandora-box.toml
+    cat <<CONFIG
+
+[airgap]
+enabled = true
+protocol = "sftp"
+host = "10.0.2.2"
+port = 2222
+user = "kiosk"
+path = "keys"
+CONFIG
+} >/etc/pandora-box/airgap-test.toml
+AIRGAP="$SRCDIR/pandora-box/image/vm/airgap"
+install -m 0644 "$AIRGAP/known_hosts" /etc/pandora-box/airgap-known-hosts
+
 # The abuse.ch Auth-Key the test server expects
 install -d -m 0700 /etc/credstore
 printf 'vm-test-auth-key\n' >/etc/credstore/pandora-box.abusech-auth-key
 chmod 0600 /etc/credstore/pandora-box.abusech-auth-key
+install -m 0600 "$AIRGAP/client" /etc/credstore/pandora-box.airgap-ssh-key
+install -m 0600 "$AIRGAP/token.key" /etc/credstore/pandora-box.airgap-token-key

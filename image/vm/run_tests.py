@@ -54,6 +54,11 @@ SOURCES = "sources"
 AUTH_KEY = "vm-test-auth-key"
 # SIEM of the test profile: syslog over TCP to 10.0.2.2:5514 in the machine
 SIEM_PORT = 5514
+# Copy of the verified keys to the SFTP server of the test (sftp_server.py):
+# 10.0.2.2:2222 in the machine, keys made by image/build-test.sh
+AIRGAP_KEYS = Path("image/vm/airgap")
+AIRGAP_PORT = 2222
+AIRGAP_CONFIG = "/etc/pandora-box/airgap-test.toml"
 
 LOG = "/var/log/pandora-box/pandora-box.log"
 # Discoverable Partitions Specification: root partition of x86-64
@@ -311,6 +316,97 @@ def usb_devices(vm: Machine) -> dict[str, str]:
         'echo "$(cat $d/authorized) $(cat $d/product)"; done; true'
     )
     return {line[2:]: line[0] for line in output.splitlines() if line[1:2] == " "}
+
+
+def check_airgap(vm: Machine, workdir: Path) -> None:
+    """The clean files of a verified key copied to an SFTP server, kept in sync."""
+    step("copy of the verified keys to a server (airgap)")
+    from sftp_server import SftpServer
+
+    root = workdir / "airgap-server"
+    server = SftpServer(root, AIRGAP_PORT, AIRGAP_KEYS / "host", AIRGAP_KEYS / "client.pub")
+    # The kiosk and the service read the configuration of the copy, only
+    # for this test (runtime drop-ins: the root filesystem is read-only)
+    for unit, command in (
+        ("pandora-box", f"/usr/bin/pandora-box --config {AIRGAP_CONFIG}"),
+        ("pandora-box-airgap", f"/usr/bin/pandora-box-airgap {AIRGAP_CONFIG}"),
+    ):
+        folder = f"/run/systemd/system/{unit}.service.d"
+        vm.shell.run(
+            f"mkdir -p {folder} && printf '[Service]\\nExecStart=\\nExecStart={command}\\n'"
+            f" > {folder}/50-airgap-test.conf"
+        )
+    try:
+        started = count_events(vm, "kiosk_started")
+        vm.shell.run("systemctl daemon-reload && systemctl restart pandora-box-airgap", timeout=60)
+        vm.shell.run("systemctl restart pandora-box", timeout=300)
+        wait_next_event(vm, "kiosk_started", started, timeout=300)
+        wait_screen(vm, "Please insert a USB key")
+        user = vm.shell.run("ps -o user:32= -p $(systemctl show -P MainPID pandora-box-airgap)")
+        check(user.split() == ["pandora-box-airgap"], f"service user: {user}")
+
+        image = workdir / "airgap.img"
+        make_key(image)
+        log = KioskLog(vm)
+        vm.insert_key(image)
+        copied = log.wait("airgap_copied", timeout=180)
+        wait_screen(vm, "Files copied to the server")
+        identifier = copied["key"]
+        folder = root / "keys" / identifier
+        clean = sorted(path for path, (_, engine) in corpus.KEY.items() if not engine)
+        on_server = sorted(
+            p.relative_to(folder).as_posix()
+            for p in folder.rglob("*")
+            if p.is_file() and not p.relative_to(folder).as_posix().startswith(".pandora-box")
+        )
+        check(on_server == clean, f"files on the server: {on_server}")
+        for path in clean:
+            check((folder / path).read_bytes() == corpus.KEY[path][0], f"{path}: content")
+        reports = list((folder / ".pandora-box").glob("*.json"))
+        check(len(reports) == 1, f"reports on the server: {reports}")
+        log.wait("device_ejected")
+        vm.remove_key()
+        log.wait("device_removed")
+        # The key is not cleaned: it only got its identifier
+        files = read_key(image)
+        infected = sorted(path for path, (_, engine) in corpus.KEY.items() if engine)
+        check(all(path in files for path in infected), f"key cleaned: {files}")
+        check(".pandora-box" in files, f"no identifier on the key: {files}")
+        print(f"key {identifier}: {len(clean)} clean files copied, {len(infected)} not copied")
+
+        # A file removed from the key is removed from the server
+        subprocess.run(["mdel", "-i", str(image), "::readme.txt"], check=True)
+        vm.insert_key(image)
+        copied = log.wait("airgap_copied", timeout=180)
+        check(copied["key"] == identifier, f"identifier changed: {copied['key']}")
+        check(copied["deleted"] == 1 and copied["copied"] == 0, f"synchronization: {copied}")
+        check(not (folder / "readme.txt").exists(), "readme.txt left on the server")
+        check(len(list((folder / ".pandora-box").glob("*.json"))) == 2, "second report missing")
+        log.wait("device_ejected")
+        vm.remove_key()
+        log.wait("device_removed")
+        print("inserted again: same identifier, the removed file deleted from the server")
+
+        # The service reads the staging folder, not the reports of the kiosk
+        airgap_user = "setpriv --reuid=pandora-box-airgap --regid=pandora-box-airgap --init-groups"
+        check(
+            not vm.shell.succeeds(f"{airgap_user} ls /var/lib/pandora-box"),
+            "the copy service user reads the reports",
+        )
+        check(
+            vm.shell.run("ls -A /var/lib/pandora-box-airgap/staging").strip() == "",
+            "staging folder not emptied",
+        )
+        print("service user without access to the reports, staging folder emptied")
+    finally:
+        server.close()
+        started = count_events(vm, "kiosk_started")
+        vm.shell.run(
+            "rm -r /run/systemd/system/pandora-box.service.d"
+            " /run/systemd/system/pandora-box-airgap.service.d && systemctl daemon-reload"
+        )
+        vm.shell.run("systemctl restart pandora-box-airgap pandora-box", timeout=300)
+        wait_next_event(vm, "kiosk_started", started, timeout=300)
 
 
 def check_usb_policy(vm: Machine) -> None:
@@ -1298,6 +1394,7 @@ def main(argv: list[str] | None = None) -> int:
                 check_signature_update(vm, workdir)
                 online_set = check_online_update(vm, workdir)
                 check_siem(vm)
+                check_airgap(vm, workdir)
                 check_usb_policy(vm)
                 check_hardening(vm)
                 check_audit(vm)

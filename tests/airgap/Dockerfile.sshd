@@ -1,0 +1,11 @@
+# SSH server of the airgap tests: SFTP and rsync over SSH, key-only accounts.
+# python3: rrsync, which restricts a key to rsync in one folder, is a script.
+FROM debian:trixie-slim
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openssh-server rsync python3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --create-home --shell /bin/sh kiosk \
+    && useradd --create-home --shell /bin/sh restricted \
+    && mkdir -p /run/sshd /srv/keys
+COPY sshd.sh /usr/local/bin/sshd.sh
+CMD ["sh", "/usr/local/bin/sshd.sh"]

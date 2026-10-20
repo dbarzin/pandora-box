@@ -100,7 +100,11 @@ de l'utilisateur, par QMP et par le shell de la console virtio :
     ouvrir une connexion réseau (seul systemd-timesyncd envoie des requêtes
     NTP) ; les entrées du journal de la borne sont envoyées à un récepteur
     syslog du test (`[siem]`), par l'utilisateur de l'export SIEM, qui ne
-    peut pas lire les rapports ; un clavier et un adaptateur réseau USB
+    peut pas lire les rapports ; avec la copie vers un serveur activée
+    (`[airgap]`, un serveur SFTP du test), les fichiers sains d'une clé sont
+    copiés par l'utilisateur du service de copie, la clé garde ses fichiers
+    malveillants et reçoit son identifiant, puis un fichier retiré de la clé
+    est supprimé du serveur ; un clavier et un adaptateur réseau USB
     émulés sont bloqués par USBGuard (aucun périphérique d'entrée, aucune
     interface réseau) et les pilotes exclus ne sont pas dans l'image ; les
     réglages du noyau, le pare-feu et les bacs à sable des services sont en

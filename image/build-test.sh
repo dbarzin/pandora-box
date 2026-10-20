@@ -9,6 +9,17 @@
 set -eu
 
 cd "$(dirname "$0")"
+# Keys of the copy to a server (airgap) of the test image: the SFTP server of
+# the test (image/vm/sftp_server.py) presents the host key and accepts the
+# client key; the image trusts the host key and signs the key identifiers
+if [ ! -f vm/airgap/token.key ]; then
+    rm -rf vm/airgap
+    mkdir -p vm/airgap
+    ssh-keygen -q -t ed25519 -N "" -C airgap-test-host -f vm/airgap/host
+    ssh-keygen -q -t ed25519 -N "" -C airgap-test-kiosk -f vm/airgap/client
+    printf '[10.0.2.2]:2222 %s\n' "$(cut -d' ' -f1,2 vm/airgap/host.pub)" >vm/airgap/known_hosts
+    openssl genpkey -algorithm ed25519 -out vm/airgap/token.key
+fi
 base=$(date -u +%Y%m%d%H%M%S)
 ./build.sh --profile test --image-version="$base" "$@"
 rm -rf mkosi.output/updates

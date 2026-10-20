@@ -49,7 +49,9 @@ KD_TEXT = 0x00
 KD_GRAPHICS = 0x01
 
 # Screens that start a new step: the messages of the previous one are dropped
-_NEW_STEP = frozenset({Screen.READY, Screen.SCANNING, Screen.CLEANING, Screen.SERVICE})
+_NEW_STEP = frozenset(
+    {Screen.READY, Screen.SCANNING, Screen.CLEANING, Screen.SERVICE, Screen.TRANSFERRING}
+)
 _MAX_MESSAGES = 50
 # Minimum time between two drawings while the state changes (each scanned file)
 _MIN_REDRAW = 0.15

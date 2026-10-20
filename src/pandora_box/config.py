@@ -254,6 +254,37 @@ class SiemConfig:
         return 6514 if self.transport == "tls" else 514
 
 
+AIRGAP_PROTOCOLS = ("rsync", "sftp", "smb")
+
+
+@dataclass(frozen=True)
+class AirgapConfig:
+    # Copy of the clean files of each verified key to a server
+    # (pandora-box-airgap.service, a networked image): off by default. The
+    # key is not cleaned; the kiosk writes its identifier on it (.pandora-box)
+    enabled: bool = False
+    # "rsync" (over SSH, rsync on the server), "sftp" or "smb" (SMB 3)
+    protocol: str = "sftp"
+    host: str = ""
+    # 0: 22 for rsync and sftp, 445 for smb
+    port: int = 0
+    user: str = ""
+    # Folder of the keys on the server (smb: in the share): one folder per key
+    path: str = ""
+    # smb: the share, and the domain of the account ("": none)
+    share: str = ""
+    domain: str = ""
+    # rsync, sftp: host keys of the server (the server is never trusted on
+    # first use)
+    known_hosts: Path = Path("/etc/pandora-box/airgap-known-hosts")
+    # Clean files of the key, prepared by the kiosk for the service
+    staging: Path = Path("/var/lib/pandora-box-airgap/staging")
+    # Socket of the service
+    socket: Path = Path("/run/pandora-box-airgap/airgap.sock")
+    # Timeout of the connection and of each network operation, in seconds
+    timeout: float = 60.0
+
+
 _LANGUAGE = re.compile(r"^[a-z]{2}$")
 
 
@@ -286,6 +317,7 @@ class Config:
     updates: UpdatesConfig = field(default_factory=UpdatesConfig)
     display: DisplayConfig = field(default_factory=DisplayConfig)
     siem: SiemConfig = field(default_factory=SiemConfig)
+    airgap: AirgapConfig = field(default_factory=AirgapConfig)
 
 
 def load_config(path: Path) -> Config:
@@ -456,7 +488,44 @@ def parse_config(data: dict[str, Any]) -> Config:
         updates=_parse_updates(data.get("updates", {})),
         display=_parse_display(data.get("display", {})),
         siem=siem_cfg,
+        airgap=_parse_airgap(data.get("airgap", {})),
     )
+
+
+def _parse_airgap(airgap: dict[str, Any]) -> AirgapConfig:
+    _reject_unknown(airgap, {f.name for f in fields(AirgapConfig)}, "airgap")
+    default = AirgapConfig()
+    config = AirgapConfig(
+        enabled=_get(airgap, "airgap", "enabled", bool, False),
+        protocol=_choice(airgap, "airgap", "protocol", AIRGAP_PROTOCOLS, default.protocol),
+        host=_get(airgap, "airgap", "host", str, ""),
+        port=_get(airgap, "airgap", "port", int, 0),
+        user=_get(airgap, "airgap", "user", str, ""),
+        path=_get(airgap, "airgap", "path", str, ""),
+        share=_get(airgap, "airgap", "share", str, ""),
+        domain=_get(airgap, "airgap", "domain", str, ""),
+        known_hosts=_path(airgap, "airgap", "known_hosts", default.known_hosts),
+        staging=_path(airgap, "airgap", "staging", default.staging),
+        socket=_path(airgap, "airgap", "socket", default.socket),
+        timeout=_positive(airgap, "airgap", "timeout", default.timeout),
+    )
+    if not 0 <= config.port <= 65535:
+        raise ConfigError("airgap.port must be between 1 and 65535 (0: the default port)")
+    for key in ("host", "user", "share", "domain"):
+        value = getattr(config, key)
+        if any(c.isspace() or c in "@:/\\" for c in value) or value.startswith("-"):
+            raise ConfigError(f"airgap.{key}: invalid characters")
+    if any(part == ".." for part in config.path.replace("\\", "/").split("/")):
+        raise ConfigError("airgap.path must not hold ..")
+    if config.enabled:
+        for key in ("host", "user", "path"):
+            if not getattr(config, key):
+                raise ConfigError(f"airgap.{key} is required when the copy to a server is enabled")
+        if config.protocol == "smb" and not config.share:
+            raise ConfigError('airgap.share is required with protocol = "smb"')
+    if config.share and config.protocol != "smb":
+        raise ConfigError('airgap.share is only used with protocol = "smb"')
+    return config
 
 
 def _parse_siem(siem: dict[str, Any]) -> SiemConfig:

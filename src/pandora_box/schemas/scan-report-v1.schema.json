@@ -217,7 +217,7 @@
     },
     "actions": {
       "type": "object",
-      "description": "Actions taken after the scan, filled in after cleaning",
+      "description": "Actions taken after the scan, filled in after cleaning or after the copy to a server",
       "additionalProperties": false,
       "required": ["quarantine_folder", "quarantined", "removed", "remove_failed", "cleaned"],
       "properties": {
@@ -225,7 +225,35 @@
         "quarantined": { "type": "array", "items": { "type": "string" } },
         "removed": { "type": "array", "items": { "type": "string" } },
         "remove_failed": { "type": "array", "items": { "type": "string" } },
-        "cleaned": { "type": ["boolean", "null"], "description": "null: no cleaning attempted" }
+        "cleaned": { "type": ["boolean", "null"], "description": "null: no cleaning attempted" },
+        "airgap": {
+          "description": "Copy of the clean files of the key to a server; null or absent: no copy (airgap disabled)",
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "required": [
+            "status", "key_id", "destination", "copied", "deleted", "unchanged", "not_copied",
+            "errors", "error"
+          ],
+          "properties": {
+            "status": { "enum": ["copied", "failed", "refused"], "description": "refused: the key was not verified, nothing was copied" },
+            "key_id": { "type": "string", "description": "Identifier of the key (.pandora-box), the name of its folder on the server" },
+            "destination": { "type": "string", "description": "Folder of the key on the server" },
+            "copied": { "type": "integer", "minimum": 0 },
+            "deleted": { "type": "integer", "minimum": 0, "description": "Files deleted from the server, no longer clean files of the key" },
+            "unchanged": { "type": "integer", "minimum": 0 },
+            "not_copied": { "type": "array", "items": { "type": "string" }, "description": "Files that are not clean: never copied" },
+            "errors": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "reason"],
+                "properties": { "path": { "type": "string" }, "reason": { "type": "string" } }
+              }
+            },
+            "error": { "type": "string" }
+          }
+        }
       }
     }
   },

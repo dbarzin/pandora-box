@@ -35,6 +35,7 @@ pandora-box --config pandora-box.toml --check-config
 | `[signatures]` | Jeux de signatures et leur vérification : voir [Signatures](signatures.md) |
 | `[updates]` | Mises à jour en ligne des signatures et de l'image : voir [Signatures](signatures.md#online-updates) et [Mises à jour du système](update.md#online) |
 | `[siem]` | Export des journaux vers un SIEM : voir [Export vers un SIEM](siem.md) |
+| `[airgap]` | Copie des fichiers sains des clés vérifiées vers un serveur : voir [Copie vers un serveur](airgap.md) |
 | `[report]`, `[quarantine]`, `[logging]` | Dossiers des rapports d'analyse et de la quarantaine, fichier et niveau de journal : voir [Journaux](logs.md) |
 
 ## Référence { #reference }

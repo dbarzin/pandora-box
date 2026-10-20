@@ -25,6 +25,7 @@ RUN if [ -n "$SNAPSHOT" ]; then \
         python3 python3-venv python3-pip git ca-certificates \
         qemu-system-x86 qemu-utils ovmf swtpm swtpm-tools \
         openssl sbsigntool python3-virt-firmware \
+        python3-paramiko openssh-client \
         pkcs11-provider p11-kit p11-kit-modules ykcs11 yubico-piv-tool pcscd libccid \
         softhsm2 opensc \
     && rm -rf /var/lib/apt/lists/* \

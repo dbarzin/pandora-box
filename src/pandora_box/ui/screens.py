@@ -295,6 +295,23 @@ class Renderer:
         y = self._result(canvas, body, "error", "threat", "error", "error_help")
         self._messages(canvas, state.messages[-3:], (body[0], y, body[2], body[3]))
 
+    def _transferring(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
+        y = self._busy_title(canvas, self.theme.text("transferring"), body)
+        self._messages(canvas, state.messages[-8:], (body[0], y, body[2], body[3]))
+
+    def _transferred(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
+        # The files listed are those not copied
+        y = self._result(canvas, body, "clean", "clean", "transferred", "transferred_help")
+        if state.files:
+            font = self.font(18, bold=True)
+            canvas.text((body[0], y), self.theme.text("transferred_left"), font, self.color("text"))
+            y += self.tx(30)
+        self._file_list(canvas, state.files, (body[0], y, body[2], body[3]))
+
+    def _transfer_failed(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
+        y = self._result(canvas, body, "error", "threat", "transfer_failed", "transfer_failed_help")
+        self._messages(canvas, state.messages[-3:], (body[0], y, body[2], body[3]))
+
     def _service(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
         font = self.font(30, bold=True)
         canvas.text((body[0], body[1]), self.theme.text("service"), font, self.color("text"))

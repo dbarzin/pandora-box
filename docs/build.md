@@ -54,6 +54,7 @@ means building a new image, then installing it as an
 | Disk controller of another computer | `KernelModulesInitrdInclude=` of `image/mkosi.conf` (see [Unified kernel image](image.md#unified-kernel-image)) |
 | Certificate authorities of the SIEM | `image/siem-ca.pem` (see [SIEM](siem.md)) |
 | abuse.ch Auth-Key, profile `online` | `image/credentials.toml` (see [Profile online](#profile-online)) |
+| Copy to a server: credentials, host key | `image/credentials.toml`, `image/airgap-known-hosts` (see [Copy to a server](airgap.md)) |
 | NTP servers, profile `online` | see [Time](#time) |
 
 ### Keys
@@ -107,7 +108,8 @@ Without a profile, the image has no network configuration at all.
 [Signatures](signatures.md#online-updates)): systemd-networkd (DHCP on the
 wired network), systemd-resolved, systemd-timesyncd, freshclam, the
 `pandora-box-update` timer and a firewall that only lets the update service,
-the log export to a SIEM (see [SIEM](siem.md)) and NTP out
+the log export to a SIEM (see [SIEM](siem.md)), the copy of the verified
+keys to a server (see [Copy to a server](airgap.md)) and NTP out
 (`image/mkosi.profiles/online/`). Its `postinst.chroot` enables `[updates]`
 in the configuration of the kiosk, and installs the credentials of
 `image/credentials.toml` (outside git) in `/etc/credstore`.

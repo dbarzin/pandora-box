@@ -31,3 +31,4 @@ htmlcov/
 # Image update artifacts
 /update/
 /release/
+/image/vm/airgap/

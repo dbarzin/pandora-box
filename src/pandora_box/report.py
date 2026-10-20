@@ -71,6 +71,24 @@ class DeviceUsage:
 
 
 @dataclass
+class AirgapAction:
+    """The copy of the clean files of the key to a server (airgap)."""
+
+    # "copied", "failed" or "refused" (key not verified)
+    status: str
+    key_id: str = ""
+    destination: str = ""
+    copied: int = 0
+    deleted: int = 0
+    unchanged: int = 0
+    # Files of the key that are not clean: never copied
+    not_copied: list[FileResult] = field(default_factory=list)
+    # Clean files that could not be copied, and why
+    errors: list[tuple[str, str]] = field(default_factory=list)
+    error: str = ""
+
+
+@dataclass
 class Actions:
     quarantine_folder: Path | None = None
     quarantined: list[FileResult] = field(default_factory=list)
@@ -78,6 +96,8 @@ class Actions:
     remove_failed: list[FileResult] = field(default_factory=list)
     # None: no cleaning attempted
     cleaned: bool | None = None
+    # None: no copy to a server (airgap disabled)
+    airgap: AirgapAction | None = None
 
 
 def build_report(
@@ -271,4 +291,19 @@ def _actions(actions: Actions) -> dict[str, Any]:
         "removed": paths(actions.removed),
         "remove_failed": paths(actions.remove_failed),
         "cleaned": actions.cleaned,
+        "airgap": None if actions.airgap is None else _airgap(actions.airgap),
+    }
+
+
+def _airgap(action: AirgapAction) -> dict[str, Any]:
+    return {
+        "status": action.status,
+        "key_id": action.key_id,
+        "destination": escape(action.destination),
+        "copied": action.copied,
+        "deleted": action.deleted,
+        "unchanged": action.unchanged,
+        "not_copied": [escape(r.display_path) for r in action.not_copied],
+        "errors": [{"path": escape(p), "reason": escape(r)} for p, r in action.errors],
+        "error": escape(action.error),
     }

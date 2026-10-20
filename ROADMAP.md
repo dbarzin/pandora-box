@@ -27,7 +27,7 @@ The open tasks of the phases below, by priority.
 
 **2. Hardening and user features**
 
-1. File transfer stations: key identifier, then inbound, then outbound station (phase 4)
+1. Outbound file transfer station (phase 4)
 2. Scan receipt for the user (phase 5)
 3. German and Dutch texts (phase 3)
 4. Protected administrator mode (phase 3)
@@ -253,8 +253,8 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 ## Phase 5 — Fleet management and traceability
 
 - [x] Log export to a SIEM ([docs/siem.md](docs/siem.md))
-- [ ] Signed identifier of each key for the file transfer stations
-- [ ] Inbound file transfer station: copy the clean files of a key to a network share
+- [x] Signed identifier of each key for the file transfer stations
+- [x] Inbound file transfer station: copy the clean files of a key to a server ([docs/airgap.md](docs/airgap.md))
 - [ ] Outbound file transfer station: copy files from a network share to a key
 - [ ] Printed or exported scan receipt for the user
 - [ ] Optional central server: kiosk inventory, reports, signature status
@@ -333,7 +333,8 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 ### File transfer stations
 
 - The stations only handle a verified key: a key the kiosk could scan entirely. A key not verified is refused, without copy in either direction and without identifier written on it.
-- Inbound station: from a verified key, only the clean files are copied, never the malicious or suspicious ones, to a network share (SFTP, SCP over SSH or SMB) configured on the kiosk: one directory per key, named after its identifier, one subdirectory per scan, named after the `report_id` of the report. The key is not cleaned; the identifier file is the only file written on it.
+- Inbound station (`[airgap]`): from a verified key, only the clean files are copied, never the malicious or suspicious ones, to a server configured on the kiosk, by rsync over SSH (rsync on the server), SFTP or SMB 3 (encrypted). One directory per key, named after its identifier, kept as a mirror of the clean files of its last verified scan: new and changed files (size, modification time) are copied, files no longer on the key, or no longer clean, are deleted from the server; the scan reports are kept in its `.pandora-box/` folder, one per scan, named after the `report_id`. A per-scan snapshot was dropped: every insertion would copy the whole key again. The key is not cleaned; the identifier file is the only file written on it.
+- The kiosk has no network: it stages the clean files (checked against the scanned SHA-256) for the service `pandora-box-airgap`, its own user let out by the firewall, which reads nothing else of the kiosk and gets the SSH key or the SMB password as systemd credentials; the kiosk asks it over a Unix socket and deletes the staged files afterwards. The host key of an SSH server must be listed in `airgap.known_hosts`, never trusted on first use.
 - Outbound station: a key holding a file the cleaning would remove (a malicious file, or a suspicious file with `scan.suspicious = "block"`) is refused until it is cleaned by a kiosk that cleans (an inbound station never cleans), then inserted again. The key must stay in the kiosk from the scan to the end of the copy; removed, it is scanned again. The files of the outbound directory of the key on the server that are new or modified (size, modification time) are scanned, then copied to the key, after a check of its free space; the limits of each filesystem are handled (4 GiB files on vfat, forbidden characters, name length, case-insensitive names), and a file that cannot be written is reported, never renamed silently.
 - Identifier: the USB serial number is missing or shared on some keys, so at the first insertion of a verified key the kiosk writes a token in a hidden file `.pandora-box` at its root (on the first supported partition): a random UUID signed with a key of the kiosks of the organization (Ed25519, systemd credential of the image). The file is read as hostile data (size limit, strict format); a malformed or unsigned token is logged and replaced with a new one (new identifier, empty outbound directory). The signature prevents forging an identifier, not copying the file to another key.
 - An ext4 key with a journal to replay is not reformatted to receive files: its identifier could not be read, and it would lose its outbound files.

@@ -26,9 +26,11 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    "paramiko>=3.4",  # copy to an SFTP server (airgap)
     "pillow>=10.1",
     "pyudev>=0.24",
     "python-magic>=0.4.24",
+    "smbprotocol>=1.13",  # copy to an SMB server (airgap)
     "yara-x>=1.0",
 ]
 
@@ -48,6 +50,7 @@ pandora-box-signatures = "pandora_box.sigsets:main"
 pandora-box-image = "pandora_box.imageupdate:main"
 pandora-box-theme = "pandora_box.ui.preview:main"
 pandora-box-siem = "pandora_box.siem:main"
+pandora-box-airgap = "pandora_box.airgap:main"
 
 [project.urls]
 Homepage = "https://github.com/sourcentis/pandora-box"
@@ -91,14 +94,15 @@ warn_unreachable = true
 files = ["src", "tests", "image/vm"]
 
 [[tool.mypy.overrides]]
-module = ["pyudev", "pyudev.*", "flor", "jsonschema"]
+module = ["pyudev", "pyudev.*", "flor", "jsonschema", "paramiko", "paramiko.*", "smbclient", "smbprotocol.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "8.0"
 testpaths = ["tests"]
-addopts = ["-ra", "--strict-markers", "--strict-config", "-m", "not e2e"]
+addopts = ["-ra", "--strict-markers", "--strict-config", "-m", "not e2e and not airgap"]
 markers = [
     "e2e: end-to-end tests with a loop device (need root, see tests/e2e/run.sh)",
+    "airgap: copy to real rsync, SFTP and SMB servers (see tests/airgap/run.sh)",
     "integration: tests with real engines or signatures, skipped when unavailable",
 ]

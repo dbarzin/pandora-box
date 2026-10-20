@@ -1,0 +1,50 @@
+[Unit]
+Description=PandoraBox copy of the verified keys to a server (airgap)
+Documentation=https://github.com/sourcentis/pandora-box/blob/main/docs/airgap.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+# Copies the clean files that the kiosk staged for a key to the server
+# ([airgap] of the configuration; exits at once when it is disabled), as the
+# only user besides the update and the SIEM services that the firewall lets
+# out, without privileges. It reads the staging folder through its group;
+# the kiosk talks to it over its socket.
+ExecStart=/usr/bin/pandora-box-airgap
+User=pandora-box-airgap
+Group=pandora-box-airgap
+RuntimeDirectory=pandora-box-airgap
+RuntimeDirectoryMode=0750
+# The SSH key (rsync, sftp) and the SMB password, from /etc/credstore of the
+# image: only this service reads them
+ImportCredential=pandora-box.airgap-ssh-key
+ImportCredential=pandora-box.airgap-password
+Restart=on-failure
+RestartSec=10
+
+NoNewPrivileges=yes
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

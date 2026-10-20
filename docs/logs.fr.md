@@ -86,6 +86,7 @@ redémarre la borne.
 | `signatures_installed`, `signatures_refused`, `signatures_not_newer` | Résultat d'une clé de mise à jour des signatures |
 | `signatures_changed` | Nouveau jeu de signatures chargé après une mise à jour en ligne |
 | `maintenance_refused` | Demande de maintenance refusée |
+| `airgap_copied`, `airgap_failed`, `airgap_refused` | Copie d'une clé vers un serveur (voir [Copie vers un serveur](airgap.md)) |
 | `display_started`, `display_resized` | Taille de l'écran pour laquelle l'interface dessine |
 
 ## Export vers un SIEM { #export-to-a-siem }

@@ -56,6 +56,7 @@ comme une [mise à jour](update.md).
 | Contrôleur de disque d'un autre ordinateur | `KernelModulesInitrdInclude=` de `image/mkosi.conf` (voir [Image noyau unifiée](image.md#unified-kernel-image)) |
 | Autorités de certification du SIEM | `image/siem-ca.pem` (voir [SIEM](siem.md)) |
 | Auth-Key abuse.ch, profil `online` | `image/credentials.toml` (voir [Profil online](#profile-online)) |
+| Copie vers un serveur : secrets, clé d'hôte | `image/credentials.toml`, `image/airgap-known-hosts` (voir [Copie vers un serveur](airgap.md)) |
 | Serveurs NTP, profil `online` | voir [Heure](#time) |
 
 ### Clés { #keys }
@@ -113,7 +114,9 @@ leurs sources (voir [Signatures](signatures.md#online-updates)) :
 systemd-networkd (DHCP sur le réseau filaire), systemd-resolved,
 systemd-timesyncd, freshclam, le timer `pandora-box-update` et un pare-feu
 qui ne laisse sortir que le service de mise à jour, l'export des journaux
-vers un SIEM (voir [SIEM](siem.md)) et NTP (`image/mkosi.profiles/online/`).
+vers un SIEM (voir [SIEM](siem.md)), la copie des clés vérifiées vers un
+serveur (voir [Copie vers un serveur](airgap.md)) et NTP
+(`image/mkosi.profiles/online/`).
 Son `postinst.chroot` active `[updates]` dans la configuration de la borne,
 et installe les identifiants de `image/credentials.toml` (hors de git) dans
 `/etc/credstore`.

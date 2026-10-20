@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 import dataclasses
+import json
 import logging
 import os
+import shutil
 import stat
 import subprocess
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pandora_box import __version__, imageupdate, maintenance
+from pandora_box import __version__, airgap, imageupdate, keyid, maintenance
 from pandora_box.config import Config
 from pandora_box.device import DeviceError, Mounter, SystemMountWatcher, UsbDevice
 from pandora_box.engines import Engine, EngineError, EngineKind, Verdict
@@ -23,6 +26,7 @@ from pandora_box.policy import device_verdict
 from pandora_box.quarantine import Quarantine
 from pandora_box.report import (
     Actions,
+    AirgapAction,
     DeviceUsage,
     PartitionUsage,
     ScanReport,
@@ -47,7 +51,7 @@ from pandora_box.sigsets import (
     verify_installed,
 )
 from pandora_box.statemachine import State, StateMachine
-from pandora_box.text import escape
+from pandora_box.text import escape, human_size
 from pandora_box.ui import Display
 from pandora_box.ui.base import Screen
 from pandora_box.workers import EngineInfo, WorkerPool, auto_workers
@@ -317,6 +321,14 @@ class Kiosk:
             info.append("FAKE SCAN MODE - for development only, no real detection")
         if self.config.device.auto_mount:
             info.append("AUTO-MOUNT MODE - for development only, devices are not mounted read-only")
+        airgap_config = self.config.airgap
+        if airgap_config.enabled:
+            info.append(
+                f"Copy to {airgap_config.protocol}://{airgap_config.host}/{airgap_config.path}"
+            )
+            if airgap.credential(airgap.TOKEN_KEY_CREDENTIAL) is None:
+                log_event(logger, "airgap_unavailable", logging.ERROR, reason="no token key")
+                info.append(f"NO KEY TO IDENTIFY THE KEYS ({airgap.TOKEN_KEY_CREDENTIAL})")
         for line in info:
             self.display.message(line)
         self.display.show_info(info)
@@ -726,6 +738,8 @@ class Kiosk:
                 f"WARNING: {len(suspicious)} suspicious files, use with caution:", suspicious
             )
         not_verified = self._check_complete(self.summary)
+        if self.config.airgap.enabled:
+            return self._copy_to_server()
         if not infected:
             self._release()
             if not_verified:
@@ -806,6 +820,164 @@ class Kiosk:
         return State.WAIT
 
     # -- helpers -----------------------------------------------------------
+
+    # -- copy to a server (airgap) ------------------------------------------
+
+    def _copy_to_server(self) -> State:
+        """Copy the clean files of a verified key to the server; the key is not cleaned."""
+        summary, device = self.summary, self.device
+        if summary is None or device is None:
+            return State.WAIT
+        not_copied = [f for f in summary.files if f.verdict is not Verdict.CLEAN]
+        # Only a key scanned entirely, whatever scan.on_error
+        if not summary.complete:
+            self.actions.airgap = AirgapAction("refused", not_copied=not_copied)
+            self._save_report()
+            self._release()
+            log_event(logger, "airgap_refused", logging.WARNING, reason="key not verified")
+            self.display.show(Screen.NOT_VERIFIED, summary.unscanned)
+            self.display.message(
+                "DEVICE NOT VERIFIED: not copied to the server. Remove the device."
+            )
+            return State.WAIT
+        self.display.show(Screen.TRANSFERRING)
+        self.display.message("Copying the clean files to the server...")
+        config = self.config.airgap
+        identifier = ""
+        action = AirgapAction("failed", not_copied=not_copied)
+        self.actions.airgap = action
+        try:
+            identifier = self._key_identifier(device)
+            action.key_id = identifier
+            staged = self._stage(identifier, device, summary)
+            action.errors = list(staged.errors)
+            self._save_report()
+            self._stage_report(staged)
+            result = airgap.request(config, identifier, self._report_id(), self._copy_progress())
+        except (airgap.AirgapError, keyid.TokenError, DeviceError, OSError) as ex:
+            action.error = str(ex)
+            self._save_report()
+            self._release()
+            log_event(logger, "airgap_failed", logging.ERROR, key=identifier, error=str(ex))
+            self.display.show(Screen.TRANSFER_FAILED)
+            self.display.message(f"Copy to the server FAILED: {ex}")
+            return State.WAIT
+        finally:
+            if identifier:
+                airgap.remove_staging(config, identifier)
+        action.status = "copied"
+        action.destination = result.destination
+        action.copied, action.deleted = result.copied, result.deleted
+        action.unchanged = result.unchanged
+        action.errors += result.errors
+        self._save_report()
+        log_event(
+            logger,
+            "airgap_copied",
+            key=identifier,
+            destination=result.destination,
+            copied=result.copied,
+            deleted=result.deleted,
+            unchanged=result.unchanged,
+            not_copied=len(not_copied),
+            errors=len(action.errors),
+        )
+        # Logged before the key is ejected: in the order things happen
+        self._release()
+        failed = {path for path, _ in action.errors}
+        left = not_copied + [f for f in summary.files if self._target(device, f) in failed]
+        self.display.show(Screen.TRANSFERRED, left)
+        self.display.message(
+            f"Copied to the server: {result.copied} new or changed files, "
+            f"{result.unchanged} unchanged, {result.deleted} deleted from the server"
+        )
+        if left:
+            self._list(f"{len(left)} files not copied:", left)
+        self.display.message("You can remove the device.")
+        return State.WAIT
+
+    def _key_identifier(self, device: UsbDevice) -> str:
+        """The identifier of the key, from its token, else a new one written on it."""
+        key = airgap.credential(airgap.TOKEN_KEY_CREDENTIAL)
+        if key is None:
+            raise airgap.AirgapError(
+                f"no key to sign the key identifiers (credential {airgap.TOKEN_KEY_CREDENTIAL})"
+            )
+        first = device.volumes[0]
+        root = self._mount(first)
+        try:
+            identifier = keyid.verify_token(keyid.read_token(root), key)
+        except keyid.TokenError as ex:
+            if str(ex) != "no token":
+                log_event(logger, "key_token_invalid", logging.WARNING, error=str(ex))
+        else:
+            log_event(logger, "key_identified", key=identifier)
+            return identifier
+        identifier, token = keyid.new_token(key)
+        # Read-write only to write the token
+        root = self._mount(first, read_only=False)
+        keyid.write_token(root, token)
+        self._unmount()
+        log_event(logger, "key_token_written", key=identifier, node=first.node)
+        return identifier
+
+    def _stage(self, identifier: str, device: UsbDevice, summary: ScanSummary) -> airgap.Staged:
+        """Copy the clean files of the key into the staging folder of the service."""
+        files = [
+            f
+            for f in summary.files
+            if f.verdict is Verdict.CLEAN and f.info is not None and not self._is_token(device, f)
+        ]
+        needed = sum(f.size for f in files)
+        staged = airgap.prepare(self.config.airgap, identifier, needed)
+        for volume in device.volumes:
+            mine = [f for f in files if self._volume_of(f) == volume]
+            if not mine:
+                continue
+            root = self._mount(volume)
+            for result in mine:
+                # Clean files have their hashes (filtered above)
+                sha256 = result.info.sha256 if result.info is not None else ""
+                target = self._target(device, result)
+                airgap.stage_file(staged, root, result.rel_path, target, sha256)
+        self._unmount()
+        return staged
+
+    def _stage_report(self, staged: airgap.Staged) -> None:
+        if self.report is None:
+            raise airgap.AirgapError("no scan report")
+        target = staged.folder / airgap.REPORT
+        if self.report.path is not None and self.report.path.is_file():
+            shutil.copyfile(self.report.path, target)
+        else:
+            target.write_text(json.dumps(self.report.data, indent=2, ensure_ascii=True))
+
+    def _report_id(self) -> str:
+        return "" if self.report is None else self.report.report_id
+
+    def _copy_progress(self) -> Callable[[int, int], None]:
+        """Progress of the copy, in the messages, at most every tenth."""
+        shown = [-1]
+
+        def progress(done: int, total: int) -> None:
+            tenth = 10 if total <= 0 else min(10, done * 10 // total)
+            if tenth > shown[0]:
+                shown[0] = tenth
+                self.display.message(f"Copied: {tenth * 10}% of {human_size(total)}")
+
+        return progress
+
+    def _target(self, device: UsbDevice, result: FileResult) -> str:
+        """Path of a file in the folder of the key on the server."""
+        if not device.multiple:
+            return result.rel_path
+        index = next((i for i, v in enumerate(device.volumes) if v.name == result.volume), 0)
+        return f"partition-{index + 1}/{result.rel_path}"
+
+    def _is_token(self, device: UsbDevice, result: FileResult) -> bool:
+        first = device.volumes[0]
+        on_first = not result.volume or result.volume == first.name
+        return on_first and result.rel_path in (keyid.TOKEN_FILE, f"{keyid.TOKEN_FILE}.tmp")
 
     def _clean_screen(self) -> tuple[Screen, list[FileResult]]:
         """No infected file is left: a warning for the files kept (warn policies)."""

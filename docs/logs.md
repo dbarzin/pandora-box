@@ -83,6 +83,7 @@ comes last as it restarts the kiosk.
 | `signatures_installed`, `signatures_refused`, `signatures_not_newer` | Result of a signature update device |
 | `signatures_changed` | New signature set loaded after an online update |
 | `maintenance_refused` | Maintenance request refused |
+| `airgap_copied`, `airgap_failed`, `airgap_refused` | Copy of a key to a server (see [Copy to a server](airgap.md)) |
 | `display_started`, `display_resized` | Size of the screen the interface draws for |
 
 ## Export to a SIEM

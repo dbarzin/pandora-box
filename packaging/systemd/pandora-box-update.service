@@ -16,8 +16,8 @@ Group=pandora-box-update
 StateDirectory=pandora-box-update
 StateDirectoryMode=0700
 # The abuse.ch Auth-Key (MalwareBazaar), from /etc/credstore of the image:
-# only this service reads it
-ImportCredential=pandora-box.*
+# only this service reads it (not the credentials of the copy to a server)
+ImportCredential=pandora-box.abusech-auth-key
 ExecStart=-/usr/bin/pandora-box-signatures download --staging /var/lib/pandora-box-update/staging
 ExecStart=-/usr/bin/pandora-box-image download --staging /var/lib/pandora-box-update/image
 # 2. Verify and install them, as root ("+": without the sandbox below). The

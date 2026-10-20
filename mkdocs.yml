@@ -69,6 +69,7 @@ plugins:
             -- System updates: -- Mises à jour du système
             -- Logs: -- Journaux
             -- Log export to a SIEM: -- Export vers un SIEM
+            -- Copy to a server: -- Copie vers un serveur
             REFERENCE: RÉFÉRENCE
             -- Interface: -- Interface
             -- Configuration: -- Configuration
@@ -113,6 +114,7 @@ nav:
       - -- System updates: update.md
       - -- Logs: logs.md
       - -- Log export to a SIEM: siem.md
+      - -- Copy to a server: airgap.md
   - REFERENCE:
       - -- Interface: interface.md
       - -- Configuration: configuration.md

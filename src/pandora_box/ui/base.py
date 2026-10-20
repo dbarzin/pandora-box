@@ -44,6 +44,10 @@ class Screen(StrEnum):
     ERROR = "error"
     # Maintenance, signature or image update device
     SERVICE = "service"
+    # airgap: the clean files of the key are copied to a server
+    TRANSFERRING = "transferring"
+    TRANSFERRED = "transferred"
+    TRANSFER_FAILED = "transfer_failed"
 
 
 # Screens of a scan result: kept for a while after the device is removed
@@ -56,6 +60,8 @@ RESULT_SCREENS = frozenset(
         Screen.NOT_VERIFIED,
         Screen.ERROR,
         Screen.SERVICE,
+        Screen.TRANSFERRED,
+        Screen.TRANSFER_FAILED,
     }
 )
 

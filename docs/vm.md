@@ -91,7 +91,11 @@ the virtio console:
     and only the update service user can open a network connection
     (systemd-timesyncd alone sends NTP requests); the
     log entries of the kiosk are sent to a syslog receiver of the test
-    (`[siem]`), by the SIEM export user, who cannot read the reports; an
+    (`[siem]`), by the SIEM export user, who cannot read the reports; with
+    the copy to a server enabled (`[airgap]`, an SFTP server of the test),
+    the clean files of a key are copied by the copy service user, the key
+    keeps its malicious files and gets its identifier, then a file removed
+    from the key is deleted from the server; an
     emulated USB keyboard and network adapter are blocked by USBGuard (no
     input device, no network interface) and the excluded drivers are not in
     the image; the kernel settings, the firewall and the service sandboxes are

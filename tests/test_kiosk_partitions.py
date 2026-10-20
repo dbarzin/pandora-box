@@ -121,6 +121,7 @@ def test_every_partition_is_scanned_and_cleaned(
         "removed": ["sdb2/docs/eicar.com"],
         "remove_failed": [],
         "cleaned": True,
+        "airgap": None,
     }
     [manifest] = Path(config.quarantine.folder).glob("*/manifest.json")
     [entry] = json.loads(manifest.read_text())["files"]

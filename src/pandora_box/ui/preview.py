@@ -111,6 +111,15 @@ def sample_states(language: str = "en") -> dict[str, ViewState]:
                 "A signature update device is not scanned. Remove the device.",
             ),
         ),
+        "transferring": ViewState(
+            Screen.TRANSFERRING,
+            messages=("Copying the clean files to the server...", "Copied: 45% of 2.1GB"),
+        ),
+        "transferred": ViewState(Screen.TRANSFERRED, files=threats[:2]),
+        "transfer_failed": ViewState(
+            Screen.TRANSFER_FAILED,
+            messages=("Copy to the server FAILED: sftp: [Errno 113] No route to host",),
+        ),
     }
 
 

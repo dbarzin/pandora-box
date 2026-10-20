@@ -105,6 +105,7 @@ publication sont de confiance.
 | Signatures falsifiées ou rejouées par un serveur malveillant | Les jeux construits sur la borne à partir des sources sont vérifiés par les moteurs, puis signés avec une clé générée sur la borne ; les jeux publiés doivent porter une signature de confiance et un numéro de série plus récent ; les bases ClamAV sont aussi signées par Cisco Talos |
 | D'autres échanges depuis un processus compromis | Pare-feu : tout est rejeté sauf DHCP, DNS, NTP, le service de mise à jour et l'export vers le SIEM, chacun autorisé par son utilisateur système ; la borne et les processus d'analyse n'ont pas de réseau |
 | Lire les journaux exportés | Syslog sur TLS par défaut, avec les autorités de certification du SIEM |
+| Un faux serveur qui reçoit les clés copiées, ou les lit en chemin (air-gap) | La clé d'hôte d'un serveur SSH doit figurer dans l'image, jamais acceptée à la première connexion ; SMB 3 avec chiffrement exigé ; le service de copie a son propre utilisateur et ne lit de la borne que les fichiers sains préparés pour lui |
 
 ### Chaîne d'approvisionnement et publication { #supply-chain-and-releases }
 

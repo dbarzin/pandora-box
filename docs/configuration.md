@@ -33,6 +33,7 @@ pandora-box --config pandora-box.toml --check-config
 | `[signatures]` | Signature sets and their verification: see [Signatures](signatures.md) |
 | `[updates]` | Online signature and image updates: see [Signatures](signatures.md#online-updates) and [System updates](update.md#online) |
 | `[siem]` | Log export to a SIEM: see [Log export to a SIEM](siem.md) |
+| `[airgap]` | Copy of the clean files of the verified keys to a server: see [Copy to a server](airgap.md) |
 | `[report]`, `[quarantine]`, `[logging]` | Folders of the scan reports, of the quarantine, log file and level: see [Logs](logs.md) |
 
 ## Reference

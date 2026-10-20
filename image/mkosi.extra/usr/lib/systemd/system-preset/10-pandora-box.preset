@@ -6,6 +6,8 @@ enable pandora-box.service
 disable pandora-box-update.timer
 # Log export to a SIEM: enabled by the image profile "online"
 disable pandora-box-siem.service
+# Copy of the verified keys to a server: enabled by the image profile "online"
+disable pandora-box-airgap.service
 # clamd is started by its socket: without a signature set, it cannot start
 enable clamav-daemon.socket
 disable clamav-daemon.service

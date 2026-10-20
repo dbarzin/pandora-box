@@ -51,7 +51,11 @@ LogsDirectoryMode=0750
 CapabilityBoundingSet=CAP_SYS_ADMIN CAP_DAC_OVERRIDE CAP_FOWNER CAP_CHOWN CAP_SETUID CAP_SETGID CAP_SETPCAP CAP_NET_ADMIN
 NoNewPrivileges=yes
 ProtectSystem=strict
-ReadWritePaths=/media/pandora-box /var/lib/pandora-box-signatures /var/lib/pandora-box-image
+# /var/lib/pandora-box-airgap: the clean files of a key staged for the copy
+# to a server (airgap)
+ReadWritePaths=/media/pandora-box /var/lib/pandora-box-signatures /var/lib/pandora-box-image /var/lib/pandora-box-airgap
+# The key that signs the identifiers written on the keys (airgap)
+ImportCredential=pandora-box.airgap-token-key
 ProtectHome=yes
 PrivateTmp=yes
 ProtectKernelTunables=yes

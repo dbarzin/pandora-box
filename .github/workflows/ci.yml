@@ -51,6 +51,14 @@ jobs:
       - name: Run tests in a privileged container (real clamd, YARA-X, hash engines)
         run: tests/e2e/run.sh
 
+  airgap:
+    name: Copy to real servers (rsync over SSH, SFTP, SMB)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Run tests against an OpenSSH and a Samba server in containers
+        run: tests/airgap/run.sh
+
   image:
     name: Kiosk image (end-to-end test in a QEMU/KVM virtual machine)
     runs-on: ubuntu-latest
