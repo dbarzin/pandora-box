@@ -1,7 +1,14 @@
 #!/bin/sh
-# Build the pandora-box wheel from the repository, without network.
+# Build the pandora-box wheel from the repository, without network, and the
+# library the kiosk preloads into ntfs-3g (pandora_box.fuse).
 set -eu
 
 mkdir -p "$DESTDIR/usr/share/pandora-box/wheels"
 python3 -m pip wheel --no-deps --no-build-isolation --no-index \
     -w "$DESTDIR/usr/share/pandora-box/wheels" "$SRCDIR/pandora-box"
+
+mkdir -p "$DESTDIR/usr/lib/pandora-box"
+gcc -O2 -Wall -Wextra -Werror -shared -fPIC -s \
+    -fstack-protector-strong -D_FORTIFY_SOURCE=2 -Wl,-z,relro,-z,now \
+    -o "$DESTDIR/usr/lib/pandora-box/fuse-premounted.so" \
+    "$SRCDIR/pandora-box/packaging/fuse/premounted.c" -ldl

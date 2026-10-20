@@ -43,7 +43,12 @@ MKFS = {
     "vfat": ["mkfs.vfat", "-n", "USBKEY"],
     "exfat": ["mkfs.exfat", "-L", "USBKEY"],
     "ext4": ["mkfs.ext4", "-q", "-L", "USBKEY"],
+    # -F: a file, not a block device; -Q: quick format
+    "ntfs": ["mkntfs", "-F", "-Q", "-L", "USBKEY"],
 }
+# Mount type that fills a key: NTFS with ntfs-3g, as root (the kernel of the
+# host may have no NTFS driver)
+POPULATE = {"ntfs": "ntfs-3g"}
 
 
 def run(*argv: str) -> str:
@@ -60,6 +65,8 @@ def attach(image: Path) -> str:
     if not Path(node).exists():
         os.mknod(node, 0o660 | 0o060000, os.makedev(7, int(node.removeprefix("/dev/loop"))))
     run("losetup", node, str(image))
+    # The kiosk leaves a scanned device read-only, the loop device keeps it
+    run("blockdev", "--setrw", node)
     return node
 
 
@@ -69,6 +76,19 @@ def mount_options(node: str) -> list[str]:
         if fields[0] == node:
             return fields[3].split(",")
     return []
+
+
+def mount_type(node: str) -> str:
+    for line in Path("/proc/self/mounts").read_text().splitlines():
+        fields = line.split()
+        if fields[0] == node:
+            return fields[2]
+    return ""
+
+
+# vfat stays in the kernel; the other filesystems are read by a FUSE driver
+# in the sandbox (pandora_box.fuse)
+MOUNT_TYPES = {"vfat": "vfat", "exfat": "fuse.exfat", "ntfs": "fuse.ntfs", "ext4": "fuse.ext4"}
 
 
 @contextmanager
@@ -84,7 +104,7 @@ def make_key(tmp_path: Path, fs_type: str, files: dict[str, bytes]) -> Iterator[
     try:
         populate = tmp_path / "populate"
         populate.mkdir()
-        run("mount", "-t", fs_type, node, str(populate))
+        run("mount", "-t", POPULATE.get(fs_type, fs_type), node, str(populate))
         for name, content in files.items():
             (populate / name).parent.mkdir(parents=True, exist_ok=True)
             (populate / name).write_bytes(content)
@@ -136,8 +156,11 @@ def test_scan_and_clean(usb_key: UsbDevice, tmp_path: Path) -> None:
     options_during_scan: list[list[str]] = []
     original_progress = display.progress
 
+    types_during_scan: set[str] = set()
+
     def record(percent: int) -> None:
         options_during_scan.append(mount_options(usb_key.node))
+        types_during_scan.add(mount_type(usb_key.node))
         original_progress(percent)
 
     display.progress = record  # type: ignore[method-assign]
@@ -158,6 +181,7 @@ def test_scan_and_clean(usb_key: UsbDevice, tmp_path: Path) -> None:
     assert options_during_scan
     for options in options_during_scan:
         assert {"ro", "noexec", "nosuid", "nodev"} <= set(options)
+    assert types_during_scan == {MOUNT_TYPES[usb_key.fs_type]}
     assert not os.path.ismount(mount_point)
     # The user could remove the device while asked to confirm the cleaning
     assert mounted_at_confirm == [False]
@@ -171,6 +195,42 @@ def test_scan_and_clean(usb_key: UsbDevice, tmp_path: Path) -> None:
 
     # Infected files are removed from the key, clean files are kept
     assert key_files(usb_key.node, tmp_path) == ["docs/report.pdf", "readme.txt"]
+
+
+@pytest.mark.parametrize("fs_type", ["ext4", "ntfs"])
+def test_stopped_driver_is_not_verified(fs_type: str, tmp_path: Path) -> None:
+    """The FUSE driver dies during the scan: the key is not verified."""
+    mount_point = tmp_path / "media"
+    mount_point.mkdir()
+    config = parse_config(
+        {
+            "kiosk": {"name": "e2e", "fake_scan": True, "interface": "console"},
+            "device": {"mount_point": str(mount_point), "eject": False},
+            "quarantine": {"folder": str(tmp_path / "quarantine")},
+            "report": {"folder": str(tmp_path / "reports")},
+            "logging": {"file": str(tmp_path / "pandora-box.log")},
+        }
+    )
+    files = {f"file{i}.txt": b"hello" for i in range(5)}
+    display = RecordingDisplay()
+    mounter = make_mounter(config)
+    original_progress = display.progress
+
+    def kill_driver(percent: int) -> None:
+        # After the first file scanned
+        if percent and mounter.driver is not None and mounter.driver.process.poll() is None:
+            mounter.driver.process.kill()
+            mounter.driver.process.wait()
+        original_progress(percent)
+
+    display.progress = kill_driver  # type: ignore[method-assign]
+    with make_key(tmp_path, fs_type, files) as key, build_pool(config) as pool:
+        Kiosk(config, display, ListSource([DeviceEvent(Action.ADD, key)]), pool, mounter).run()
+        assert not os.path.ismount(mount_point)
+    assert display.messages[-1] == "DEVICE NOT VERIFIED: do not use it. Remove the device."
+    [report_path] = list((tmp_path / "reports").glob("*.json"))
+    reasons = json.loads(report_path.read_text())["verdict"]["incomplete_reasons"]
+    assert any("filesystem driver" in r and "stopped" in r for r in reasons), reasons
 
 
 # -- Real engines -------------------------------------------------------------

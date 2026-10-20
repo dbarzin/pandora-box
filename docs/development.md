@@ -11,6 +11,7 @@ The code is in the `pandora_box` package (`src/pandora_box/`):
 | `statemachine.py`, `kiosk.py` | State machine and kiosk workflow |
 | `monitor.py` | USB detection with udev |
 | `device.py` | Hardened mounting (`ro,noexec,nosuid,nodev` on a read-only block device, read-write only to clean) |
+| `fuse.py` | NTFS, exFAT and ext4 read by FUSE drivers in the sandbox, with a watchdog |
 | `inventory.py` | Device inventory: never follows links, never leaves the device, limits |
 | `scanner.py`, `workers.py`, `worker.py` | Scan in supervised worker processes, timeouts and watchdog |
 | `sigsets.py`, `publish.py` | Signed signature sets: verification, installation, publication from the sources, `pandora-box-signatures` command |
@@ -81,6 +82,15 @@ Mounting a device requires root: adding your user to a group (such as `disk`) is
 The device is unmounted while the kiosk asks the user to confirm the cleaning, so that it can be removed safely. To clean, it is mounted again read-write; a file is only removed if its SHA-256 is still the one that was scanned (another device may have been inserted in the meantime). When the scan and the cleaning are over, the device is ejected (`device.eject`, with `eject`, or `udisksctl power-off` in auto-mount mode).
 
 The scan workers run in a sandbox by default (`scan.sandbox`): it needs root, `bwrap` (Debian package `bubblewrap`), `setpriv` and a `pandora-box-scan` user (`sudo systemd-sysusers packaging/sysusers/pandora-box.conf`). For development without them, set `sandbox = false` in `[scan]`.
+
+NTFS, exFAT and ext4 are read by FUSE drivers in this sandbox (`device.fuse`, see [Image internals](image.md#filesystem-drivers)): Debian packages `ntfs-3g`, `exfat-fuse` and `fuse2fs`, and the library preloaded into ntfs-3g, to build once:
+
+```sh
+sudo mkdir -p /usr/lib/pandora-box
+sudo cc -O2 -shared -fPIC -o /usr/lib/pandora-box/fuse-premounted.so packaging/fuse/premounted.c -ldl
+```
+
+Without the sandbox (`sandbox = false`), or with `fuse = false` in `[device]`, the kernel drivers mount them.
 
 The kiosk only uses a signed signature set (`signatures.verify`, see [docs/signatures.md](signatures.md)): development signatures are not signed, set `verify = false` in `[signatures]` to use them.
 

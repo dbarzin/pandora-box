@@ -65,6 +65,7 @@ def test_full_config() -> None:
                 "auto_mount": True,
                 "eject": False,
                 "auto_mount_wait": 5,
+                "fuse": False,
             },
             "scan": {"workers": 8, "suspicious": "warn", "on_error": "warn", "fake_delay": 1},
             "limits": {"max_file_size": 1000, "max_files": 10, "max_depth": 3},
@@ -89,6 +90,7 @@ def test_full_config() -> None:
             "logging": {"file": "", "level": "DEBUG"},
         }
     )
+    assert config.device.fuse is False
     assert config.scan.on_error == "warn"
     assert config.limits == LimitsConfig(1000, 10, 3)
     assert config.policy.min_malicious_engines == 2

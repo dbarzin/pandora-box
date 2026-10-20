@@ -280,6 +280,28 @@ def test_limit_overrun_is_not_verified(
     assert display.messages[-1] == "DEVICE NOT VERIFIED: do not use it. Remove the device."
 
 
+class FailingDriverMounter(DirectoryMounter):
+    """The filesystem driver stops during the scan: some files are missing."""
+
+    @property
+    def failure(self) -> str | None:
+        return "ntfs-3g stopped (exit status 139)"
+
+
+def test_stopped_filesystem_driver_is_not_verified(
+    config: Config, display: RecordingDisplay, tmp_path: Path, pool: WorkerPool
+) -> None:
+    root = tmp_path / "media"
+    root.mkdir()
+    (root / "file.txt").write_text("hello")
+    make_kiosk(
+        config, display, FailingDriverMounter(root), [DeviceEvent(Action.ADD, DEVICE)], pool
+    ).run()
+    assert "Cannot read device: ntfs-3g stopped (exit status 139)" in display.messages
+    assert "Not scanned: filesystem driver: ntfs-3g stopped (exit status 139)" in display.messages
+    assert display.messages[-1] == "DEVICE NOT VERIFIED: do not use it. Remove the device."
+
+
 def test_progress_messages(
     config: Config, display: RecordingDisplay, usb_tree: Path, pool: WorkerPool
 ) -> None:

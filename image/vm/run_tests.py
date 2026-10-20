@@ -1026,11 +1026,19 @@ class KioskLog:
             time.sleep(1.0)
 
 
+# Driver of each filesystem: vfat in the kernel, the others in user space, in
+# the sandbox of the scan workers (pandora_box.fuse)
+DRIVERS = {"vfat": "kernel", "exfat": "mount.exfat-fuse", "ntfs": "ntfs-3g", "ext4": "fuse2fs"}
+
+
 def scan_and_clean(vm: Machine, name: str, image: Path) -> None:
     """Insert a key holding the corpus: clean it, then it is reported clean."""
     log = KioskLog(vm)
     vm.insert_key(image)
     inserted = log.wait("device_inserted")
+    mounted = log.wait("device_mounted")
+    driver = DRIVERS[inserted["fs_type"]]
+    check(mounted["driver"] == driver, f"{name}: driver {mounted['driver']}, not {driver}")
     infected = log.wait("infected_files")
     expected = sorted(path for path, (_, engine) in corpus.KEY.items() if engine)
     check(infected["count"] == len(expected), f"{name}: infected files: {infected['count']}")
@@ -1052,7 +1060,7 @@ def scan_and_clean(vm: Machine, name: str, image: Path) -> None:
     vm.remove_key()
     log.wait("device_removed")
     print(
-        f"{name}: {inserted['fs_type']} on {inserted['node']}, "
+        f"{name}: {inserted['fs_type']} on {inserted['node']} ({driver} driver), "
         f"{len(expected)} infected files removed, then reported clean"
     )
 
@@ -1063,7 +1071,7 @@ def check_filesystem_keys(vm: Machine, workdir: Path) -> None:
     for name, build in keys.CORPUS_KEYS.items():
         images[name] = workdir / f"{name}.img"
         build(images[name])
-    # exfat and NTFS are filled by the kernel of the machine, the kiosk stopped
+    # exfat and NTFS are filled in the machine, the kiosk stopped
     started = count_events(vm, "kiosk_started")
     log = KioskLog(vm)
     vm.shell.run("systemctl stop pandora-box", timeout=120)
@@ -1135,37 +1143,39 @@ def check_partitioned_keys(vm: Machine, workdir: Path) -> None:
 
 def check_refused_keys(vm: Machine, workdir: Path) -> None:
     step("unsupported and corrupted filesystems")
-    for name, build, error in (
-        ("unsupported", keys.unsupported_key, "filesystem not allowed: erofs"),
-        ("corrupted-ext4", keys.corrupted_ext4_key, "mount"),
+    image = workdir / "unsupported.img"
+    keys.unsupported_key(image)
+    log = KioskLog(vm)
+    vm.insert_key(image)
+    failed = log.wait("mount_failed")
+    check("filesystem not allowed: erofs" in failed["error"], f"unsupported: {failed}")
+    wait_screen(vm, "An error occurred")
+    vm.remove_key()
+    log.wait("device_removed")
+    print(f"unsupported: refused, {failed['error'].splitlines()[0]}")
+
+    # Mounted, but files or folders cannot be read: the key is not verified.
+    # fuse2fs mounts the ext4 key without its group descriptors, the folders
+    # of the key cannot be read.
+    for name, build, unreadable in (
+        ("corrupted-vfat", keys.corrupted_vfat_key, keys.UNREADABLE),
+        ("corrupted-ext4", keys.corrupted_ext4_key, "cannot read the device"),
     ):
         image = workdir / f"{name}.img"
         build(image)
         log = KioskLog(vm)
         vm.insert_key(image)
-        failed = log.wait("mount_failed")
-        check(error in failed["error"], f"{name}: {failed}")
-        wait_screen(vm, "An error occurred")
+        verdict = log.wait("device_verdict")
+        check(
+            verdict["verdict"] == "not_verified" and not verdict["complete"],
+            f"{name}: verdict {verdict}",
+        )
+        wait_screen(vm, "USB key NOT verified")
+        report = last_report(vm)
+        check(unreadable in json.dumps(report), f"{name}: {unreadable} not reported")
         vm.remove_key()
         log.wait("device_removed")
-        print(f"{name}: refused, {failed['error'].splitlines()[0]}")
-
-    # Mounted, but a file cannot be read: the key is not verified
-    image = workdir / "corrupted-vfat.img"
-    keys.corrupted_vfat_key(image)
-    log = KioskLog(vm)
-    vm.insert_key(image)
-    verdict = log.wait("device_verdict")
-    check(
-        verdict["verdict"] == "not_verified" and not verdict["complete"],
-        f"corrupted-vfat: verdict {verdict}",
-    )
-    wait_screen(vm, "USB key NOT verified")
-    report = last_report(vm)
-    check(keys.UNREADABLE in json.dumps(report), f"corrupted-vfat: {keys.UNREADABLE} not reported")
-    vm.remove_key()
-    log.wait("device_removed")
-    print(f"corrupted-vfat: not verified, {keys.UNREADABLE} unreadable")
+        print(f"{name}: not verified, {unreadable}")
 
 
 def check_maintenance(vm: Machine, workdir: Path) -> None:

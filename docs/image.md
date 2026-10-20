@@ -217,9 +217,11 @@ After the ANSSI configuration recommendations for GNU/Linux systems:
   code, the second one refuses a system call bubblewrap needs.
 - **Kernel modules removed**: network protocols the kiosk never uses (DCCP,
   SCTP, RDS, TIPC) and FireWire, another way to reach the memory of the
-  kiosk, besides the USB network, Bluetooth and Wi-Fi drivers. The protocols
-  and FireWire are also listed in `/etc/modprobe.d/pandora-box.conf`, where
-  the auditing tools look for them.
+  kiosk, besides the USB network, Bluetooth and Wi-Fi drivers, and the NTFS
+  and exFAT drivers (read in user space, see
+  [Filesystem drivers](#filesystem-drivers)). The protocols, FireWire, NTFS
+  and exFAT are also listed in `/etc/modprobe.d/pandora-box.conf`, where the
+  auditing tools look for them.
 - **Audit log** (`/etc/audit/audit.rules`, auditd): loading of kernel modules,
   mounts (except those of systemd and bubblewrap), every program started,
   ptrace, changes of the clock, of the signature sets and of the staged image
@@ -276,6 +278,43 @@ The virtual machine test checks these settings and prints the exposure of
 the services measured by `systemd-analyze security` (0 to 10, lower is
 better): about 1.6 for clamd, 3.8 for the kiosk (which starts the worker
 sandbox), 2.8 for USBGuard.
+
+## Filesystem drivers
+
+A kernel filesystem driver parses the structures written on the key: a flaw
+of this driver, on a crafted key, runs code in the kernel, before any
+sandbox (the NTFS, exFAT and ext4 drivers of Linux get regular fuzzing
+findings). NTFS, exFAT and ext4 are therefore read by a FUSE driver, in the
+sandbox of the scan workers (`device.fuse`, `src/pandora_box/fuse.py`):
+
+| Filesystem | Driver |
+|---|---|
+| vfat | kernel (its simplest and oldest driver) |
+| exFAT | `exfat-fuse` |
+| NTFS | `ntfs-3g` |
+| ext4 | `fuse2fs` |
+
+- **No privilege**: the kiosk opens `/dev/fuse` and mounts the connection
+  itself (`noexec,nosuid,nodev`, read-only to scan); the driver only serves
+  it. libfuse 3 drivers take the mounted connection as mount point
+  `/dev/fd/N`; ntfs-3g carries its own FUSE library, which mounts by itself:
+  a library preloaded into ntfs-3g only (`packaging/fuse/premounted.c`)
+  hands it the connection. `fusermount3` is not setuid.
+- **Sandbox**: the bubblewrap sandbox of the workers, as the
+  `pandora-box-scan` user with the group of the block device, without
+  capabilities. The block device is its only device; it sees `/usr`, the
+  user names and nothing of the kiosk.
+- **Watchdog**: a driver that crashed makes every access fail; a driver
+  whose requests stay unanswered while the key reads nothing is killed after
+  `device.command_timeout`. Either way the key is reported not verified.
+  Once the key is unmounted, the kiosk waits for the driver to exit: it
+  writes its last changes (cleaning).
+- **Kernel drivers removed**: the image has no NTFS and exFAT kernel
+  modules; ext4 stays for the data partition.
+
+A compromised driver no longer takes over the kiosk, but it can still hide
+files from the scan. fuse2fs refuses an ext4 key whose journal needs a
+replay, like the kernel.
 
 ## Unified kernel image
 

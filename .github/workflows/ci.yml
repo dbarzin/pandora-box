@@ -47,7 +47,7 @@ jobs:
           # exfat is shipped in the extra modules package on the Azure kernel
           sudo apt-get update
           sudo apt-get install -y "linux-modules-extra-$(uname -r)"
-          sudo modprobe -a loop vfat exfat ext4
+          sudo modprobe -a loop vfat exfat ext4 fuse
       - name: Run tests in a privileged container (real clamd, YARA-X, hash engines)
         run: tests/e2e/run.sh
 

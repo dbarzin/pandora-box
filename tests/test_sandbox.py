@@ -54,6 +54,18 @@ def test_wrap(scan_user: None) -> None:
     ]
 
 
+def test_wrap_options_and_groups(scan_user: None) -> None:
+    argv = Sandbox("pandora-box-scan").wrap(
+        ["true"], options=["--dev-bind", "/dev/sdb1", "/dev/sdb1"], groups=(6,)
+    )
+    text = " ".join(argv)
+    # The files of /etc are readable by the sandbox user
+    assert "--perms 0755 --dir /etc" in text
+    assert "--dev-bind /dev/sdb1 /dev/sdb1 --chdir / --" in text
+    assert "--groups=6" in argv
+    assert "--clear-groups" not in argv
+
+
 def test_unknown_user() -> None:
     with pytest.raises(SandboxError, match="no user"):
         Sandbox("no-such-user-pandora-box").ids()
@@ -128,3 +140,13 @@ def test_seccomp_filter() -> None:
     if "libseccomp not available" in result.stderr:
         pytest.skip("libseccomp not installed")
     assert result.stdout.split() == ["thread", "inet", "refused", "execve", "refused", "nnp"]
+
+
+def test_make_mounter_fuse(scan_user: None) -> None:
+    """The FUSE drivers need the sandbox: without it, the kernel mounts."""
+    from pandora_box.kiosk import make_mounter
+
+    mounter = make_mounter(parse_config({}))
+    assert mounter.fuse == Sandbox("pandora-box-scan")
+    assert make_mounter(parse_config({"device": {"fuse": False}})).fuse is None
+    assert make_mounter(parse_config({"scan": {"sandbox": False}})).fuse is None

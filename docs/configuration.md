@@ -25,7 +25,7 @@ pandora-box --config pandora-box.toml --check-config
 |---|---|
 | `[kiosk]` | Name of the kiosk in the logs, interface (`framebuffer`, `curses`, `console`), FAKE_SCAN mode |
 | `[display]` | Theme, language, framebuffer, return to the waiting screen: see [Interface](interface.md) |
-| `[device]` | Mount point, allowed filesystems, eject |
+| `[device]` | Mount point, allowed filesystems, FUSE drivers, eject |
 | `[scan]` | Parallel workers, timeout per file, `suspicious` and `on_error` policies, sandbox |
 | `[limits]` | Maximum file size, number of files, folder depth |
 | `[policy]` | Number of engines needed for a malicious verdict |

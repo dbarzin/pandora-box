@@ -11,7 +11,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from pandora_box.fuse import (
+    FUSE_DEVICE,
+    FUSE_FILESYSTEMS,
+    FuseDriver,
+    FuseError,
+    mount_connection,
+    start_driver,
+    unescape_mount,
+    unmount_connection,
+)
 from pandora_box.logs import get_logger, log_event
+from pandora_box.sandbox import Sandbox
 
 logger = get_logger("device")
 
@@ -26,6 +37,10 @@ UMOUNT = "/usr/bin/umount"
 EJECT = "/usr/bin/eject"
 SUDO = "/usr/bin/sudo"
 UDISKSCTL = "/usr/bin/udisksctl"
+_JOURNAL_TO_REPLAY = (
+    "ext4 journal to replay (not cleanly unmounted): eject the device"
+    " properly from the computer, then scan it again"
+)
 
 
 class DeviceError(Exception):
@@ -97,7 +112,11 @@ def mount_options(
 
 
 class Mounter:
-    """Mount the inserted device on a fixed mount point."""
+    """Mount the inserted device on a fixed mount point.
+
+    fuse: the sandbox of the FUSE drivers of NTFS, exFAT and ext4
+    (pandora_box.fuse); None: the kernel drivers mount them.
+    """
 
     def __init__(
         self,
@@ -106,13 +125,16 @@ class Mounter:
         use_sudo: bool = False,
         timeout: float = 60.0,
         reader_gid: int | None = None,
+        fuse: Sandbox | None = None,
     ) -> None:
         self.mount_point = mount_point
         self.allowed_filesystems = tuple(allowed_filesystems)
         self.use_sudo = use_sudo
         self.timeout = timeout
         self.reader_gid = reader_gid
+        self.fuse = fuse
         self.device: UsbDevice | None = None
+        self.driver: FuseDriver | None = None
 
     def mount(self, device: UsbDevice, read_only: bool = True) -> None:
         if device.fs_type not in self.allowed_filesystems:
@@ -130,6 +152,22 @@ class Mounter:
         # (not verified): mounted without it (noload), its files would not be
         # those a computer sees once it has replayed the journal.
         self._run(BLOCKDEV, "--setro" if read_only else "--setrw", device.node)
+        if self.fuse is not None and device.fs_type in FUSE_FILESYSTEMS:
+            # The driver gets the permission options
+            options = options[:4]
+            self._mount_fuse(device, read_only)
+        else:
+            self._mount_kernel(device, read_only, options)
+        self.device = device
+        log_event(
+            logger,
+            "device_mounted",
+            node=device.node,
+            options=",".join(options),
+            driver="kernel" if self.driver is None else self.driver.name,
+        )
+
+    def _mount_kernel(self, device: UsbDevice, read_only: bool, options: list[str]) -> None:
         try:
             self._run(
                 MOUNT,
@@ -142,23 +180,77 @@ class Mounter:
             )
         except DeviceError as ex:
             if read_only and device.fs_type == "ext4" and "read-only" in str(ex):
-                raise DeviceError(
-                    "ext4 journal to replay (not cleanly unmounted): eject the device"
-                    " properly from the computer, then scan it again"
-                ) from ex
+                raise DeviceError(_JOURNAL_TO_REPLAY) from ex
             raise
-        self.device = device
-        log_event(logger, "device_mounted", node=device.node, options=",".join(options))
+
+    def _mount_fuse(self, device: UsbDevice, read_only: bool) -> None:
+        """Mount a FUSE connection, served by a driver in the sandbox."""
+        if self.fuse is None:
+            raise DeviceError("no sandbox for the filesystem drivers")
+        fd = os.open(FUSE_DEVICE, os.O_RDWR | os.O_CLOEXEC)
+        try:
+            mount_connection(fd, device.fs_type, device.node, self.mount_point, read_only)
+            try:
+                self.driver = start_driver(
+                    self.fuse,
+                    device.fs_type,
+                    device.node,
+                    fd,
+                    self.mount_point,
+                    read_only,
+                    self.reader_gid or 0,
+                    self.timeout,
+                )
+            except OSError as ex:
+                unmount_connection(self.mount_point)
+                raise DeviceError(f"cannot start the filesystem driver: {ex}") from ex
+        except FuseError as ex:
+            raise DeviceError(str(ex)) from ex
+        finally:
+            # The connection ends with the driver: the kiosk keeps no copy
+            os.close(fd)
+        try:
+            self.driver.wait_ready()
+        except FuseError as ex:
+            self.driver = None
+            self._unmount_fuse()
+            journal = "journal needs recovery" in ex.output.lower()
+            if read_only and device.fs_type == "ext4" and journal:
+                raise DeviceError(_JOURNAL_TO_REPLAY) from ex
+            raise DeviceError(str(ex)) from ex
+
+    def _unmount_fuse(self) -> None:
+        try:
+            unmount_connection(self.mount_point)
+        except FuseError as ex:
+            raise DeviceError(str(ex)) from ex
+
+    @property
+    def failure(self) -> str | None:
+        """Why the filesystem driver stopped serving the mounted device."""
+        return None if self.driver is None else self.driver.failure
 
     def unmount(self) -> None:
-        if not self.is_mounted():
-            self.device = None
-            return
-        self._run(UMOUNT, str(self.mount_point))
-        log_event(logger, "device_unmounted", mount_point=str(self.mount_point))
+        if self.is_mounted():
+            if self.driver is not None:
+                self.driver.unmounting()
+                self._unmount_fuse()
+            else:
+                self._run(UMOUNT, str(self.mount_point))
+            log_event(logger, "device_unmounted", mount_point=str(self.mount_point))
         self.device = None
+        driver, self.driver = self.driver, None
+        if driver is not None:
+            try:
+                driver.stop()
+            except FuseError as ex:
+                raise DeviceError(str(ex)) from ex
 
     def is_mounted(self) -> bool:
+        if self.driver is not None:
+            # A stopped driver: a stat of the mount point fails, it is
+            # mounted all the same
+            return find_mount_point(self.mount_point) is not None
         return os.path.ismount(self.mount_point)
 
     def device_present(self, device: UsbDevice) -> bool:
@@ -191,6 +283,20 @@ class Mounter:
 MOUNTS = Path("/proc/self/mounts")
 
 
+def find_mount_point(mount_point: Path, mounts: Path = MOUNTS) -> list[str] | None:
+    """Options of the filesystem mounted on mount_point, from /proc/self/mounts."""
+    try:
+        lines = mounts.read_text(encoding="utf-8", errors="surrogateescape").splitlines()
+    except OSError:
+        return None
+    found = None
+    for line in lines:
+        fields = line.split()
+        if len(fields) >= 4 and unescape_mount(fields[1]) == str(mount_point):
+            found = fields[3].split(",")
+    return found
+
+
 def find_mount(node: str, mounts: Path = MOUNTS) -> tuple[Path, list[str]] | None:
     """Mount point and options of a device node, from /proc/self/mounts."""
     try:
@@ -200,23 +306,8 @@ def find_mount(node: str, mounts: Path = MOUNTS) -> tuple[Path, list[str]] | Non
     for line in lines:
         fields = line.split()
         if len(fields) >= 4 and fields[0] == node:
-            return Path(_unescape_mount(fields[1])), fields[3].split(",")
+            return Path(unescape_mount(fields[1])), fields[3].split(",")
     return None
-
-
-def _unescape_mount(value: str) -> str:
-    """Decode the octal escapes of /proc/self/mounts (\\040 for a space...)."""
-    data = os.fsencode(value)
-    out = bytearray()
-    i = 0
-    while i < len(data):
-        if data[i : i + 1] == b"\\" and data[i + 1 : i + 4].isdigit():
-            out.append(int(data[i + 1 : i + 4], 8))
-            i += 4
-        else:
-            out.append(data[i])
-            i += 1
-    return os.fsdecode(bytes(out))
 
 
 class SystemMountWatcher(Mounter):

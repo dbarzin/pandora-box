@@ -57,6 +57,9 @@ class DeviceConfig:
     # instead of mounting the device read-only; mount_point is then ignored
     auto_mount: bool = False
     auto_mount_wait: float = 15.0
+    # NTFS, exFAT and ext4 read by a FUSE driver in the scan sandbox
+    # (pandora_box.fuse), not by the kernel; needs scan.sandbox
+    fuse: bool = True
 
 
 @dataclass(frozen=True)
@@ -327,6 +330,7 @@ def parse_config(data: dict[str, Any]) -> Config:
             "eject",
             "auto_mount",
             "auto_mount_wait",
+            "fuse",
         },
         "device",
     )
@@ -345,6 +349,7 @@ def parse_config(data: dict[str, Any]) -> Config:
         eject=_get(device, "device", "eject", bool, True),
         auto_mount=_get(device, "device", "auto_mount", bool, False),
         auto_mount_wait=_positive(device, "device", "auto_mount_wait", 15.0),
+        fuse=_get(device, "device", "fuse", bool, True),
     )
 
     scan = data.get("scan", {})

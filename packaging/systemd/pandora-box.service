@@ -43,11 +43,11 @@ CacheDirectoryMode=0700
 LogsDirectory=pandora-box
 LogsDirectoryMode=0750
 
-# Hardening. Mounting devices and starting the sandboxed scan workers
-# (bubblewrap, then setpriv to scan.sandbox_user) require CAP_SYS_ADMIN, the
-# capabilities to change user, and CAP_NET_ADMIN (bubblewrap brings up the
-# loopback interface of the network namespace of the workers). The workers
-# keep none of them.
+# Hardening. Mounting devices and starting the sandboxed scan workers and
+# filesystem drivers (bubblewrap, then setpriv to scan.sandbox_user) require
+# CAP_SYS_ADMIN, the capabilities to change user, and CAP_NET_ADMIN
+# (bubblewrap brings up the loopback interface of the network namespace of
+# the workers). The workers and the drivers keep none of them.
 CapabilityBoundingSet=CAP_SYS_ADMIN CAP_DAC_OVERRIDE CAP_FOWNER CAP_CHOWN CAP_SETUID CAP_SETGID CAP_SETPCAP CAP_NET_ADMIN
 NoNewPrivileges=yes
 ProtectSystem=strict

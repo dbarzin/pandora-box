@@ -75,14 +75,14 @@ the virtio console:
 8. the cleaned key is inserted again and reported clean;
 9. keys of the other filesystems go through the same scan and cleaning, then
    are reported clean: exfat, NTFS, ext4 (its files private to their owner,
-   as on the key of a Linux user) and a key with an MBR partition table and a
-   vfat partition; a key on EROFS (a filesystem the kernel mounts, but not
-   allowed) and an ext4 key whose group descriptors are overwritten are
-   refused; a vfat key with a cut cluster chain is mounted, but the file
-   cannot be read: the key is reported not verified (`image/vm/keys.py`;
-   exfat and NTFS have no tool writing files without mounting them: they
-   are formatted in the container, then filled by the kernel of the machine,
-   the kiosk stopped);
+   as on the key of a Linux user), each read by its FUSE driver, and a key
+   with an MBR partition table and a vfat partition; a key on EROFS (a
+   filesystem the kernel mounts, but not allowed) is refused; a vfat key
+   with a cut cluster chain and an ext4 key whose group descriptors are
+   overwritten are mounted, but a file or the folders cannot be read: the key
+   is reported not verified (`image/vm/keys.py`; exfat and NTFS have no tool
+   writing files without mounting them: they are formatted in the container,
+   then filled by the FUSE drivers of the machine, the kiosk stopped);
 10. a signature update key with a newer set (serial 2) is installed, the
     engines are reloaded and the new sample it detects is found; a modified
     set, a set signed with another key and an older set are refused; a newer

@@ -4,7 +4,7 @@ a partitioned key and the cases the kiosk must refuse.
 The images are written without root: vfat with mtools, ext4 with
 mkfs.ext4 -d. No tool writes files into exfat or NTFS without mounting
 them: those keys are formatted here, then filled in the machine itself
-(fill_in_machine), by its kernel, while the kiosk is stopped.
+(fill_in_machine), by its FUSE drivers, while the kiosk is stopped.
 """
 
 from __future__ import annotations
@@ -22,8 +22,9 @@ from pathlib import Path
 import corpus
 from machine import KEY_SIZE, Machine, MachineError, make_key
 
-# Filled in the machine, kernel driver of each filesystem
-FILLED_IN_MACHINE = {"exfat": "exfat", "ntfs": "ntfs3"}
+# Filled in the machine: the mount type of the FUSE driver of each filesystem
+# (the image has no kernel driver for them)
+FILLED_IN_MACHINE = {"exfat": "exfat-fuse", "ntfs": "ntfs-3g"}
 # Clean file of the corrupted vfat key whose cluster chain is cut: unreadable
 UNREADABLE = "unreadable.bin"
 PARTITION_START = 1024 * 1024
@@ -149,7 +150,8 @@ def unsupported_key(path: Path) -> None:
 
 def corrupted_ext4_key(path: Path) -> None:
     """An ext4 key whose group descriptors are overwritten: blkid still finds
-    ext4 (the superblock is intact), the kernel refuses to mount it."""
+    ext4 (the superblock is intact), fuse2fs mounts it, its folders cannot be
+    read."""
     ext4_key(path)
     with path.open("r+b") as image:
         # Block size 4096: the group descriptors are in block 1

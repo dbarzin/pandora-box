@@ -1,7 +1,7 @@
 #!/bin/sh
 # Build and run the end-to-end tests in a privileged container.
 # The host kernel must provide loop devices and the tested filesystems:
-#   sudo modprobe -a loop vfat exfat ext4
+#   sudo modprobe -a loop vfat exfat ext4 fuse
 set -eu
 
 cd "$(dirname "$0")/../.."

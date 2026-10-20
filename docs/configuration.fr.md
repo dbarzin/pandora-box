@@ -27,7 +27,7 @@ pandora-box --config pandora-box.toml --check-config
 |---|---|
 | `[kiosk]` | Nom de la borne dans les journaux, interface (`framebuffer`, `curses`, `console`), mode FAKE_SCAN |
 | `[display]` | Thème, langue, framebuffer, retour à l'écran d'attente : voir [Interface](interface.md) |
-| `[device]` | Point de montage, systèmes de fichiers autorisés, éjection |
+| `[device]` | Point de montage, systèmes de fichiers autorisés, pilotes FUSE, éjection |
 | `[scan]` | Processus d'analyse en parallèle, délai par fichier, politiques `suspicious` et `on_error`, bac à sable |
 | `[limits]` | Taille maximale d'un fichier, nombre de fichiers, profondeur des dossiers |
 | `[policy]` | Nombre de moteurs nécessaires pour un verdict malveillant |

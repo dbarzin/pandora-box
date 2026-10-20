@@ -73,7 +73,7 @@ pytest
 - Unit tests are required for new code and bug fixes.
 - Detection tests must use harmless samples (EICAR, synthetic files). Do not commit real malware, nor the raw EICAR string: generate it at test time (`tests/samples.py`).
 - Add regression samples and known false positives to the detection corpus: see [tests/corpus/README.md](tests/corpus/README.md).
-- End-to-end tests run in a privileged container with simulated USB disk images (loop devices, vfat/exfat/ext4). Run them with `tests/e2e/run.sh` (requires Docker and the `loop`, `vfat` and `exfat` kernel modules).
+- End-to-end tests run in a privileged container with simulated USB disk images (loop devices, vfat/exfat/ntfs/ext4, the FUSE drivers in their sandbox). Run them with `tests/e2e/run.sh` (requires Docker and the `loop`, `vfat`, `exfat` and `fuse` kernel modules).
 
 ### Commit messages
 

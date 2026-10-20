@@ -11,6 +11,7 @@ Le code est dans le paquet `pandora_box` (`src/pandora_box/`) :
 | `statemachine.py`, `kiosk.py` | Machine à états et déroulement de la borne |
 | `monitor.py` | Détection USB avec udev |
 | `device.py` | Montage durci (`ro,noexec,nosuid,nodev` sur un périphérique bloc en lecture seule, lecture-écriture seulement pour nettoyer) |
+| `fuse.py` | NTFS, exFAT et ext4 lus par des pilotes FUSE dans le bac à sable, avec un chien de garde |
 | `inventory.py` | Inventaire de la clé : ne suit jamais les liens, ne quitte jamais la clé, limites |
 | `scanner.py`, `workers.py`, `worker.py` | Analyse dans des processus surveillés, délais et chien de garde |
 | `sigsets.py`, `publish.py` | Jeux de signatures signés : vérification, installation, publication depuis les sources, commande `pandora-box-signatures` |
@@ -81,6 +82,15 @@ Monter un périphérique nécessite root : ajouter votre utilisateur à un group
 La clé est démontée pendant que la borne demande à l'utilisateur de confirmer le nettoyage, pour qu'elle puisse être retirée sans risque. Pour nettoyer, elle est remontée en lecture-écriture ; un fichier n'est supprimé que si son SHA-256 est toujours celui qui a été analysé (une autre clé a pu être insérée entre-temps). Une fois l'analyse et le nettoyage terminés, la clé est éjectée (`device.eject`, avec `eject`, ou `udisksctl power-off` en mode de montage automatique).
 
 Les processus d'analyse tournent dans un bac à sable par défaut (`scan.sandbox`) : il nécessite root, `bwrap` (paquet Debian `bubblewrap`), `setpriv` et un utilisateur `pandora-box-scan` (`sudo systemd-sysusers packaging/sysusers/pandora-box.conf`). Pour développer sans eux, réglez `sandbox = false` dans `[scan]`.
+
+NTFS, exFAT et ext4 sont lus par des pilotes FUSE dans ce bac à sable (`device.fuse`, voir [Fonctionnement de l'image](image.md#filesystem-drivers)) : paquets Debian `ntfs-3g`, `exfat-fuse` et `fuse2fs`, et la bibliothèque préchargée dans ntfs-3g, à compiler une fois :
+
+```sh
+sudo mkdir -p /usr/lib/pandora-box
+sudo cc -O2 -shared -fPIC -o /usr/lib/pandora-box/fuse-premounted.so packaging/fuse/premounted.c -ldl
+```
+
+Sans le bac à sable (`sandbox = false`), ou avec `fuse = false` dans `[device]`, ce sont les pilotes du noyau qui les montent.
 
 La borne n'utilise qu'un jeu de signatures signé (`signatures.verify`, voir [Signatures](signatures.md)) : les signatures de développement ne sont pas signées, réglez `verify = false` dans `[signatures]` pour les utiliser.
 

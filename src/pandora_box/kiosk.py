@@ -181,12 +181,18 @@ def make_mounter(config: Config) -> Mounter:
     # Sandboxed workers read the files through their group (YARA-X reopens
     # the descriptor it gets)
     sandbox = build_sandbox(config)
+    # The FUSE drivers run in the sandbox of the workers, without their files;
+    # without the sandbox (development), the kernel mounts every filesystem
+    fuse = None
+    if sandbox is not None and device.fuse:
+        fuse = Sandbox(config.scan.sandbox_user)
     return Mounter(
         device.mount_point,
         device.allowed_filesystems,
         use_sudo=device.use_sudo,
         timeout=device.command_timeout,
         reader_gid=None if sandbox is None else sandbox.ids()[1],
+        fuse=fuse,
     )
 
 
@@ -672,6 +678,11 @@ class Kiosk:
             self.display.progress(min(99, percent))
 
         part = self.scanner.scan_tree(root, on_progress)
+        # A driver that stopped: the files it no longer served are missing
+        if (failure := self.mounter.failure) is not None:
+            log_event(logger, "filesystem_driver_failed", logging.ERROR, error=failure)
+            self.display.message(f"Cannot read device: {failure}")
+            part.incomplete_reasons.append(f"filesystem driver: {failure}")
         if multiple:
             part.files = [dataclasses.replace(f, volume=volume.name) for f in part.files]
             part.incomplete_reasons = [

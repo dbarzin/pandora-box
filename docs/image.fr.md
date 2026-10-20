@@ -240,8 +240,10 @@ l'ANSSI :
   code natif, le second refuse un appel système dont bubblewrap a besoin.
 - **Modules du noyau retirés** : protocoles réseau que la borne n'utilise
   jamais (DCCP, SCTP, RDS, TIPC) et FireWire, un autre moyen d'atteindre la
-  mémoire de la borne, en plus des pilotes réseau USB, Bluetooth et Wi-Fi.
-  Les protocoles et FireWire sont aussi listés dans
+  mémoire de la borne, en plus des pilotes réseau USB, Bluetooth et Wi-Fi,
+  et des pilotes NTFS et exFAT (lus en espace utilisateur, voir
+  [Pilotes de systèmes de fichiers](#filesystem-drivers)). Les protocoles,
+  FireWire, NTFS et exFAT sont aussi listés dans
   `/etc/modprobe.d/pandora-box.conf`, où les outils d'audit les cherchent.
 - **Journal d'audit** (`/etc/audit/audit.rules`, auditd) : chargement de
   modules du noyau, montages (sauf ceux de systemd et de bubblewrap), chaque
@@ -308,6 +310,45 @@ Le test en machine virtuelle vérifie ces réglages et affiche l'exposition
 des services mesurée par `systemd-analyze security` (de 0 à 10, plus c'est
 bas, mieux c'est) : environ 1,6 pour clamd, 3,8 pour la borne (qui lance le
 bac à sable des processus d'analyse), 2,8 pour USBGuard.
+
+## Pilotes de systèmes de fichiers { #filesystem-drivers }
+
+Un pilote de système de fichiers du noyau analyse les structures écrites sur
+la clé : une faille de ce pilote, sur une clé forgée, exécute du code dans
+le noyau, avant tout bac à sable (les pilotes NTFS, exFAT et ext4 de Linux
+font régulièrement l'objet de découvertes par fuzzing). NTFS, exFAT et ext4
+sont donc lus par un pilote FUSE, dans le bac à sable des processus
+d'analyse (`device.fuse`, `src/pandora_box/fuse.py`) :
+
+| Système de fichiers | Pilote |
+|---|---|
+| vfat | noyau (son pilote le plus simple et le plus ancien) |
+| exFAT | `exfat-fuse` |
+| NTFS | `ntfs-3g` |
+| ext4 | `fuse2fs` |
+
+- **Aucun privilège** : la borne ouvre `/dev/fuse` et monte elle-même la
+  connexion (`noexec,nosuid,nodev`, en lecture seule pour l'analyse) ; le
+  pilote ne fait que la servir. Les pilotes libfuse 3 prennent la connexion
+  montée comme point de montage `/dev/fd/N` ; ntfs-3g embarque sa propre
+  bibliothèque FUSE, qui monte elle-même : une bibliothèque préchargée dans
+  ntfs-3g seulement (`packaging/fuse/premounted.c`) lui donne la connexion.
+  `fusermount3` n'est pas setuid.
+- **Bac à sable** : le bac à sable bubblewrap des processus d'analyse, sous
+  l'utilisateur `pandora-box-scan` avec le groupe du périphérique bloc, sans
+  capacités. Le périphérique bloc est son seul périphérique ; il voit
+  `/usr`, les noms d'utilisateur et rien de la borne.
+- **Chien de garde** : un pilote planté fait échouer tous les accès ; un
+  pilote dont les requêtes restent sans réponse alors que la clé ne lit
+  rien est tué après `device.command_timeout`. Dans les deux cas, la clé est
+  déclarée non vérifiée. Une fois la clé démontée, la borne attend la fin du
+  pilote : il écrit ses dernières modifications (nettoyage).
+- **Pilotes du noyau retirés** : l'image n'a pas les modules NTFS et exFAT
+  du noyau ; ext4 reste pour la partition de données.
+
+Un pilote compromis ne prend plus le contrôle de la borne, mais il peut
+encore cacher des fichiers à l'analyse. fuse2fs refuse une clé ext4 dont le
+journal doit être rejoué, comme le noyau.
 
 ## Image noyau unifiée { #unified-kernel-image }
 

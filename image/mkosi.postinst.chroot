@@ -43,6 +43,10 @@ install -D -m 0644 "$PACKAGING/logrotate/pandora-box" /etc/logrotate.d/pandora-b
 # User of the sandboxed scan workers, created by systemd-sysusers at build time
 install -D -m 0644 "$PACKAGING/sysusers/pandora-box.conf" /usr/lib/sysusers.d/pandora-box.conf
 
+# The kiosk mounts the FUSE connections itself (pandora_box.fuse): no setuid
+# fusermount3 (fuse3 package, a dependency of ntfs-3g)
+chmod u-s /usr/bin/fusermount3
+
 # clamd settings required by the ClamAV engine (docs/engines.md)
 clamd_option() {
     if grep -q "^$1 " /etc/clamav/clamd.conf; then

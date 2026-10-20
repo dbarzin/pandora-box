@@ -73,8 +73,14 @@ class Sandbox:
             os.chown(path, uid, gid)
             path.chmod(0o700)
 
-    def wrap(self, command: Sequence[str]) -> list[str]:
-        """The command line starting command in the sandbox."""
+    def wrap(
+        self, command: Sequence[str], options: Sequence[str] = (), groups: Sequence[int] = ()
+    ) -> list[str]:
+        """The command line starting command in the sandbox.
+
+        options: more bubblewrap options (pandora_box.fuse: the block device);
+        groups: supplementary groups of the sandbox user.
+        """
         uid, gid = self.ids()
         argv = [
             BWRAP,
@@ -101,6 +107,8 @@ class Sandbox:
             link = Path("/", name)
             if link.is_symlink():
                 argv += ["--symlink", str(link.readlink()), str(link)]
+        # bubblewrap would create /etc for root only (0700)
+        argv += ["--perms", "0755", "--dir", "/etc"]
         for etc_file in ETC_FILES:
             argv += ["--ro-bind-try", etc_file, etc_file]
         # A new, empty /tmp of the sandbox
@@ -122,12 +130,12 @@ class Sandbox:
             argv += ["--ro-bind-try", str(path), str(path)]
         for path in self.writable:
             argv += ["--bind", str(path), str(path)]
-        argv += ["--chdir", "/", "--"]
+        argv += [*options, "--chdir", "/", "--"]
         argv += [
             SETPRIV,
             f"--reuid={uid}",
             f"--regid={gid}",
-            "--clear-groups",
+            f"--groups={','.join(map(str, groups))}" if groups else "--clear-groups",
             "--inh-caps=-all",
             "--bounding-set=-all",
             "--no-new-privs",

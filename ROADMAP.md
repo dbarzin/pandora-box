@@ -28,11 +28,10 @@ The open tasks of the phases below, by priority.
 
 **2. Hardening and user features**
 
-1. Mount NTFS, exFAT and ext4 through FUSE in a sandbox (phase 2)
-2. File transfer stations: key identifier, then inbound, then outbound station (phase 4)
-3. Scan receipt for the user (phase 5)
-4. German and Dutch texts, accessibility (phase 3)
-5. Protected administrator mode (phase 3)
+1. File transfer stations: key identifier, then inbound, then outbound station (phase 4)
+2. Scan receipt for the user (phase 5)
+3. German and Dutch texts, accessibility (phase 3)
+4. Protected administrator mode (phase 3)
 
 **3. Later**
 
@@ -86,6 +85,7 @@ The PandoraBox v1 code has been ported to the `pandora_box` package (`src/pandor
 | `statemachine.py`, `kiosk.py` | State machine and kiosk workflow |
 | `monitor.py` | USB detection with udev |
 | `device.py` | Hardened mounting (`ro,noexec,nosuid,nodev` on a read-only block device, read-write only to clean) |
+| `fuse.py` | NTFS, exFAT and ext4 read by FUSE drivers in the sandbox, with a watchdog |
 | `inventory.py` | Device inventory: never follows links, never leaves the device, limits |
 | `scanner.py`, `workers.py`, `worker.py` | Scan in supervised worker processes, timeouts and watchdog |
 | `sigsets.py`, `publish.py` | Signed signature sets: verification, installation, publication from the sources, `pandora-box-signatures` command |
@@ -185,8 +185,8 @@ Tasks:
 - [x] USBGuard rule for the touchscreen of the reference hardware
 - [x] No boot loader menu
 - [x] Devices mounted read-only on a read-only block device, no automount
-- [x] Four supported filesystems: vfat, exfat, ntfs3, ext4
-- [ ] Mount NTFS, exFAT and ext4 through FUSE in a sandbox
+- [x] Four supported filesystems: vfat, exFAT, NTFS, ext4
+- [x] NTFS, exFAT and ext4 mounted through FUSE in a sandbox
 - [x] Hardened systemd services
 - [x] Each scan worker runs in a sandbox
 - [x] One worker per engine
@@ -317,9 +317,12 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 
 ### Devices and mounting
 
-- Devices are mounted `ro,noexec,nosuid,nodev` by the kiosk, without automount (no udisks); only vfat, exfat, ntfs3 and ext4 are mounted. The block device is read-only while it is scanned (`blockdev --setro`): the kernel writes nothing to it.
+- Devices are mounted `ro,noexec,nosuid,nodev` by the kiosk, without automount (no udisks); only vfat, exFAT, NTFS and ext4 are mounted. The block device is read-only while it is scanned (`blockdev --setro`): the kernel writes nothing to it.
 - An ext4 key whose journal needs a replay (removed without being ejected) is not verified and never mounted: read-only, the kiosk would see other files than a computer that replays the journal; read-write, the kernel would replay a journal given by the device. The kiosk asks to eject it properly from a computer, then to insert it again.
-- The kernel of the kiosk parses the filesystem structures given by the device: a flaw of a driver (ext4, ntfs3 and exfat get regular fuzzing findings on crafted images) runs code in the kernel, before any sandbox. NTFS, exFAT and ext4 will be mounted through FUSE (ntfs-3g, exfat-fuse, fuse2fs, Debian packages), the driver running in the sandbox of the engines with only the block device and `/dev/fuse`, and a watchdog for a crashed or stuck driver. vfat stays in the kernel, its simplest and oldest driver: fusefat is experimental, lklfuse is not packaged in Debian. A compromised FUSE driver no longer takes over the kiosk, but can still hide files from the scan; a disposable micro-VM would also cover vfat, at a much higher cost.
+- A kernel filesystem driver parses the structures given by the device: a flaw (ext4, ntfs3 and exfat get regular fuzzing findings on crafted images) runs code in the kernel, before any sandbox. NTFS, exFAT and ext4 are therefore read by FUSE drivers (ntfs-3g, exfat-fuse, fuse2fs, Debian packages) in the sandbox of the scan workers, with the block device as their only device (`device.fuse`); the image has no ntfs3 and exfat kernel modules. vfat stays in the kernel, its simplest and oldest driver: fusefat is experimental, lklfuse is not packaged in Debian. A compromised FUSE driver no longer takes over the kiosk, but can still hide files from the scan; a disposable micro-VM would also cover vfat, at a much higher cost.
+- The kiosk mounts the FUSE connection itself (`mount -t fuse.TYPE -o fd=N`), the driver only serves it, as the sandbox user: libfuse 3 drivers take it as mount point `/dev/fd/N`; ntfs-3g carries its own FUSE library, which mounts by itself, so a library preloaded into it (`packaging/fuse/premounted.c`) hands it the connection. No setuid `fusermount3`.
+- A crashed driver makes every access fail; a driver whose requests stay unanswered while the device is idle is killed by a watchdog after `device.command_timeout`. Either way the key is not verified. Once the device is unmounted, the kiosk waits for the driver to exit: it writes its last changes (cleaning).
+- fuse2fs refuses an ext4 key whose journal needs a replay, like the kernel; it mounts an ext4 key with corrupted group descriptors, whose folders then cannot be read: the key is not verified instead of refused.
 
 ### Signatures
 
