@@ -15,10 +15,9 @@ User=pandora-box-airgap
 Group=pandora-box-airgap
 RuntimeDirectory=pandora-box-airgap
 RuntimeDirectoryMode=0750
-# The SSH key (rsync, sftp) and the SMB password, from /etc/credstore of the
-# image: only this service reads them
+# The SSH key of the account on the server, from /etc/credstore of the
+# image: only this service reads it
 ImportCredential=pandora-box.airgap-ssh-key
-ImportCredential=pandora-box.airgap-password
 Restart=on-failure
 RestartSec=10
 

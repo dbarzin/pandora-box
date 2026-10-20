@@ -1,6 +1,6 @@
-# Servers of the airgap tests and the runner: see run.sh.
+# Server of the airgap tests and the runner: see run.sh.
 services:
-  # The secrets of the test: an SSH key of the kiosk, an SMB password
+  # The secret of the test: an SSH key of the kiosk
   keygen:
     build: {context: ../.., dockerfile: tests/airgap/Dockerfile}
     volumes: [secrets:/secrets]
@@ -10,23 +10,17 @@ services:
       - >-
         rm -f /secrets/* &&
         ssh-keygen -q -t ed25519 -N "" -f /secrets/id_ed25519 &&
-        head -c 18 /dev/urandom | base64 > /secrets/smb-password &&
         chmod 0644 /secrets/*
   sshd:
     build: {context: ., dockerfile: Dockerfile.sshd}
     volumes: [secrets:/secrets, sshdata:/srv/keys]
-  samba:
-    build: {context: ., dockerfile: Dockerfile.samba}
-    volumes: [secrets:/secrets:ro, smbdata:/srv/samba]
   runner:
     build: {context: ../.., dockerfile: tests/airgap/Dockerfile}
-    depends_on: [sshd, samba]
+    depends_on: [sshd]
     volumes:
       - secrets:/secrets:ro
-      # The files as the servers hold them, to check them
+      # The files as the server holds them, to check them
       - sshdata:/check/ssh:ro
-      - smbdata:/check/smb:ro
 volumes:
   secrets:
   sshdata:
-  smbdata:

@@ -17,7 +17,6 @@ from pandora_box.remotes import (
     Entry,
     Secrets,
     Server,
-    SmbFS,
     TransferError,
     mirror,
     rsync_mirror,
@@ -27,11 +26,10 @@ from pandora_box.remotes import (
 
 
 class LocalFS:
-    """A remote folder that is a local folder: what the SFTP and SMB classes do."""
+    """A remote folder that is a local folder: what the SFTP class does."""
 
-    def __init__(self, base: Path, case_insensitive: bool = False) -> None:
+    def __init__(self, base: Path) -> None:
         self.base = base
-        self.case_insensitive = case_insensitive
         self.puts: list[str] = []
 
     def _p(self, path: str) -> Path:
@@ -58,9 +56,6 @@ class LocalFS:
 
     def rmdir(self, path: str) -> None:
         self._p(path).rmdir()
-
-    def check_name(self, path: str) -> str:
-        return SmbFS.check_name(self, path) if self.case_insensitive else ""  # type: ignore[arg-type]
 
     def close(self) -> None:
         pass
@@ -126,18 +121,60 @@ def test_file_replaced_by_a_folder(tmp_path: Path) -> None:
     assert not (server / "k1/y").exists()
 
 
-def test_names_an_smb_server_cannot_hold(tmp_path: Path) -> None:
+def test_windows_names(tmp_path: Path) -> None:
+    """A Windows server refuses some names, and ignores the case."""
     local, server = tmp_path / "local", tmp_path / "server"
-    write(local / "Report.txt", "1")
-    write(local / "report.txt", "2")
-    write(local / "what?.txt", "3")
-    write(local / "dot.", "4")
-    result = mirror(local, LocalFS(server, case_insensitive=True), "k1")
-    assert result.copied == ["Report.txt"]
+    for name in (
+        "Report.txt",
+        "report.txt",
+        "what?.txt",
+        "dot.",
+        "CON.txt",
+        "con1.txt",
+        "a:b/c.txt",
+    ):
+        write(local / name, name)
+    result = mirror(local, LocalFS(server), "k1", windows_names=True)
+    assert sorted(result.copied) == ["Report.txt", "con1.txt"]
     reasons = dict(result.errors)
     assert "case ignored" in reasons["report.txt"]
     assert "refuses" in reasons["what?.txt"]
     assert "dot" in reasons["dot."]
+    assert "device" in reasons["CON.txt"]
+    assert "a:b/c.txt" in reasons
+    # Without the option, every name is copied
+    assert len(mirror(local, LocalFS(tmp_path / "other"), "k1").copied) == 7
+
+
+def test_sftp_rename_without_posix_rename(tmp_path: Path) -> None:
+    """A server without the posix-rename extension: the target is replaced."""
+    calls: list[tuple[str, ...]] = []
+
+    class Sftp:
+        def putfo(self, source: Any, path: str, callback: Any) -> None:
+            calls.append(("put", path))
+
+        def utime(self, path: str, times: Any) -> None:
+            calls.append(("utime", path))
+
+        def posix_rename(self, old: str, new: str) -> None:
+            raise OSError("Operation unsupported")
+
+        def remove(self, path: str) -> None:
+            calls.append(("remove", path))
+
+        def rename(self, old: str, new: str) -> None:
+            calls.append(("rename", old, new))
+
+    fs = remotes.SftpFS.__new__(remotes.SftpFS)
+    fs._sftp = Sftp()
+    local = tmp_path / "a.txt"
+    write(local, "a")
+    fs.put(local, "k1/a.txt", 1, lambda sent: None)
+    assert calls[-2:] == [
+        ("remove", "k1/a.txt"),
+        ("rename", "k1/.a.txt.pandora-box-tmp", "k1/a.txt"),
+    ]
 
 
 def test_progress(tmp_path: Path) -> None:

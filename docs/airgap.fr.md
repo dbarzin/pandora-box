@@ -2,7 +2,7 @@
 
 Une borne peut servir de borne d'entrée : une fois une clé analysée et
 vérifiée, la borne copie ses fichiers sains sur un serveur de l'organisation
-(rsync sur SSH, SFTP ou SMB), où ils sont récupérés depuis le réseau protégé.
+(rsync sur SSH ou SFTP), où ils sont récupérés depuis le réseau protégé.
 La clé elle-même n'est pas nettoyée et repart avec ses fichiers.
 
 ## En bref { #in-short }
@@ -61,9 +61,10 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.
   des analyses précédentes sont gardés.
 - **Plusieurs partitions.** Les fichiers de chaque partition vont dans
   `partition-1/`, `partition-2/`...
-- **Noms SMB.** Un fichier dont un serveur SMB refuse le nom
-  (`\ : * ? " < > |`, une espace ou un point final), ou qui ne diffère d'un
-  autre que par la casse, n'est pas copié et est signalé comme tel.
+- **Serveur Windows.** Avec `windows_names = true`, un fichier dont Windows
+  refuse le nom (`\ : * ? " < > |`, une espace ou un point final, `CON`,
+  `NUL`, `COM1`...), ou qui ne diffère d'un autre que par la casse, n'est
+  pas copié et est signalé comme tel.
 
 L'écran montre la copie, puis **Fichiers copiés sur le serveur** avec les
 fichiers qui n'ont pas été copiés (dangereux, suspects ou refusés par le
@@ -77,14 +78,13 @@ nettoyée ni copiée, et peut être insérée à nouveau plus tard.
 ```toml
 [airgap]
 enabled = true
-# "rsync" (rsync sur SSH), "sftp" ou "smb"
+# "rsync" (rsync sur SSH) ou "sftp"
 protocol = "sftp"
 host = "files.example.org"
-port = 0                    # 22 pour rsync et sftp, 445 pour smb
+port = 0                    # 22
 user = "kiosk"
-path = "/srv/keys"          # smb : un répertoire du partage
-share = ""                  # smb : le partage
-domain = ""                 # smb : le domaine du compte
+path = "/srv/keys"
+windows_names = false       # sftp vers un serveur Windows : voir plus bas
 known_hosts = "/etc/pandora-box/airgap-known-hosts"
 timeout = 60.0
 ```
@@ -99,8 +99,7 @@ credentials systemd dans `/etc/credstore` de l'image :
 
 | Clé | Pour | Lue par |
 |---|---|---|
-| `ssh_key` | la clé SSH privée du compte (rsync, sftp) | le service de copie |
-| `password` | le mot de passe du compte (smb) | le service de copie |
+| `ssh_key` | la clé SSH privée du compte sur le serveur | le service de copie |
 | `token_key` | la clé qui signe les identifiants des clés | la borne |
 
 ```sh
@@ -159,12 +158,54 @@ clés.
     ```
 
     puis `path = "."`, les chemins étant relatifs au répertoire de `rrsync`.
-- **SMB** : un partage et un compte avec droit d'écriture ; la borne exige
-  SMB 3 avec chiffrement (`server min protocol = SMB3`,
-  `server smb encrypt = required` sur Samba).
 
 Seules les bornes suppriment des fichiers dans le répertoire d'une clé :
 archivez ou purgez les anciens répertoires sur le serveur.
+
+### Serveur Windows { #windows-server }
+
+Windows fournit un serveur OpenSSH (Windows 10 1809 et Windows Server 2019
+ou plus récents) : utilisez `protocol = "sftp"` (Windows n'a pas rsync) et
+`windows_names = true`.
+
+1. Installez-le et démarrez-le, dans PowerShell en administrateur :
+
+    ```powershell
+    Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+    Set-Service -Name sshd -StartupType Automatic
+    Start-Service sshd
+    ```
+
+2. Créez un compte local pour les bornes, **pas un administrateur** (les
+   clés des administrateurs sont lues dans
+   `C:\ProgramData\ssh\administrators_authorized_keys` à la place), et
+   placez la clé publique des bornes dans
+   `C:\Users\kiosk\.ssh\authorized_keys`.
+3. Limitez-le à SFTP dans un répertoire, à la fin de
+   `C:\ProgramData\ssh\sshd_config`, puis redémarrez le service
+   (`Restart-Service sshd`) :
+
+    ```text
+    Match User kiosk
+        ChrootDirectory C:\PandoraBox
+        ForceCommand internal-sftp
+        AllowTcpForwarding no
+        PermitTTY no
+    ```
+
+    avec `path = "/keys"`, le répertoire `C:\PandoraBox\keys` étant
+    accessible en écriture au compte. Sans chroot, les chemins s'écrivent
+    `/C:/PandoraBox/keys`.
+4. La clé d'hôte du serveur, pour `image/airgap-known-hosts` :
+   `ssh-keygen -lf C:\ProgramData\ssh\ssh_host_ed25519_key.pub` sur le
+   serveur donne l'empreinte à comparer avec celle de `ssh-keyscan`.
+
+La copie envoie chaque fichier sous un nom temporaire, puis le renomme à la
+place de l'ancien (extension SFTP `posix-rename`) ; sur un serveur qui ne la
+propose pas, l'ancien fichier est d'abord supprimé, puis le nouveau renommé.
+
+Un serveur Windows peut être testé dans une machine virtuelle : voir
+[Tests](#tests).
 
 ## Rapport d'analyse { #scan-report }
 
@@ -187,13 +228,49 @@ dans son journal (`journalctl -u pandora-box-airgap`).
 
 ## Tests { #tests }
 
-- `tests/airgap/run.sh` copie vers de vrais serveurs dans des conteneurs :
-  OpenSSH avec rsync (SFTP, rsync sur SSH, et rsync limité par `rrsync`
-  comme ci-dessus) et Samba (SMB 3 chiffré) ; une
-  première copie, puis une synchronisation (fichiers modifiés, nouveaux et
-  supprimés), une clé d'hôte inconnue et un mauvais mot de passe refusés, et
-  le service par son socket.
+- `tests/airgap/run.sh` copie vers un vrai serveur OpenSSH avec rsync, dans
+  un conteneur (SFTP, rsync sur SSH, et rsync limité par `rrsync` comme
+  ci-dessus) : une première copie, puis une synchronisation (fichiers
+  modifiés, nouveaux et supprimés), une clé d'hôte inconnue refusée, et le
+  service par son socket.
+- `tests/windows/windows.sh` copie vers un Windows Server dans une machine
+  virtuelle QEMU, configuré comme ci-dessus (voir plus bas).
 - Le [test en machine virtuelle](vm.md) active la copie vers un serveur SFTP
   de test : une clé est copiée, puis insérée à nouveau sans l'un de ses
   fichiers, qui est supprimé du serveur ; la clé garde ses fichiers
   malveillants et reçoit son identifiant.
+
+### Serveur Windows en machine virtuelle { #windows-server-in-a-virtual-machine }
+
+La copie vers un serveur Windows est vérifiée sur un vrai Windows Server
+2025, dans une machine virtuelle QEMU du conteneur de construction (avec
+KVM) :
+
+1. Téléchargez l'ISO de **Windows Server 2025 en évaluation** (en anglais,
+   180 jours, sans clé de produit) sur le
+   [Microsoft Evaluation Center](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2025).
+   Elle reste hors du dépôt.
+2. Installez-le une fois, sans intervention (20 à 40 minutes, à suivre par
+   VNC sur `localhost:5900`) :
+
+    ```sh
+    tests/windows/windows.sh prepare ~/Téléchargements/windows-server-2025-eval.iso
+    ```
+
+    `tests/windows/autounattend.xml` installe l'image 1 de l'ISO (Standard,
+    Server Core ; `--index 2` pour le bureau), puis `tests/windows/setup.ps1`
+    configure OpenSSH comme décrit ci-dessus (le compte `kiosk`, sa clé, SFTP
+    seulement dans `C:\PandoraBox`) et éteint la machine. Le disque est
+    `tests/windows/work/windows.qcow2` (hors de git).
+3. Copiez des clés dessus, autant de fois que nécessaire (chaque passage
+   repart du disque installé) :
+
+    ```sh
+    tests/windows/windows.sh test
+    ```
+
+    Une première copie (les noms que Windows refuse ou confond sont
+    signalés), un remplacement, un ajout et une suppression, les dates
+    gardées, et un serveur à une autre clé d'hôte refusé.
+
+L'évaluation expire après 180 jours : préparez alors un nouveau disque.

@@ -102,7 +102,7 @@ trusted.
 | Forged or replayed signatures from a malicious server | Sets built on the kiosk from the sources are checked by the engines, then signed with a key generated on the kiosk; published sets must carry a trusted signature and a newer serial; ClamAV databases are also signed by Cisco Talos |
 | Other traffic from a compromised process | Firewall: everything dropped except DHCP, DNS, NTP, the update service and the SIEM export, each allowed by its system user; the kiosk and the workers have no network |
 | Reading the exported logs | Syslog over TLS by default, with the certificate authorities of the SIEM |
-| A fake server receiving the copied keys, or reading them on the way (airgap) | The host key of an SSH server must be listed in the image, never trusted on first use; SMB 3 with encryption required; the copy service has its own user and reads nothing of the kiosk but the clean files staged for it |
+| A fake server receiving the copied keys, or reading them on the way (airgap) | The host key of the SSH server must be listed in the image, never trusted on first use; the copy service has its own user and reads nothing of the kiosk but the clean files staged for it |
 
 ### Supply chain and releases
 

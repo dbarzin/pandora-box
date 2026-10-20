@@ -254,7 +254,7 @@ class SiemConfig:
         return 6514 if self.transport == "tls" else 514
 
 
-AIRGAP_PROTOCOLS = ("rsync", "sftp", "smb")
+AIRGAP_PROTOCOLS = ("rsync", "sftp")
 
 
 @dataclass(frozen=True)
@@ -263,17 +263,17 @@ class AirgapConfig:
     # (pandora-box-airgap.service, a networked image): off by default. The
     # key is not cleaned; the kiosk writes its identifier on it (.pandora-box)
     enabled: bool = False
-    # "rsync" (over SSH, rsync on the server), "sftp" or "smb" (SMB 3)
+    # "rsync" (over SSH, rsync on the server) or "sftp"
     protocol: str = "sftp"
     host: str = ""
-    # 0: 22 for rsync and sftp, 445 for smb
+    # 0: 22
     port: int = 0
     user: str = ""
-    # Folder of the keys on the server (smb: in the share): one folder per key
+    # Folder of the keys on the server: one folder per key
     path: str = ""
-    # smb: the share, and the domain of the account ("": none)
-    share: str = ""
-    domain: str = ""
+    # sftp to a Windows server (OpenSSH of Windows): the names NTFS refuses,
+    # or confuses (case ignored), are not copied and are reported
+    windows_names: bool = False
     # rsync, sftp: host keys of the server (the server is never trusted on
     # first use)
     known_hosts: Path = Path("/etc/pandora-box/airgap-known-hosts")
@@ -502,8 +502,7 @@ def _parse_airgap(airgap: dict[str, Any]) -> AirgapConfig:
         port=_get(airgap, "airgap", "port", int, 0),
         user=_get(airgap, "airgap", "user", str, ""),
         path=_get(airgap, "airgap", "path", str, ""),
-        share=_get(airgap, "airgap", "share", str, ""),
-        domain=_get(airgap, "airgap", "domain", str, ""),
+        windows_names=_get(airgap, "airgap", "windows_names", bool, False),
         known_hosts=_path(airgap, "airgap", "known_hosts", default.known_hosts),
         staging=_path(airgap, "airgap", "staging", default.staging),
         socket=_path(airgap, "airgap", "socket", default.socket),
@@ -511,20 +510,18 @@ def _parse_airgap(airgap: dict[str, Any]) -> AirgapConfig:
     )
     if not 0 <= config.port <= 65535:
         raise ConfigError("airgap.port must be between 1 and 65535 (0: the default port)")
-    for key in ("host", "user", "share", "domain"):
+    for key in ("host", "user"):
         value = getattr(config, key)
         if any(c.isspace() or c in "@:/\\" for c in value) or value.startswith("-"):
             raise ConfigError(f"airgap.{key}: invalid characters")
+    if config.windows_names and config.protocol != "sftp":
+        raise ConfigError('airgap.windows_names is only used with protocol = "sftp"')
     if any(part == ".." for part in config.path.replace("\\", "/").split("/")):
         raise ConfigError("airgap.path must not hold ..")
     if config.enabled:
         for key in ("host", "user", "path"):
             if not getattr(config, key):
                 raise ConfigError(f"airgap.{key} is required when the copy to a server is enabled")
-        if config.protocol == "smb" and not config.share:
-            raise ConfigError('airgap.share is required with protocol = "smb"')
-    if config.share and config.protocol != "smb":
-        raise ConfigError('airgap.share is only used with protocol = "smb"')
     return config
 
 

@@ -10,7 +10,7 @@ The kiosk has no network. Once a key is scanned and verified:
 3. the service pandora-box-airgap (its own user, the only one besides the
    update and the SIEM services that the firewall lets out) mirrors that
    folder to <airgap.path>/<identifier>/ on the server, by rsync over SSH,
-   SFTP or SMB (pandora_box.remotes), with the scan report in its
+   or SFTP (pandora_box.remotes), with the scan report in its
    .pandora-box folder; then the kiosk deletes the staging folder.
 
 The kiosk and the service talk over a Unix socket, one JSON line per
@@ -45,7 +45,6 @@ logger = get_logger("airgap")
 DEFAULT_CONFIG = Path("/etc/pandora-box/pandora-box.toml")
 # systemd credentials (LoadCredential=/ImportCredential= of the services)
 SSH_KEY_CREDENTIAL = "pandora-box.airgap-ssh-key"
-PASSWORD_CREDENTIAL = "pandora-box.airgap-password"  # noqa: S105  (a file name)
 TOKEN_KEY_CREDENTIAL = "pandora-box.airgap-token-key"  # noqa: S105  (a file name)
 # Files of the key in staging/<identifier>/files, the report next to them
 FILES = "files"
@@ -224,19 +223,14 @@ def server_of(config: AirgapConfig) -> Server:
         port=config.port,
         user=config.user,
         path=config.path,
-        share=config.share,
-        domain=config.domain,
         known_hosts=config.known_hosts,
         timeout=config.timeout,
+        windows_names=config.windows_names,
     )
 
 
 def secrets() -> Secrets:
-    password = credential(PASSWORD_CREDENTIAL)
-    return Secrets(
-        ssh_key=credential(SSH_KEY_CREDENTIAL),
-        password=password.read_text().strip() if password is not None else "",
-    )
+    return Secrets(ssh_key=credential(SSH_KEY_CREDENTIAL))
 
 
 def transfer(

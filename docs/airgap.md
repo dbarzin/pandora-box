@@ -2,7 +2,7 @@
 
 A kiosk can act as an inbound station: once a key is scanned and verified,
 the kiosk copies its clean files to a server of the organization (rsync over
-SSH, SFTP or SMB), where they are picked up from the protected network. The
+SSH or SFTP), where they are picked up from the protected network. The
 key itself is not cleaned and leaves with its files.
 
 ## In short
@@ -58,12 +58,13 @@ key itself is not cleaned and leaves with its files.
   written file. The reports of the previous scans are kept.
 - **Several partitions.** The files of each partition go into
   `partition-1/`, `partition-2/`...
-- **SMB names.** A file whose name an SMB server refuses (`\ : * ? " < > |`,
-  a trailing space or dot), or that differs from another one only by its
-  case, is not copied and is listed as such.
+- **Windows server.** With `windows_names = true`, a file whose name Windows
+  refuses (`\ : * ? " < > |`, a trailing space or dot, `CON`, `NUL`,
+  `COM1`...), or that differs from another one only by its case, is not
+  copied and is listed as such.
 
 The screen shows the copy, then **Files copied to the server** with the
-files that were not copied (dangerous, suspicious, or refused by the server),
+files that were not copied (dangerous, suspicious, or that the server refused),
 or **Copy to the server failed**: the key is then neither cleaned nor
 copied, and can be inserted again later.
 
@@ -74,14 +75,13 @@ copied, and can be inserted again later.
 ```toml
 [airgap]
 enabled = true
-# "rsync" (rsync over SSH), "sftp" or "smb"
+# "rsync" (rsync over SSH) or "sftp"
 protocol = "sftp"
 host = "files.example.org"
-port = 0                    # 22 for rsync and sftp, 445 for smb
+port = 0                    # 22
 user = "kiosk"
-path = "/srv/keys"          # smb: a folder of the share
-share = ""                  # smb: the share
-domain = ""                 # smb: the domain of the account
+path = "/srv/keys"
+windows_names = false       # sftp to a Windows server: see below
 known_hosts = "/etc/pandora-box/airgap-known-hosts"
 timeout = 60.0
 ```
@@ -96,8 +96,7 @@ credentials in `/etc/credstore` of the image:
 
 | Key | For | Read by |
 |---|---|---|
-| `ssh_key` | the private SSH key of the account (rsync, sftp) | the copy service |
-| `password` | the password of the account (smb) | the copy service |
+| `ssh_key` | the private SSH key of the account on the server | the copy service |
 | `token_key` | the key that signs the identifiers of the keys | the kiosk |
 
 ```sh
@@ -154,12 +153,52 @@ Give the kiosks an account that can only write into the folder of the keys.
     ```
 
     then `path = "."`, paths being relative to the folder of `rrsync`.
-- **SMB**: a share and an account with write access; SMB 3 with encryption is
-  required by the kiosk (`server min protocol = SMB3`, `server smb encrypt =
-  required` on Samba).
 
 The folder of a key is deleted by nobody but the kiosks: archive or purge the
 old ones on the server.
+
+### Windows server
+
+Windows ships an OpenSSH server (Windows 10 1809 and Windows Server 2019 or
+later): use `protocol = "sftp"` (Windows has no rsync) and
+`windows_names = true`.
+
+1. Install and start it, in PowerShell as administrator:
+
+    ```powershell
+    Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+    Set-Service -Name sshd -StartupType Automatic
+    Start-Service sshd
+    ```
+
+2. Create a local account for the kiosks, **not an administrator** (the keys
+   of administrators are read from
+   `C:\ProgramData\ssh\administrators_authorized_keys` instead), and put the
+   public key of the kiosks in `C:\Users\kiosk\.ssh\authorized_keys`.
+3. Restrict it to SFTP in a folder, at the end of
+   `C:\ProgramData\ssh\sshd_config`, then restart the service
+   (`Restart-Service sshd`):
+
+    ```text
+    Match User kiosk
+        ChrootDirectory C:\PandoraBox
+        ForceCommand internal-sftp
+        AllowTcpForwarding no
+        PermitTTY no
+    ```
+
+    with `path = "/keys"`, the folder `C:\PandoraBox\keys` writable by the
+    account. Without a chroot, the paths are written `/C:/PandoraBox/keys`.
+4. The host key of the server, for `image/airgap-known-hosts`:
+   `ssh-keygen -lf C:\ProgramData\ssh\ssh_host_ed25519_key.pub` on the server
+   gives the fingerprint to compare with that of `ssh-keyscan`.
+
+The copy sends each file to a temporary name, then renames it over the old
+one (SFTP extension `posix-rename`); a server without it gets the old file
+deleted first, then the new one renamed.
+
+A Windows server can be tested in a virtual machine: see
+[Tests](#tests).
 
 ## Scan report
 
@@ -182,12 +221,47 @@ the service logs `airgap_done` and `airgap_failed` in its journal
 
 ## Tests
 
-- `tests/airgap/run.sh` copies to real servers in containers: OpenSSH with
-  rsync (SFTP, rsync over SSH, and rsync restricted by `rrsync` as above)
-  and Samba (SMB 3 with encryption), first a
-  copy, then a synchronization (changed, new and removed files), an unknown
-  host key and a wrong password refused, and the service over its socket.
+- `tests/airgap/run.sh` copies to a real OpenSSH server with rsync, in a
+  container (SFTP, rsync over SSH, and rsync restricted by `rrsync` as
+  above): first a copy, then a synchronization (changed, new and removed
+  files), an unknown host key refused, and the service over its socket.
+- `tests/windows/windows.sh` copies to a Windows Server in a QEMU virtual
+  machine, set up as above (see below).
 - The [virtual machine test](vm.md) enables the copy to an SFTP server of the
   test: a key is copied, then inserted again without one of its files, which
   is deleted from the server; the key keeps its malicious files and gets its
   identifier.
+
+### Windows server in a virtual machine
+
+The copy to a Windows server is checked against a real Windows Server 2025,
+in a QEMU virtual machine of the build container (with KVM):
+
+1. Download the ISO of **Windows Server 2025 evaluation** (English, 180 days,
+   no product key) from the
+   [Microsoft Evaluation Center](https://www.microsoft.com/en-us/evalcenter/download-windows-server-2025).
+   It stays out of the repository.
+2. Install it once, unattended (20 to 40 minutes, to watch over VNC on
+   `localhost:5900`):
+
+    ```sh
+    tests/windows/windows.sh prepare ~/Downloads/windows-server-2025-eval.iso
+    ```
+
+    `tests/windows/autounattend.xml` installs image 1 of the ISO (Standard,
+    Server Core; `--index 2` for the desktop), then `tests/windows/setup.ps1`
+    sets up OpenSSH as described above (the account `kiosk`, its key, SFTP
+    only in `C:\PandoraBox`) and shuts down. The disk is
+    `tests/windows/work/windows.qcow2` (outside git).
+3. Copy keys to it, as often as needed (each run starts from the installed
+   disk):
+
+    ```sh
+    tests/windows/windows.sh test
+    ```
+
+    A first copy (the names Windows refuses or confuses reported), a
+    replacement, an addition and a deletion, dates kept, and a server with
+    another host key refused.
+
+The evaluation expires after 180 days: prepare a new disk then.

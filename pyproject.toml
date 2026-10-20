@@ -30,7 +30,6 @@ dependencies = [
     "pillow>=10.1",
     "pyudev>=0.24",
     "python-magic>=0.4.24",
-    "smbprotocol>=1.13",  # copy to an SMB server (airgap)
     "yara-x>=1.0",
 ]
 
@@ -94,7 +93,7 @@ warn_unreachable = true
 files = ["src", "tests", "image/vm"]
 
 [[tool.mypy.overrides]]
-module = ["pyudev", "pyudev.*", "flor", "jsonschema", "paramiko", "paramiko.*", "smbclient", "smbprotocol.*"]
+module = ["pyudev", "pyudev.*", "flor", "jsonschema", "paramiko", "paramiko.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
@@ -103,6 +102,6 @@ testpaths = ["tests"]
 addopts = ["-ra", "--strict-markers", "--strict-config", "-m", "not e2e and not airgap"]
 markers = [
     "e2e: end-to-end tests with a loop device (need root, see tests/e2e/run.sh)",
-    "airgap: copy to real rsync, SFTP and SMB servers (see tests/airgap/run.sh)",
+    "airgap: copy to a real rsync and SFTP server (see tests/airgap/run.sh)",
     "integration: tests with real engines or signatures, skipped when unavailable",
 ]

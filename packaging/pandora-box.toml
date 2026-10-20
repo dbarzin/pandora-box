@@ -269,18 +269,17 @@ timeout = 10.0
 # there), with the scan reports in <path>/<identifier>/.pandora-box/. A key
 # not verified is refused. Credentials: [airgap] of image/credentials.toml.
 enabled = false
-# "rsync" (rsync over SSH, rsync on the server), "sftp" or "smb" (SMB 3,
-# encrypted)
+# "rsync" (rsync over SSH, rsync on the server) or "sftp"
 protocol = "sftp"
 host = ""
-# 0: 22 for rsync and sftp, 445 for smb
+# 0: 22
 port = 0
 user = ""
-# Folder of the keys on the server; for smb, a folder of the share
+# Folder of the keys on the server
 path = ""
-# smb: the share, and the domain of the account ("" for none)
-share = ""
-domain = ""
+# sftp to a Windows server (its OpenSSH server): the names Windows refuses,
+# or confuses (case ignored), are not copied and are reported
+windows_names = false
 # rsync, sftp: host keys of the server; in the image: image/airgap-known-hosts
 known_hosts = "/etc/pandora-box/airgap-known-hosts"
 # Clean files of a key, prepared by the kiosk for the service, deleted once copied

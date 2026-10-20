@@ -1,8 +1,8 @@
-"""Copy to real servers (airgap): rsync over SSH, SFTP and SMB.
+"""Copy to a real server (airgap): rsync over SSH and SFTP.
 
-Run in containers with tests/airgap/run.sh: an OpenSSH server (with rsync)
-and a Samba server (SMB 3, encryption required). The runner sees the folders
-of the servers (/check), to compare them with what was sent.
+Run in containers with tests/airgap/run.sh: an OpenSSH server with rsync.
+The runner sees the folder of the server (/check), to compare it with what
+was sent.
 """
 
 from __future__ import annotations
@@ -40,35 +40,27 @@ SERVERS = {
         dict(protocol="sftp", host="sshd", user="kiosk", path="/srv/keys"),
         Path("/check/ssh"),
     ),
-    "smb": (
-        dict(protocol="smb", host="samba", user="kiosk", path="keys", share="transfers"),
-        Path("/check/smb/keys"),
-    ),
 }
 
 
 @pytest.fixture
 def credentials(tmp_path: Path) -> Path:
-    """The credentials of the service: the SSH key (0600, as ssh wants it), the password."""
+    """The credentials of the service: the SSH key (0600, as ssh wants it)."""
     folder = tmp_path / "credentials"
     folder.mkdir()
     key = folder / airgap.SSH_KEY_CREDENTIAL
     shutil.copyfile(SECRETS / "id_ed25519", key)
     key.chmod(0o600)
-    shutil.copyfile(SECRETS / "smb-password", folder / airgap.PASSWORD_CREDENTIAL)
     return folder
 
 
 def server(name: str, known_hosts: Path = SECRETS / "known_hosts") -> Server:
     options, _ = SERVERS[name]
-    return Server(port=0, known_hosts=known_hosts, timeout=20, **options)
+    return Server(port=0, known_hosts=known_hosts, timeout=20, **options)  # type: ignore[arg-type]
 
 
 def secrets(credentials: Path) -> Secrets:
-    return Secrets(
-        ssh_key=credentials / airgap.SSH_KEY_CREDENTIAL,
-        password=(credentials / airgap.PASSWORD_CREDENTIAL).read_text().strip(),
-    )
+    return Secrets(ssh_key=credentials / airgap.SSH_KEY_CREDENTIAL)
 
 
 def write(path: Path, content: bytes, mtime: int = 1_700_000_000) -> None:
@@ -141,16 +133,6 @@ def test_unknown_host_key_is_refused(protocol: str, credentials: Path, tmp_path:
         upload(
             local, report, server(protocol, other), secrets(credentials), "/srv/keys/x", "r.json"
         )
-
-
-def test_wrong_smb_password(tmp_path: Path) -> None:
-    local = tmp_path / "local"
-    write(local / "a.txt", b"a")
-    report = tmp_path / "report.json"
-    report.write_text("{}")
-    with pytest.raises(TransferError):
-        wrong = Secrets(password="wrong")  # noqa: S106  (a wrong password, on purpose)
-        upload(local, report, server("smb"), wrong, "keys/x", "r.json")
 
 
 @pytest.fixture

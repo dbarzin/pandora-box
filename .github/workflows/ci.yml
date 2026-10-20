@@ -51,11 +51,11 @@ jobs:
         run: tests/e2e/run.sh
 
   airgap:
-    name: Copy to real servers (rsync over SSH, SFTP, SMB)
+    name: Copy to a real server (rsync over SSH, SFTP)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Run tests against an OpenSSH and a Samba server in containers
+      - name: Run tests against an OpenSSH server in a container
         run: tests/airgap/run.sh
 
   image:

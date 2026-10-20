@@ -32,3 +32,4 @@ htmlcov/
 /update/
 /release/
 /image/vm/airgap/
+/tests/windows/work/

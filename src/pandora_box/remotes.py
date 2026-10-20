@@ -1,4 +1,4 @@
-"""Mirror of a local folder to a remote server: rsync over SSH, SFTP, SMB (airgap).
+"""Mirror of a local folder to a remote server: rsync over SSH or SFTP (airgap).
 
 The remote folder becomes a copy of the local one, in one direction: new and
 changed files (size, modification time) are copied, files and folders that
@@ -6,15 +6,13 @@ are not in the local folder any more are deleted. Names listed in protect
 (the reports of the kiosk) are left alone at the top of the remote folder.
 
 rsync runs the OpenSSH client and needs rsync on the server. SFTP (paramiko)
-and SMB (smbprotocol, SMB 3 with encryption) use the same comparison, written
-here. The server is always authenticated: its SSH host key must be listed in
-known_hosts; SMB relies on the account and the encryption of SMB 3.
+uses the same comparison, written here. The server is always authenticated:
+its SSH host key must be listed in known_hosts.
 """
 
 from __future__ import annotations
 
 import contextlib
-import errno
 import os
 import shutil
 import stat
@@ -30,10 +28,14 @@ SSH = "/usr/bin/ssh"
 # Modification times differ by up to 2 seconds between filesystems (vfat)
 MODIFY_WINDOW = 2
 CHUNK = 1024 * 1024
+# Names a Windows server (NTFS) refuses: characters, and device names, with
+# or without an extension
+_WINDOWS_FORBIDDEN = set('\\:*?"<>|') | {chr(c) for c in range(32)}
+_WINDOWS_DEVICES = {"con", "prn", "aux", "nul"} | {
+    f"{d}{n}" for d in ("com", "lpt") for n in "123456789"
+}
 # Folder of the scan reports, at the top of the folder of a key on the server
 REPORTS = ".pandora-box"
-# Characters a file name cannot hold on an SMB server
-_SMB_FORBIDDEN = set('\\:*?"<>|') | {chr(c) for c in range(32)}
 
 Progress = Callable[[int, int], None]
 
@@ -66,12 +68,12 @@ class Server:
     host: str
     port: int
     user: str
-    # Folder on the server (SMB: in the share)
+    # Folder on the server
     path: str
-    share: str = ""
-    domain: str = ""
     known_hosts: Path | None = None
     timeout: float = 60.0
+    # The server is Windows (OpenSSH): NTFS names, case ignored
+    windows_names: bool = False
 
 
 @dataclass(frozen=True)
@@ -79,7 +81,6 @@ class Secrets:
     """Credentials of the account (systemd credentials of the service)."""
 
     ssh_key: Path | None = None
-    password: str = ""
 
 
 def scan_local(root: Path) -> dict[str, Entry]:
@@ -107,9 +108,6 @@ def same(local: Entry, remote: Entry) -> bool:
 class RemoteFS(Protocol):
     """The operations of the mirror on a remote folder; paths use "/"."""
 
-    # Names that differ only by their case are the same file on the server
-    case_insensitive: bool
-
     def scan(self, root: str) -> dict[str, Entry] | None:
         """Entries below root, relative to it; None when root does not exist."""
         ...
@@ -124,11 +122,19 @@ class RemoteFS(Protocol):
 
     def rmdir(self, path: str) -> None: ...
 
-    def check_name(self, path: str) -> str:
-        """Why the server cannot hold this path ("": it can)."""
-        ...
-
     def close(self) -> None: ...
+
+
+def windows_name(path: str) -> str:
+    """Why a Windows server (NTFS) cannot hold this path ("": it can)."""
+    for part in path.split("/"):
+        if set(part) & _WINDOWS_FORBIDDEN:
+            return 'name with characters Windows refuses (\\ : * ? " < > |)'
+        if part.endswith((" ", ".")):
+            return "name ending with a space or a dot, refused by Windows"
+        if part.split(".", 1)[0].casefold() in _WINDOWS_DEVICES:
+            return "name of a Windows device (CON, NUL, COM1...)"
+    return ""
 
 
 def mirror(
@@ -137,8 +143,13 @@ def mirror(
     remote_root: str,
     protect: Sequence[str] = (),
     progress: Progress | None = None,
+    windows_names: bool = False,
 ) -> SyncResult:
-    """Make remote_root a copy of local_root; return what changed."""
+    """Make remote_root a copy of local_root; return what changed.
+
+    windows_names: names Windows refuses, and names equal to another one but
+    for the case, are not copied and reported in the errors.
+    """
     result = SyncResult()
     local = scan_local(local_root)
     remote = fs.scan(remote_root)
@@ -146,24 +157,9 @@ def mirror(
         fs.makedirs(remote_root)
         remote = {}
     remote = {p: e for p, e in remote.items() if p.split("/", 1)[0] not in protect}
-    # Names the server cannot hold, and names equal but for the case on a
-    # server that ignores it: reported, not copied
-    rejected: set[str] = set()
-    seen: dict[str, str] = {}
-    for path in sorted(local):
-        reason = fs.check_name(path)
-        folded = path.casefold() if fs.case_insensitive else path
-        if not reason and folded in seen:
-            reason = f"same name as {seen[folded]} on the server (case ignored)"
-        if any(path.startswith(f"{r}/") for r in rejected):
-            reason = reason or "in a folder that cannot be copied"
-        if reason:
-            rejected.add(path)
-            if not local[path].is_dir:
-                result.errors.append((path, reason))
-            continue
-        seen[folded] = path
-    wanted = {p: e for p, e in local.items() if p not in rejected}
+    wanted = local
+    if windows_names:
+        wanted = _windows_wanted(local, result)
 
     # Remote entries in the way, or not wanted any more: deepest first
     for path in sorted(remote, key=lambda p: p.count("/"), reverse=True):
@@ -215,8 +211,6 @@ def mirror(
 
 class SftpFS:
     """A folder on an SFTP server (paramiko); the host key must be known."""
-
-    case_insensitive = False
 
     def __init__(self, server: Server, secrets: Secrets) -> None:
         import paramiko
@@ -282,7 +276,14 @@ class SftpFS:
         with local.open("rb") as source:
             self._sftp.putfo(source, tmp, callback=lambda sent, _total: progress(sent))
         self._sftp.utime(tmp, (mtime, mtime))
-        self._sftp.posix_rename(tmp, path)
+        try:
+            self._sftp.posix_rename(tmp, path)
+        except OSError:
+            # A server without the posix-rename extension: SFTP rename refuses
+            # an existing target, which is deleted first (not atomic)
+            with contextlib.suppress(FileNotFoundError):
+                self._sftp.remove(path)
+            self._sftp.rename(tmp, path)
 
     def remove(self, path: str) -> None:
         self._sftp.remove(path)
@@ -290,102 +291,29 @@ class SftpFS:
     def rmdir(self, path: str) -> None:
         self._sftp.rmdir(path)
 
-    def check_name(self, path: str) -> str:
-        return ""
-
     def close(self) -> None:
         self._client.close()
 
 
-# -- SMB -------------------------------------------------------------------------------
-
-
-class SmbFS:
-    """A folder of an SMB share (smbprotocol), SMB 3 with encryption."""
-
-    case_insensitive = True
-
-    def __init__(self, server: Server, secrets: Secrets) -> None:
-        import smbclient
-        from smbprotocol.exceptions import SMBException
-
-        self._smb = smbclient
-        self._server = server
-        self._port = server.port or 445
-        user = f"{server.domain}\\{server.user}" if server.domain else server.user
-        try:
-            smbclient.register_session(
-                server.host,
-                username=user,
-                password=secrets.password,
-                port=self._port,
-                encrypt=True,
-                connection_timeout=int(server.timeout),
-            )
-        except (OSError, SMBException, ValueError) as ex:
-            raise TransferError(f"smb: {ex}") from ex
-        self._prefix = f"\\\\{server.host}\\{server.share}"
-
-    def _path(self, path: str) -> str:
-        return self._prefix + "".join(f"\\{p}" for p in path.split("/") if p)
-
-    def scan(self, root: str) -> dict[str, Entry] | None:
-        try:
-            self._smb.stat(self._path(root), port=self._port)
-        except OSError as ex:
-            # smbprotocol raises an OSError of its own, not FileNotFoundError
-            if ex.errno == errno.ENOENT:
-                return None
-            raise
-        entries: dict[str, Entry] = {}
-        pending = [""]
-        while pending:
-            relative = pending.pop()
-            for entry in self._smb.scandir(self._path(f"{root}/{relative}"), port=self._port):
-                path = f"{relative}/{entry.name}".lstrip("/")
-                info = entry.stat()
-                if entry.is_dir():
-                    entries[path] = Entry(0, 0, True)
-                    pending.append(path)
-                else:
-                    entries[path] = Entry(info.st_size, int(info.st_mtime))
-        return entries
-
-    def makedirs(self, path: str) -> None:
-        self._smb.makedirs(self._path(path), exist_ok=True, port=self._port)
-
-    def put(self, local: Path, path: str, mtime: int, progress: Callable[[int], None]) -> None:
-        tmp = self._path(_tmp_name(path))
-        sent = 0
-        with (
-            local.open("rb") as source,
-            self._smb.open_file(tmp, mode="wb", port=self._port) as target,
-        ):
-            while chunk := source.read(CHUNK):
-                target.write(chunk)
-                sent += len(chunk)
-                progress(sent)
-        self._smb.utime(tmp, times=(mtime, mtime), port=self._port)
-        self._smb.replace(tmp, self._path(path), port=self._port)
-
-    def remove(self, path: str) -> None:
-        self._smb.remove(self._path(path), port=self._port)
-
-    def rmdir(self, path: str) -> None:
-        self._smb.rmdir(self._path(path), port=self._port)
-
-    def check_name(self, path: str) -> str:
-        for part in path.split("/"):
-            if set(part) & _SMB_FORBIDDEN:
-                return "name with characters an SMB server refuses"
-            if part.endswith((" ", ".")):
-                return "name ending with a space or a dot"
-        return ""
-
-    def close(self) -> None:
-        # Closing: nothing left to do on an error
-        with contextlib.suppress(Exception):
-            self._smb.delete_session(self._server.host, port=self._port)
+def _windows_wanted(local: dict[str, Entry], result: SyncResult) -> dict[str, Entry]:
+    """The entries a Windows server can hold; the others are reported in result."""
+    rejected: set[str] = set()
+    seen: dict[str, str] = {}
+    for path in sorted(local):
+        reason = windows_name(path)
+        parent = path.rpartition("/")[0]
+        if not reason and parent in rejected:
+            reason = "in a folder that cannot be copied"
+        folded = path.casefold()
+        if not reason and folded in seen:
+            reason = f"same name as {seen[folded]} for Windows (case ignored)"
+        if reason:
+            rejected.add(path)
+            if not local[path].is_dir:
+                result.errors.append((path, reason))
+            continue
+        seen[folded] = path
+    return {p: e for p, e in local.items() if p not in rejected}
 
 
 def _tmp_name(path: str) -> str:
@@ -497,8 +425,6 @@ def _quote(value: str) -> str:
 def open_fs(server: Server, secrets: Secrets) -> RemoteFS:
     if server.protocol == "sftp":
         return SftpFS(server, secrets)
-    if server.protocol == "smb":
-        return SmbFS(server, secrets)
     raise ValueError(f"no file access for {server.protocol}")
 
 
@@ -519,7 +445,7 @@ def upload(
         return result
     fs = fs_factory(server, secrets)
     try:
-        result = mirror(local_root, fs, remote_root, (REPORTS,), progress)
+        result = mirror(local_root, fs, remote_root, (REPORTS,), progress, server.windows_names)
         fs.makedirs(f"{remote_root}/{REPORTS}")
         fs.put(report, f"{remote_root}/{REPORTS}/{report_name}", int(report.stat().st_mtime),
                lambda _sent: None)  # fmt: skip

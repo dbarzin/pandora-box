@@ -39,7 +39,6 @@ if key:
 airgap = credentials.get("airgap", {})
 for field, name, what in (
     ("ssh_key", "airgap-ssh-key", "SSH key of the copy to a server (airgap service)"),
-    ("password", "airgap-password", "SMB password of the copy to a server (airgap service)"),
     ("token_key", "airgap-token-key", "key of the key identifiers (kiosk)"),
 ):
     if airgap.get(field, ""):
