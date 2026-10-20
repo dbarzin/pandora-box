@@ -8,6 +8,13 @@
         <xhtml:link rel="alternate" hreflang="fr" href="https://sourcentis.github.io/pandora-box/fr/"/>
     </url>
     <url>
+        <loc>https://sourcentis.github.io/pandora-box/airgap/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sourcentis.github.io/pandora-box/airgap/"/>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://sourcentis.github.io/pandora-box/fr/airgap/"/>
+    </url>
+    <url>
         <loc>https://sourcentis.github.io/pandora-box/build/</loc>
         <lastmod>2026-10-20</lastmod>
         <changefreq>daily</changefreq>
@@ -118,6 +125,13 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="fr" href="https://sourcentis.github.io/pandora-box/fr/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://sourcentis.github.io/pandora-box/"/>
+    </url>
+    <url>
+        <loc>https://sourcentis.github.io/pandora-box/fr/airgap/</loc>
+        <lastmod>2026-10-20</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="fr" href="https://sourcentis.github.io/pandora-box/fr/airgap/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://sourcentis.github.io/pandora-box/airgap/"/>
     </url>
     <url>
         <loc>https://sourcentis.github.io/pandora-box/fr/build/</loc>

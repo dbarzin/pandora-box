@@ -749,6 +749,8 @@
       
         
       
+        
+      
     
     
     
@@ -895,6 +897,34 @@
     
   
     -- Export vers un SIEM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../airgap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Copie vers un serveur
   
 
     
@@ -1465,6 +1495,10 @@ comme une <a href="../update/">mise à jour</a>.</p>
 <td><code>image/credentials.toml</code> (voir <a href="#profile-online">Profil online</a>)</td>
 </tr>
 <tr>
+<td>Copie vers un serveur : secrets, clé d'hôte</td>
+<td><code>image/credentials.toml</code>, <code>image/airgap-known-hosts</code> (voir <a href="../airgap/">Copie vers un serveur</a>)</td>
+</tr>
+<tr>
 <td>Serveurs NTP, profil <code>online</code></td>
 <td>voir <a href="#time">Heure</a></td>
 </tr>
@@ -1514,7 +1548,9 @@ leurs sources (voir <a href="../signatures/#online-updates">Signatures</a>) :
 systemd-networkd (DHCP sur le réseau filaire), systemd-resolved,
 systemd-timesyncd, freshclam, le timer <code>pandora-box-update</code> et un pare-feu
 qui ne laisse sortir que le service de mise à jour, l'export des journaux
-vers un SIEM (voir <a href="../siem/">SIEM</a>) et NTP (<code>image/mkosi.profiles/online/</code>).
+vers un SIEM (voir <a href="../siem/">SIEM</a>), la copie des clés vérifiées vers un
+serveur (voir <a href="../airgap/">Copie vers un serveur</a>) et NTP
+(<code>image/mkosi.profiles/online/</code>).
 Son <code>postinst.chroot</code> active <code>[updates]</code> dans la configuration de la borne,
 et installe les identifiants de <code>image/credentials.toml</code> (hors de git) dans
 <code>/etc/credstore</code>.</p>

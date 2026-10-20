@@ -591,6 +591,8 @@
       
         
       
+        
+      
     
     
     
@@ -737,6 +739,34 @@
     
   
     -- Export vers un SIEM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../airgap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Copie vers un serveur
   
 
     
@@ -1675,6 +1705,10 @@ publication sont de confiance.</p>
 <tr>
 <td>Lire les journaux exportés</td>
 <td>Syslog sur TLS par défaut, avec les autorités de certification du SIEM</td>
+</tr>
+<tr>
+<td>Un faux serveur qui reçoit les clés copiées, ou les lit en chemin (air-gap)</td>
+<td>La clé d'hôte d'un serveur SSH doit figurer dans l'image, jamais acceptée à la première connexion ; SMB 3 avec chiffrement exigé ; le service de copie a son propre utilisateur et ne lit de la borne que les fichiers sains préparés pour lui</td>
 </tr>
 </tbody>
 </table>

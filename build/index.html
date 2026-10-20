@@ -749,6 +749,8 @@
       
         
       
+        
+      
     
     
     
@@ -895,6 +897,34 @@
     
   
     -- Log export to a SIEM
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../airgap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    -- Copy to a server
   
 
     
@@ -1463,6 +1493,10 @@ means building a new image, then installing it as an
 <td><code>image/credentials.toml</code> (see <a href="#profile-online">Profile online</a>)</td>
 </tr>
 <tr>
+<td>Copy to a server: credentials, host key</td>
+<td><code>image/credentials.toml</code>, <code>image/airgap-known-hosts</code> (see <a href="../airgap/">Copy to a server</a>)</td>
+</tr>
+<tr>
 <td>NTP servers, profile <code>online</code></td>
 <td>see <a href="#time">Time</a></td>
 </tr>
@@ -1508,7 +1542,8 @@ newer version than the running one.</p>
 <a href="../signatures/#online-updates">Signatures</a>): systemd-networkd (DHCP on the
 wired network), systemd-resolved, systemd-timesyncd, freshclam, the
 <code>pandora-box-update</code> timer and a firewall that only lets the update service,
-the log export to a SIEM (see <a href="../siem/">SIEM</a>) and NTP out
+the log export to a SIEM (see <a href="../siem/">SIEM</a>), the copy of the verified
+keys to a server (see <a href="../airgap/">Copy to a server</a>) and NTP out
 (<code>image/mkosi.profiles/online/</code>). Its <code>postinst.chroot</code> enables <code>[updates]</code>
 in the configuration of the kiosk, and installs the credentials of
 <code>image/credentials.toml</code> (outside git) in <code>/etc/credstore</code>.</p>
