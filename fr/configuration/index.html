@@ -1219,7 +1219,7 @@ démarrer la borne :</p>
 </tr>
 <tr>
 <td><code>[device]</code></td>
-<td>Point de montage, systèmes de fichiers autorisés, éjection</td>
+<td>Point de montage, systèmes de fichiers autorisés, pilotes FUSE, éjection</td>
 </tr>
 <tr>
 <td><code>[scan]</code></td>
@@ -1305,8 +1305,15 @@ anglais) :</p>
 <span class="c1"># Filesystems that may be mounted; any other device is rejected</span>
 <span class="n">allowed_filesystems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"vfat"</span><span class="p">,</span><span class="w"> </span><span class="s2">"exfat"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ntfs"</span><span class="p">,</span><span class="w"> </span><span class="s2">"ext4"</span><span class="p">]</span>
 
-<span class="c1"># Timeout of mount/umount commands, in seconds</span>
+<span class="c1"># Timeout of mount/umount commands, in seconds; also the time a FUSE driver</span>
+<span class="c1"># may leave requests unanswered while the device is idle before it is killed</span>
 <span class="n">command_timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">60</span>
+
+<span class="c1"># NTFS, exFAT and ext4 are read by a FUSE driver (ntfs-3g, exfat-fuse,</span>
+<span class="c1"># fuse2fs) in the sandbox of the scan workers, not by the kernel: a flaw of a</span>
+<span class="c1"># filesystem driver, on a crafted key, then does not run code in the kernel.</span>
+<span class="c1"># Needs scan.sandbox; without it, the kernel drivers mount them.</span>
+<span class="n">fuse</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 
 <span class="c1"># Eject the device (/usr/bin/eject, Debian package "eject") when the scan and</span>
 <span class="c1"># the cleaning are over, so that the user can remove it safely. While the</span>

@@ -1301,6 +1301,10 @@
 <td>Montage durci (<code>ro,noexec,nosuid,nodev</code> sur un périphérique bloc en lecture seule, lecture-écriture seulement pour nettoyer)</td>
 </tr>
 <tr>
+<td><code>fuse.py</code></td>
+<td>NTFS, exFAT et ext4 lus par des pilotes FUSE dans le bac à sable, avec un chien de garde</td>
+</tr>
+<tr>
 <td><code>inventory.py</code></td>
 <td>Inventaire de la clé : ne suit jamais les liens, ne quitte jamais la clé, limites</td>
 </tr>
@@ -1398,6 +1402,11 @@ sudo<span class="w"> </span>.venv/bin/pandora-box<span class="w"> </span>--confi
 <p>Monter un périphérique nécessite root : ajouter votre utilisateur à un groupe (comme <code>disk</code>) ne suffit pas. Sur un bureau qui monte lui-même les périphériques USB (montage automatique d'udisks), réglez plutôt <code>auto_mount = true</code> dans <code>[device]</code> : la borne utilise alors le montage du système, puis démonte et remonte la clé avec <code>udisksctl</code>, et fonctionne donc sans <code>sudo</code>. C'est réservé au développement : le montage du système est en général en lecture-écriture et n'est pas durci.</p>
 <p>La clé est démontée pendant que la borne demande à l'utilisateur de confirmer le nettoyage, pour qu'elle puisse être retirée sans risque. Pour nettoyer, elle est remontée en lecture-écriture ; un fichier n'est supprimé que si son SHA-256 est toujours celui qui a été analysé (une autre clé a pu être insérée entre-temps). Une fois l'analyse et le nettoyage terminés, la clé est éjectée (<code>device.eject</code>, avec <code>eject</code>, ou <code>udisksctl power-off</code> en mode de montage automatique).</p>
 <p>Les processus d'analyse tournent dans un bac à sable par défaut (<code>scan.sandbox</code>) : il nécessite root, <code>bwrap</code> (paquet Debian <code>bubblewrap</code>), <code>setpriv</code> et un utilisateur <code>pandora-box-scan</code> (<code>sudo systemd-sysusers packaging/sysusers/pandora-box.conf</code>). Pour développer sans eux, réglez <code>sandbox = false</code> dans <code>[scan]</code>.</p>
+<p>NTFS, exFAT et ext4 sont lus par des pilotes FUSE dans ce bac à sable (<code>device.fuse</code>, voir <a href="../image/#filesystem-drivers">Fonctionnement de l'image</a>) : paquets Debian <code>ntfs-3g</code>, <code>exfat-fuse</code> et <code>fuse2fs</code>, et la bibliothèque préchargée dans ntfs-3g, à compiler une fois :</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/usr/lib/pandora-box
+sudo<span class="w"> </span>cc<span class="w"> </span>-O2<span class="w"> </span>-shared<span class="w"> </span>-fPIC<span class="w"> </span>-o<span class="w"> </span>/usr/lib/pandora-box/fuse-premounted.so<span class="w"> </span>packaging/fuse/premounted.c<span class="w"> </span>-ldl
+</code></pre></div>
+<p>Sans le bac à sable (<code>sandbox = false</code>), ou avec <code>fuse = false</code> dans <code>[device]</code>, ce sont les pilotes du noyau qui les montent.</p>
 <p>La borne n'utilise qu'un jeu de signatures signé (<code>signatures.verify</code>, voir <a href="../signatures/">Signatures</a>) : les signatures de développement ne sont pas signées, réglez <code>verify = false</code> dans <code>[signatures]</code> pour les utiliser.</p>
 <p>Pour travailler sur le déroulement sans signatures, réglez <code>fake_scan = true</code> dans <code>[kiosk]</code> (ou utilisez <code>--fake-scan</code>) : seul le <a href="https://www.eicar.org/download-anti-malware-testfile/">fichier de test EICAR</a> est déclaré malveillant, si bien que tout le déroulement (analyse, quarantaine, nettoyage) peut être testé sans vrais moteurs.</p>
 <h2 id="lint-and-tests">Analyse statique et tests<a class="headerlink" href="#lint-and-tests" title="Permanent link">&para;</a></h2>

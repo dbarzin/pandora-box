@@ -1301,6 +1301,10 @@
 <td>Hardened mounting (<code>ro,noexec,nosuid,nodev</code> on a read-only block device, read-write only to clean)</td>
 </tr>
 <tr>
+<td><code>fuse.py</code></td>
+<td>NTFS, exFAT and ext4 read by FUSE drivers in the sandbox, with a watchdog</td>
+</tr>
+<tr>
 <td><code>inventory.py</code></td>
 <td>Device inventory: never follows links, never leaves the device, limits</td>
 </tr>
@@ -1398,6 +1402,11 @@ sudo<span class="w"> </span>.venv/bin/pandora-box<span class="w"> </span>--confi
 <p>Mounting a device requires root: adding your user to a group (such as <code>disk</code>) is not enough. On a desktop that mounts USB devices itself (udisks automount), set <code>auto_mount = true</code> in <code>[device]</code> instead: the kiosk then uses the system mount, and unmounts and mounts the device again with <code>udisksctl</code>, so it runs without <code>sudo</code>. This is for development only: the system mount is usually read-write and not hardened.</p>
 <p>The device is unmounted while the kiosk asks the user to confirm the cleaning, so that it can be removed safely. To clean, it is mounted again read-write; a file is only removed if its SHA-256 is still the one that was scanned (another device may have been inserted in the meantime). When the scan and the cleaning are over, the device is ejected (<code>device.eject</code>, with <code>eject</code>, or <code>udisksctl power-off</code> in auto-mount mode).</p>
 <p>The scan workers run in a sandbox by default (<code>scan.sandbox</code>): it needs root, <code>bwrap</code> (Debian package <code>bubblewrap</code>), <code>setpriv</code> and a <code>pandora-box-scan</code> user (<code>sudo systemd-sysusers packaging/sysusers/pandora-box.conf</code>). For development without them, set <code>sandbox = false</code> in <code>[scan]</code>.</p>
+<p>NTFS, exFAT and ext4 are read by FUSE drivers in this sandbox (<code>device.fuse</code>, see <a href="../image/#filesystem-drivers">Image internals</a>): Debian packages <code>ntfs-3g</code>, <code>exfat-fuse</code> and <code>fuse2fs</code>, and the library preloaded into ntfs-3g, to build once:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>mkdir<span class="w"> </span>-p<span class="w"> </span>/usr/lib/pandora-box
+sudo<span class="w"> </span>cc<span class="w"> </span>-O2<span class="w"> </span>-shared<span class="w"> </span>-fPIC<span class="w"> </span>-o<span class="w"> </span>/usr/lib/pandora-box/fuse-premounted.so<span class="w"> </span>packaging/fuse/premounted.c<span class="w"> </span>-ldl
+</code></pre></div>
+<p>Without the sandbox (<code>sandbox = false</code>), or with <code>fuse = false</code> in <code>[device]</code>, the kernel drivers mount them.</p>
 <p>The kiosk only uses a signed signature set (<code>signatures.verify</code>, see <a href="../signatures/">docs/signatures.md</a>): development signatures are not signed, set <code>verify = false</code> in <code>[signatures]</code> to use them.</p>
 <p>To work on the workflow without signatures, set <code>fake_scan = true</code> in <code>[kiosk]</code> (or use <code>--fake-scan</code>): only the <a href="https://www.eicar.org/download-anti-malware-testfile/">EICAR test file</a> is reported as malicious, so the whole workflow (scan, quarantine, cleaning) can be tested without real engines.</p>
 <h2 id="lint-and-tests">Lint and tests<a class="headerlink" href="#lint-and-tests" title="Permanent link">&para;</a></h2>

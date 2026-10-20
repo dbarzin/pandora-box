@@ -1357,14 +1357,15 @@ de l'utilisateur, par QMP et par le shell de la console virtio :</p>
 <li>des clés des autres systèmes de fichiers passent par la même analyse et
    le même nettoyage, puis sont déclarées saines : exFAT, NTFS, ext4 (ses
    fichiers privés à leur propriétaire, comme sur la clé d'un utilisateur
-   Linux) et une clé avec une table de partitions MBR et une partition vfat ;
-   une clé en EROFS (un système de fichiers que le noyau monte, mais non
-   autorisé) et une clé ext4 dont les descripteurs de groupe sont écrasés
-   sont refusées ; une clé vfat avec une chaîne de clusters coupée est
-   montée, mais le fichier ne peut pas être lu : la clé est déclarée non
-   vérifiée (<code>image/vm/keys.py</code> ; exFAT et NTFS n'ont pas d'outil qui écrit
-   des fichiers sans les monter : elles sont formatées dans le conteneur,
-   puis remplies par le noyau de la machine, la borne arrêtée) ;</li>
+   Linux), chacune lue par son pilote FUSE, et une clé avec une table de
+   partitions MBR et une partition vfat ; une clé en EROFS (un système de
+   fichiers que le noyau monte, mais non autorisé) est refusée ; une clé
+   vfat avec une chaîne de clusters coupée et une clé ext4 dont les
+   descripteurs de groupe sont écrasés sont montées, mais un fichier ou les
+   dossiers ne peuvent pas être lus : la clé est déclarée non vérifiée
+   (<code>image/vm/keys.py</code> ; exFAT et NTFS n'ont pas d'outil qui écrit des
+   fichiers sans les monter : elles sont formatées dans le conteneur, puis
+   remplies par les pilotes FUSE de la machine, la borne arrêtée) ;</li>
 <li>une clé de mise à jour des signatures avec un jeu plus récent (numéro de
     série 2) est installée, les moteurs sont rechargés et le nouvel
     échantillon qu'il détecte est trouvé ; un jeu modifié, un jeu signé avec
