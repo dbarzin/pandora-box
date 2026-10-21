@@ -1,9 +1,18 @@
 # Copie vers un serveur (air-gap)
 
-Une borne peut servir de borne d'entrée : une fois une clé analysée et
-vérifiée, la borne copie ses fichiers sains sur un serveur de l'organisation
-(rsync sur SSH ou SFTP), où ils sont récupérés depuis le réseau protégé.
-La clé elle-même n'est pas nettoyée et repart avec ses fichiers.
+Une borne peut servir de borne de transfert de fichiers, entre les clés des
+utilisateurs et un serveur de l'organisation (rsync sur SSH ou SFTP), à la
+même insertion :
+
+- **entrée** : une fois une clé analysée et vérifiée, la borne copie ses
+  fichiers sains sur le serveur, où ils sont récupérés depuis le réseau
+  protégé ;
+- **sortie** : les fichiers que le réseau protégé a déposés sur le serveur
+  pour cette clé sont analysés, puis les fichiers sains sont écrits sur la
+  clé.
+
+La clé elle-même n'est pas nettoyée, sauf avec `airgap.clean` (voir
+[Nettoyer la clé](#cleaning-the-key)).
 
 ## En bref { #in-short }
 
@@ -19,6 +28,10 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.
 5. Quand la clé revient, son répertoire sur le serveur est **synchronisé** :
    les fichiers nouveaux et modifiés sont copiés, ceux qui ne sont plus sur
    la clé, ou plus sains, sont supprimés du serveur.
+6. Ensuite, les fichiers de `<path>/<répertoire>/.pandora-box/outbound/`
+   que la clé n'a pas, ou a dans une autre version, sont téléchargés,
+   **analysés**, et les fichiers sains sont écrits à la racine de la clé
+   (voir [Sortie](#outbound)).
 
 ```text
 /srv/keys/                                   path sur le serveur, non listable
@@ -27,7 +40,9 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.
     ├── readme.txt
     └── .pandora-box/                        rapports d'analyse, un par insertion
         ├── 7c9e6679-7425-40de-944b-e07fc1f90ae7.json
-        └── 3f2504e0-4f89-41d3-9a0c-0305e82c3301.json
+        ├── 3f2504e0-4f89-41d3-9a0c-0305e82c3301.json
+        └── outbound/                        fichiers en attente pour la clé
+            └── reponse.pdf
 ```
 
 ## Fonctionnement { #how-it-works }
@@ -58,7 +73,8 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.
   résultat.
 - **Rien des clés sur la borne.** Une borne qui copie vers un serveur ne
   garde aucun rapport d'analyse (ils partent sur le serveur, avec les
-  fichiers), n'a pas de quarantaine (elle ne nettoie pas), et son journal
+  fichiers), n'a pas de quarantaine sauf si elle nettoie les clés avec
+  `quarantine.enabled`, et son journal
   omet les noms et les empreintes des fichiers, le libellé, le fabricant, le
   modèle et le numéro de série de la clé, et les lignes de l'écran :
   seulement des événements, des verdicts et des compteurs. Voir
@@ -82,10 +98,66 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.
   `NUL`, `COM1`...), ou qui ne diffère d'un autre que par la casse, n'est
   pas copié et est signalé comme tel.
 
-L'écran montre la copie, puis **Fichiers copiés sur le serveur** avec les
-fichiers qui n'ont pas été copiés (dangereux, suspects ou refusés par le
-serveur), ou **La copie vers le serveur a échoué** : la clé n'est alors ni
-nettoyée ni copiée, et peut être insérée à nouveau plus tard.
+L'écran montre la copie, puis **Fichiers copiés** avec les fichiers qui
+n'ont pas été copiés, dans un sens ou dans l'autre (dangereux, suspects, ou
+refusés par le serveur ou par la clé), ou **La copie a échoué** : la clé
+peut être insérée à nouveau plus tard.
+
+## Sortie { #outbound }
+
+Le réseau protégé dépose les fichiers destinés à une clé dans le répertoire
+`.pandora-box/outbound/` de son répertoire sur le serveur : un opérateur
+retrouve ce répertoire grâce à l'identifiant de la clé, dans ses rapports
+d'analyse (`key_id`). À chaque insertion :
+
+- **Seulement une clé saine.** Une clé qui contient un fichier que le
+  nettoyage supprimerait (un fichier malveillant, ou suspect avec
+  `scan.suspicious = "block"`) ne reçoit rien : nettoyez-la sur une borne
+  qui nettoie, puis insérez-la à nouveau. Une clé non vérifiée ne reçoit
+  rien non plus.
+- **Fichiers nouveaux ou modifiés.** La borne indique au service les
+  fichiers du premier système de fichiers de la clé (chemin, taille, date
+  de modification) ; le service télécharge dans le répertoire de transit
+  (en mémoire) les fichiers du répertoire `outbound` que la clé n'a pas, ou
+  a dans une autre version. Les fichiers restent sur le serveur : un fichier
+  modifié là-bas est copié à nouveau ; supprimez-le une fois livré.
+- **Analysés.** Les fichiers téléchargés passent par les mêmes moteurs que
+  les fichiers d'une clé : un fichier malveillant, suspect ou pas
+  entièrement analysé n'est pas écrit, et il est signalé.
+- **Écrits à la racine de la clé**, avec leurs dossiers et leurs dates de
+  modification, à la place d'un fichier de même nom. Chaque fichier est
+  écrit sous un nom temporaire, comparé au SHA-256 analysé, puis renommé. La
+  borne vérifie la place libre de la clé et les limites de son système de
+  fichiers : fichiers de 4 Gio au plus en vfat ; noms que FAT, exFAT et NTFS
+  refusent (`\ : * ? " < > |`, une espace ou un point final, `CON`,
+  `NUL`...) ; noms de 255 caractères au plus ; noms égaux à la casse près
+  sur FAT, exFAT et NTFS. Un fichier qui ne peut pas être écrit est signalé,
+  jamais renommé. `.pandora-box` à la racine est réservé au jeton de la clé.
+
+`airgap.mode` choisit les sens : `both` (par défaut), `inbound` ou
+`outbound`.
+
+## Nettoyer la clé { #cleaning-the-key }
+
+Par défaut, une borne de transfert ne nettoie pas les clés : les fichiers
+dangereux ne sont jamais copiés sur le serveur, mais restent sur la clé, qui
+ne reçoit alors rien du serveur. Avec `airgap.clean = true`, la borne
+nettoie aussi la clé, comme toute borne, à la même insertion :
+
+1. les fichiers sains partent sur le serveur ;
+2. les fichiers à supprimer sont affichés, et un appui sur l'écran les
+   supprime ; retirer la clé à la place la laisse telle quelle (rien du
+   serveur) ;
+3. une clé entièrement nettoyée reçoit ensuite les fichiers qui l'attendent
+   sur le serveur.
+
+Ce qui est supprimé suit les réglages de toute borne : `scan.suspicious =
+"block"` (par défaut) supprime les fichiers suspects avec les fichiers
+malveillants, `"warn"` les garde (la clé ne reçoit alors rien du serveur
+que s'il reste un fichier malveillant). `quarantine.enabled` garde une copie
+des fichiers supprimés sur la borne (`quarantine.folder`) : la seule donnée
+des clés qu'elle garde ; réglez-le à `false` pour une borne qui ne garde
+rien des clés.
 
 ## Configuration { #configuration }
 
@@ -94,6 +166,10 @@ nettoyée ni copiée, et peut être insérée à nouveau plus tard.
 ```toml
 [airgap]
 enabled = true
+# "both" (par défaut), "inbound" (clé -> serveur) ou "outbound" (serveur -> clé)
+mode = "both"
+# Nettoyer aussi la clé, après un appui sur l'écran (voir plus bas)
+clean = false
 # "rsync" (rsync sur SSH) ou "sftp"
 protocol = "sftp"
 host = "files.example.org"
@@ -283,17 +359,18 @@ répertoire reste sur le serveur, à archiver ou supprimer.
 
 | Champ | Contenu |
 |---|---|
-| `status` | `copied`, `failed`, ou `refused` (clé non vérifiée) |
+| `status` | `copied`, `failed`, `refused` (clé non vérifiée), ou `skipped` (`mode = "outbound"`) |
 | `key_id` | identifiant de la clé (pas le nom de son répertoire) |
 | `destination` | répertoire de la clé sur le serveur |
 | `copied`, `deleted`, `unchanged` | fichiers envoyés, supprimés du serveur, déjà présents |
 | `not_copied` | fichiers qui ne sont pas sains |
 | `errors` | fichiers sains qui n'ont pas pu être copiés, et pourquoi |
 | `error` | pourquoi la copie a échoué |
+| `outbound` | les fichiers du serveur : `status` (`copied`, `nothing`, `refused` quand la clé contient des fichiers dangereux, `failed`), `copied`, `unchanged` (déjà sur la clé), `rejected` (avec la raison), `error` |
 
 Le journal de la borne contient les événements `key_token_written`,
-`key_identified`, `key_token_invalid`, `airgap_copied`, `airgap_failed` et
-`airgap_refused` ; le service journalise `airgap_done` et `airgap_failed`
+`key_identified`, `key_token_invalid`, `airgap_copied`, `airgap_received`,
+`airgap_failed` et `airgap_refused` ; le service journalise `airgap_done` et `airgap_failed`
 dans son journal (`journalctl -u pandora-box-airgap`).
 
 ## Tests { #tests }
@@ -301,14 +378,17 @@ dans son journal (`journalctl -u pandora-box-airgap`).
 - `tests/airgap/run.sh` copie vers un vrai serveur OpenSSH avec rsync, dans
   un conteneur (SFTP, rsync sur SSH, et rsync limité par `rrsync` comme
   ci-dessus) : une première copie, puis une synchronisation (fichiers
-  modifiés, nouveaux et supprimés), une clé d'hôte inconnue refusée, et le
-  service par son socket.
+  modifiés, nouveaux et supprimés), une clé d'hôte inconnue refusée, les
+  répertoires des clés non listables, le téléchargement des fichiers en
+  attente que la clé n'a pas, et le service par son socket.
 - `tests/windows/windows.sh` copie vers un Windows Server dans une machine
   virtuelle QEMU, configuré comme ci-dessus (voir plus bas).
 - Le [test en machine virtuelle](vm.md) active la copie vers un serveur SFTP
   de test : une clé est copiée, puis insérée à nouveau sans l'un de ses
   fichiers, qui est supprimé du serveur ; la clé garde ses fichiers
-  malveillants et reçoit son identifiant.
+  malveillants et reçoit son identifiant. Cette clé infectée ne reçoit rien
+  du serveur ; une clé saine reçoit le fichier sain qui l'attend, pas le
+  fichier EICAR à côté.
 
 ### Serveur Windows en machine virtuelle { #windows-server-in-a-virtual-machine }
 

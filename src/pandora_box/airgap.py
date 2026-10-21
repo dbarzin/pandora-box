@@ -46,7 +46,18 @@ from pandora_box.logs import (
     redact_key_fields,
     setup_logging,
 )
-from pandora_box.remotes import Secrets, Server, SyncResult, TransferError, describe, upload
+from pandora_box.remotes import (
+    Entry,
+    FetchResult,
+    Secrets,
+    Server,
+    SyncResult,
+    TransferError,
+    describe,
+    fetch,
+    send_report,
+    upload,
+)
 
 logger = get_logger("airgap")
 
@@ -57,6 +68,13 @@ TOKEN_KEY_CREDENTIAL = "pandora-box.airgap-token-key"  # noqa: S105  (a file nam
 # Files of the key in staging/<folder>/files, the report next to them
 FILES = "files"
 REPORT = "report.json"
+# Outbound: the files of the key (path, size, time), and those of the server
+# to copy to it, downloaded by the service
+KEY_FILES = "key-files.json"
+OUTBOUND = "outbound"
+# Operations of the service: copy the key to the server, download the files
+# of the server for the key, send the report alone
+OPERATIONS = ("inbound", "outbound", "report")
 MAX_LINE = 64 * 1024
 # The service tells it is alive this often during a long transfer
 HEARTBEAT = 5.0
@@ -162,6 +180,8 @@ class Transfer:
     unchanged: int = 0
     errors: list[tuple[str, str]] = field(default_factory=list)
     destination: str = ""
+    # Outbound: files of the server downloaded for the key
+    fetched: int = 0
 
 
 def request(
@@ -169,8 +189,9 @@ def request(
     folder: str,
     report_id: str,
     progress: Callable[[int, int], None] | None = None,
+    operation: str = "inbound",
 ) -> Transfer:
-    """Ask the service to copy the staging folder of a key; raise AirgapError."""
+    """Ask the service to run an operation (OPERATIONS) for a key; raise AirgapError."""
     staging_folder(config, folder)
     # The service sends a line at least every HEARTBEAT seconds
     timeout = config.timeout + 4 * HEARTBEAT
@@ -178,7 +199,7 @@ def request(
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
             sock.settimeout(timeout)
             sock.connect(str(config.socket))
-            message = {"key": folder, "report_id": report_id}
+            message = {"op": operation, "key": folder, "report_id": report_id}
             sock.sendall(json.dumps(message).encode() + b"\n")
             for answer in _lines(sock):
                 event = answer.get("event")
@@ -195,6 +216,7 @@ def request(
                             if isinstance(e, list) and len(e) == 2
                         ],
                         destination=str(answer.get("destination", "")),
+                        fetched=_int(answer, "fetched"),
                     )
                 elif event == "failed":
                     raise AirgapError(str(answer.get("error", "copy failed")))
@@ -267,6 +289,58 @@ def transfer(
     return result, remote
 
 
+def prepare_outbound(config: AirgapConfig, key_folder: str, have: dict[str, Entry]) -> Path:
+    """The folder where the service downloads the files of the server for a key.
+
+    have: the files of the key, written for the service (KEY_FILES).
+    """
+    folder = staging_folder(config, key_folder)
+    remove_staging(config, key_folder)
+    outbound = folder / OUTBOUND
+    outbound.mkdir(parents=True)
+    folder.chmod(0o2750)
+    # The service writes into it
+    outbound.chmod(0o2770)
+    files = {path: [entry.size, entry.mtime] for path, entry in have.items()}
+    (folder / KEY_FILES).write_text(json.dumps(files), encoding="utf-8")
+    return outbound
+
+
+def receive(
+    config: AirgapConfig, key_folder: str, fetch_files: Callable[..., FetchResult] = fetch
+) -> FetchResult:
+    """Download the files of the outbound folder of a key that it does not have."""
+    folder = staging_folder(config, key_folder)
+    outbound, listing = folder / OUTBOUND, folder / KEY_FILES
+    if not outbound.is_dir() or not listing.is_file():
+        raise AirgapError("nothing prepared for the key")
+    try:
+        data = json.loads(listing.read_text(encoding="utf-8"))
+        have = {
+            str(path): Entry(int(value[0]), int(value[1])) for path, value in dict(data).items()
+        }
+    except (ValueError, TypeError, IndexError) as ex:
+        raise AirgapError("invalid list of the files of the key") from ex
+    remote = f"{config.path.rstrip('/')}/{key_folder}"
+    return fetch_files(server_of(config), secrets(), remote, outbound, have)
+
+
+def report_only(
+    config: AirgapConfig,
+    key_folder: str,
+    report_id: str,
+    send: Callable[..., None] = send_report,
+) -> None:
+    """Send the report of a key alone (outbound station, or the final report)."""
+    report = staging_folder(config, key_folder) / REPORT
+    if not report.is_file():
+        raise AirgapError("no report staged for the key")
+    if not UUID.match(report_id):
+        raise AirgapError("invalid report identifier")
+    remote = f"{config.path.rstrip('/')}/{key_folder}"
+    send(report, server_of(config), secrets(), remote, f"{report_id}.json")
+
+
 def serve(
     config: AirgapConfig, transfer_key: Callable[..., tuple[SyncResult, str]] = transfer
 ) -> None:
@@ -292,6 +366,8 @@ def handle(
     connection: socket.socket,
     config: AirgapConfig,
     transfer_key: Callable[..., tuple[SyncResult, str]] = transfer,
+    receive_key: Callable[..., FetchResult] = receive,
+    report_key: Callable[..., None] = report_only,
 ) -> None:
     lock = threading.Lock()
 
@@ -308,7 +384,8 @@ def handle(
     # service stays on the disk of the kiosk
     key_folder = str(request_line.get("key", ""))
     report_id = str(request_line.get("report_id", ""))
-    log_event(logger, "airgap_started", report_id=report_id)
+    operation = str(request_line.get("op", "inbound"))
+    log_event(logger, "airgap_started", operation=operation, report_id=report_id)
     done = threading.Event()
 
     def heartbeat() -> None:
@@ -318,26 +395,48 @@ def handle(
 
     threading.Thread(target=heartbeat, daemon=True).start()
     try:
-        result, remote = transfer_key(
-            config,
-            key_folder,
-            report_id,
-            lambda sent, total: send({"event": "progress", "done": sent, "total": total}),
-        )
+        if operation == "outbound":
+            fetched = receive_key(config, key_folder)
+        elif operation == "report":
+            report_key(config, key_folder, report_id)
+        elif operation == "inbound":
+            result, remote = transfer_key(
+                config,
+                key_folder,
+                report_id,
+                lambda sent, total: send({"event": "progress", "done": sent, "total": total}),
+            )
+        else:
+            raise AirgapError(f"unknown operation: {operation!r}")
     except (AirgapError, TransferError, OSError) as ex:
         done.set()
         error = hide(str(ex), key_folder)
-        log_event(logger, "airgap_failed", logging.ERROR, report_id=report_id, error=error)
+        log_event(
+            logger, "airgap_failed", logging.ERROR, operation=operation, report_id=report_id,
+            error=error,
+        )  # fmt: skip
         with contextlib.suppress(OSError):
             send({"event": "failed", "error": error})
         return
     done.set()
-    summary = describe(result)
-    # The names of the files that could not be copied go to the kiosk only
-    logged = {**summary, "errors": len(result.errors)}
-    log_event(logger, "airgap_done", report_id=report_id, **logged)
+    reply: dict[str, Any] = {"event": "done"}
+    if operation == "outbound":
+        reply |= {
+            "fetched": len(fetched.fetched),
+            "unchanged": fetched.unchanged,
+            "errors": [[p, r] for p, r in fetched.errors],
+        }
+    elif operation == "inbound":
+        reply |= {"destination": remote, **describe(result)}
+    # The names of the files go to the kiosk only
+    logged = {
+        k: (len(v) if k == "errors" else v)
+        for k, v in reply.items()
+        if k not in ("event", "destination")
+    }
+    log_event(logger, "airgap_done", operation=operation, report_id=report_id, **logged)
     with contextlib.suppress(OSError):
-        send({"event": "done", "destination": remote, **summary})
+        send(reply)
 
 
 def main(argv: Sequence[str] | None = None) -> int:

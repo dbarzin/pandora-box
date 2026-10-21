@@ -74,7 +74,8 @@ class DeviceUsage:
 class AirgapAction:
     """The copy of the clean files of the key to a server (airgap)."""
 
-    # "copied", "failed" or "refused" (key not verified)
+    # "copied", "failed", "refused" (key not verified) or "skipped"
+    # (airgap.mode outbound: no copy to the server)
     status: str
     key_id: str = ""
     destination: str = ""
@@ -85,6 +86,23 @@ class AirgapAction:
     not_copied: list[FileResult] = field(default_factory=list)
     # Clean files that could not be copied, and why
     errors: list[tuple[str, str]] = field(default_factory=list)
+    error: str = ""
+    # The files of the server copied to the key (airgap.mode outbound or
+    # both); None: not attempted
+    outbound: OutboundAction | None = None
+
+
+@dataclass
+class OutboundAction:
+    """The files waiting on the server for the key, copied to it."""
+
+    # "copied", "nothing" (no new file), "refused" (dangerous files on the
+    # key) or "failed"
+    status: str
+    copied: list[str] = field(default_factory=list)
+    unchanged: int = 0
+    # Files of the server not copied (dangerous, refused by the key), and why
+    rejected: list[tuple[str, str]] = field(default_factory=list)
     error: str = ""
 
 
@@ -305,5 +323,16 @@ def _airgap(action: AirgapAction) -> dict[str, Any]:
         "unchanged": action.unchanged,
         "not_copied": [escape(r.display_path) for r in action.not_copied],
         "errors": [{"path": escape(p), "reason": escape(r)} for p, r in action.errors],
+        "error": escape(action.error),
+        "outbound": None if action.outbound is None else _outbound(action.outbound),
+    }
+
+
+def _outbound(action: OutboundAction) -> dict[str, Any]:
+    return {
+        "status": action.status,
+        "copied": [escape(p) for p in action.copied],
+        "unchanged": action.unchanged,
+        "rejected": [{"path": escape(p), "reason": escape(r)} for p, r in action.rejected],
         "error": escape(action.error),
     }

@@ -6,6 +6,7 @@ import dataclasses
 import hashlib
 import json
 import logging
+import os
 import shutil
 import tempfile
 import threading
@@ -28,6 +29,9 @@ from pandora_box.ui.base import Screen
 from pandora_box.workers import WorkerPool
 
 from .conftest import DirectoryMounter, ListSource, RecordingDisplay
+from .samples import eicar
+
+EICAR = eicar()
 
 DEVICE = UsbDevice("/dev/sdb1", "vfat", "KEY")
 # Name of the folder of a key on the server (pandora_box.keyid.folder_of)
@@ -224,13 +228,18 @@ def pool(airgap_config: Config) -> Iterator[WorkerPool]:
 
 
 class FakeService:
-    """The copy service: records what the kiosk staged."""
+    """The copy service: records what the kiosk staged, serves the files of the server.
 
-    def __init__(self, error: str = "") -> None:
+    outbound: the files waiting on the server for the key, path: (content, time).
+    """
+
+    def __init__(self, error: str = "", outbound: dict[str, tuple[bytes, int]] | None = None):
         self.error = error
+        self.outbound = outbound or {}
         self.staged: dict[str, bytes] = {}
         self.report: dict[str, Any] = {}
         self.keys: list[str] = []
+        self.operations: list[str] = []
 
     def __call__(
         self,
@@ -238,8 +247,26 @@ class FakeService:
         key: str,
         report_id: str,
         progress: Callable[[int, int], None] | None = None,
+        operation: str = "inbound",
     ) -> Transfer:
         folder = config.staging / key
+        self.operations.append(operation)
+        if operation == "report":
+            self.report = json.loads((folder / "report.json").read_text())
+            return Transfer()
+        if operation == "outbound":
+            have = json.loads((folder / airgap.KEY_FILES).read_text())
+            fetched = unchanged = 0
+            for path, (content, mtime) in self.outbound.items():
+                if have.get(path) == [len(content), mtime]:
+                    unchanged += 1
+                    continue
+                target = folder / airgap.OUTBOUND / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(content)
+                os.utime(target, (mtime, mtime))
+                fetched += 1
+            return Transfer(fetched=fetched, unchanged=unchanged)
         files = folder / "files"
         self.staged = {
             p.relative_to(files).as_posix(): p.read_bytes() for p in files.rglob("*") if p.is_file()
@@ -359,7 +386,7 @@ def test_copy_failure(
     monkeypatch.setattr(airgap, "request", service)
     run_kiosk(airgap_config, display, usb_tree, pool)
     assert display.screens[-1][0] is Screen.TRANSFER_FAILED
-    assert "Copy to the server FAILED: sftp: [Errno 113] No route to host" in display.messages
+    assert "Copy FAILED: sftp: [Errno 113] No route to host" in display.messages
     assert not reports(airgap_config)
     assert not any(airgap_config.airgap.staging.iterdir())
 
@@ -405,6 +432,187 @@ def test_station_logs_nothing_of_the_keys(
     for secret in ("SECRET-LABEL", "SERIAL-42", "readme.txt", "eicar.com", identity.folder):
         assert secret not in logged
     assert identity.identifier not in logged
+
+
+@pytest.fixture
+def clean_key(tmp_path: Path) -> Path:
+    root = tmp_path / "media"
+    (root / "docs").mkdir(parents=True)
+    (root / "readme.txt").write_text("hello")
+    os.utime(root / "readme.txt", (1_700_000_000, 1_700_000_000))
+    return root
+
+
+def test_files_of_the_server_copied_to_the_key(
+    airgap_config: Config,
+    display: RecordingDisplay,
+    clean_key: Path,
+    pool: WorkerPool,
+    token_key: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """New and changed files of the server are scanned, the clean ones written at the root."""
+    service = FakeService(
+        outbound={
+            "readme.txt": (b"hello", 1_700_000_000),  # already on the key
+            "docs/answer.pdf": (b"%PDF-1.4 answer", 1_700_000_100),
+            "virus.com": (EICAR, 1_700_000_200),
+            ".pandora-box": (b"forged token", 1_700_000_300),
+        }
+    )
+    monkeypatch.setattr(airgap, "request", service)
+    run_kiosk(airgap_config, display, clean_key, pool)
+
+    assert service.operations == ["inbound", "outbound", "report"]
+    assert (clean_key / "docs" / "answer.pdf").read_bytes() == b"%PDF-1.4 answer"
+    assert (clean_key / "docs" / "answer.pdf").stat().st_mtime == 1_700_000_100
+    # The malicious file of the server is not written, nor the token replaced
+    assert not (clean_key / "virus.com").exists()
+    verify_token(read_token(clean_key), token_key)
+    assert display.screens[-1][0] is Screen.TRANSFERRED
+    outbound = service.report["actions"]["airgap"]["outbound"]
+    assert outbound["status"] == "copied" and outbound["copied"] == ["docs/answer.pdf"]
+    assert outbound["unchanged"] == 1
+    reasons = {r["path"]: r["reason"] for r in outbound["rejected"]}
+    assert reasons["virus.com"].startswith("malicious")
+    assert "reserved" in reasons[".pandora-box"]
+    assert not list(clean_key.rglob("*.pandora-box-tmp"))
+
+
+def test_dangerous_key_gets_no_file_of_the_server(
+    airgap_config: Config,
+    display: RecordingDisplay,
+    usb_tree: Path,
+    pool: WorkerPool,
+    token_key: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A key that holds an EICAR file is refused until it is cleaned."""
+    service = FakeService(outbound={"answer.txt": (b"answer", 1_700_000_100)})
+    monkeypatch.setattr(airgap, "request", service)
+    run_kiosk(airgap_config, display, usb_tree, pool)
+    assert "outbound" not in service.operations
+    assert not (usb_tree / "answer.txt").exists()
+    assert service.report["actions"]["airgap"]["outbound"]["status"] == "refused"
+
+
+def test_outbound_station_only(
+    airgap_config: Config,
+    display: RecordingDisplay,
+    clean_key: Path,
+    pool: WorkerPool,
+    token_key: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = dataclasses.replace(
+        airgap_config, airgap=dataclasses.replace(airgap_config.airgap, mode="outbound")
+    )
+    service = FakeService(outbound={"answer.txt": (b"answer", 1_700_000_100)})
+    monkeypatch.setattr(airgap, "request", service)
+    run_kiosk(config, display, clean_key, pool)
+    assert service.operations == ["outbound", "report"]
+    assert (clean_key / "answer.txt").read_bytes() == b"answer"
+    assert service.report["actions"]["airgap"]["status"] == "skipped"
+
+
+def test_names_a_fat_key_cannot_hold(
+    airgap_config: Config,
+    display: RecordingDisplay,
+    clean_key: Path,
+    pool: WorkerPool,
+    token_key: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = FakeService(
+        outbound={
+            "what?.txt": (b"1", 1_700_000_100),
+            "Answer.txt": (b"2", 1_700_000_100),
+            "answer.txt": (b"3", 1_700_000_100),
+        }
+    )
+    monkeypatch.setattr(airgap, "request", service)
+    run_kiosk(airgap_config, display, clean_key, pool)  # DEVICE is vfat
+    outbound = service.report["actions"]["airgap"]["outbound"]
+    assert outbound["copied"] == ["Answer.txt"]
+    reasons = {r["path"]: r["reason"] for r in outbound["rejected"]}
+    assert "refuses" in reasons["what?.txt"] and "case ignored" in reasons["answer.txt"]
+    assert not (clean_key / "what?.txt").exists()
+
+
+def cleaning(config: Config, quarantine: bool = True) -> Config:
+    return dataclasses.replace(
+        config,
+        airgap=dataclasses.replace(config.airgap, clean=True),
+        quarantine=dataclasses.replace(config.quarantine, enabled=quarantine),
+    )
+
+
+def test_station_that_cleans(
+    airgap_config: Config,
+    display: RecordingDisplay,
+    usb_tree: Path,
+    pool: WorkerPool,
+    token_key: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """airgap.clean: copied, cleaned after a touch, then the files of the server come."""
+    config = cleaning(airgap_config)
+    service = FakeService(outbound={"answer.txt": (b"answer", 1_700_000_100)})
+    monkeypatch.setattr(airgap, "request", service)
+    run_kiosk(config, display, usb_tree, pool)
+    assert service.operations == ["inbound", "outbound", "report"]
+    assert display.confirmations == 1
+    assert not (usb_tree / "docs" / "eicar.com").exists()
+    assert (usb_tree / "answer.txt").read_bytes() == b"answer"
+    actions = service.report["actions"]
+    assert actions["cleaned"] is True and actions["removed"] == ["docs/eicar.com"]
+    assert actions["airgap"]["outbound"]["status"] == "copied"
+    # A copy of the removed file in the quarantine (quarantine.enabled)
+    assert list(config.quarantine.folder.glob("*/manifest.json"))
+    assert display.screens[-1][0] is Screen.TRANSFERRED
+
+
+def test_station_that_cleans_without_quarantine(
+    airgap_config: Config,
+    display: RecordingDisplay,
+    usb_tree: Path,
+    pool: WorkerPool,
+    token_key: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = cleaning(airgap_config, quarantine=False)
+    monkeypatch.setattr(airgap, "request", FakeService())
+    run_kiosk(config, display, usb_tree, pool)
+    assert not (usb_tree / "docs" / "eicar.com").exists()
+    assert not config.quarantine.folder.exists()
+
+
+def test_key_removed_before_cleaning(
+    airgap_config: Config,
+    display: RecordingDisplay,
+    usb_tree: Path,
+    pool: WorkerPool,
+    token_key: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = FakeService(outbound={"answer.txt": (b"answer", 1_700_000_100)})
+    monkeypatch.setattr(airgap, "request", service)
+    mounter = DirectoryMounter(usb_tree)
+    original = display.confirm
+
+    def remove_key(prompt: str) -> None:
+        mounter.present = False
+        original(prompt)
+
+    display.confirm = remove_key  # type: ignore[method-assign]
+    Kiosk(
+        cleaning(airgap_config), display, ListSource([DeviceEvent(Action.ADD, DEVICE)]), pool,
+        mounter,
+    ).run()  # fmt: skip
+    assert service.operations == ["inbound"]
+    assert (usb_tree / "docs" / "eicar.com").exists()
+    assert display.screens[-1][0] is Screen.TRANSFER_FAILED
+    assert "Copy FAILED: key removed before cleaning" in display.messages
 
 
 def test_staged_type() -> None:

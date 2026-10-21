@@ -22,7 +22,16 @@ import pytest
 
 from pandora_box import airgap
 from pandora_box.config import AirgapConfig
-from pandora_box.remotes import REPORTS, Secrets, Server, TransferError, upload
+from pandora_box.remotes import (
+    OUTBOUND,
+    REPORTS,
+    Entry,
+    Secrets,
+    Server,
+    TransferError,
+    rsync_mirror,
+    upload,
+)
 
 pytestmark = pytest.mark.airgap
 
@@ -216,3 +225,46 @@ def test_service(
     assert result.destination == f"{options['path']}/{identifier}"
     assert (check / identifier / "clean.txt").read_bytes() == b"clean"
     assert (check / identifier / REPORTS / f"{report_id}.json").read_text() == '{"report": 1}'
+
+
+@pytest.mark.parametrize("name", sorted(SERVERS))
+def test_outbound(
+    name: str,
+    credentials: Path,
+    service_folder: Path,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The files waiting in the outbound folder of a key, downloaded when the key lacks them."""
+    monkeypatch.setenv("CREDENTIALS_DIRECTORY", str(credentials))
+    options, check = SERVERS[name]
+    srv = server(name)
+    identifier = random.token_hex(32)
+    remote = f"{srv.path}/{identifier}"
+    # Files put in the outbound folder of the key, as the protected network does
+    waiting = tmp_path / "waiting"
+    write(waiting / "same.txt", b"same")
+    write(waiting / "docs/answer.pdf", b"%PDF-1.4 answer", mtime=1_700_000_100)
+    put = Server(**{**srv.__dict__, "protocol": "rsync"})
+    rsync_mirror(waiting, put, secrets(credentials), f"{remote}/{OUTBOUND}")
+
+    config = AirgapConfig(
+        enabled=True,
+        known_hosts=SECRETS / "known_hosts",
+        staging=service_folder / "staging",
+        socket=service_folder / "airgap.sock",
+        timeout=20,
+        **options,  # type: ignore[arg-type]
+    )
+    threading.Thread(target=airgap.serve, args=(config,), daemon=True).start()
+    downloads = airgap.prepare_outbound(config, identifier, {"same.txt": Entry(4, 1_700_000_000)})
+    for _ in range(100):
+        if config.socket.exists():
+            break
+        threading.Event().wait(0.05)
+    result = airgap.request(config, identifier, str(uuid.uuid4()), operation="outbound")
+    assert result.fetched == 1 and result.unchanged == 1
+    assert (downloads / "docs/answer.pdf").read_bytes() == b"%PDF-1.4 answer"
+    assert abs((downloads / "docs/answer.pdf").stat().st_mtime - 1_700_000_100) <= 2
+    assert not (downloads / "same.txt").exists()
+    assert (check / identifier / OUTBOUND / "same.txt").exists()

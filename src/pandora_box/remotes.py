@@ -12,12 +12,14 @@ its SSH host key must be listed in known_hosts.
 
 from __future__ import annotations
 
+import calendar
 import contextlib
 import os
 import shutil
 import stat
 import subprocess
 import tempfile
+import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -36,6 +38,8 @@ _WINDOWS_DEVICES = {"con", "prn", "aux", "nul"} | {
 }
 # Folder of the scan reports, at the top of the folder of a key on the server
 REPORTS = ".pandora-box"
+# Files waiting on the server to be copied to the key (outbound station)
+OUTBOUND = f"{REPORTS}/outbound"
 
 Progress = Callable[[int, int], None]
 
@@ -116,6 +120,10 @@ class RemoteFS(Protocol):
 
     def put(self, local: Path, path: str, mtime: int, progress: Callable[[int], None]) -> None:
         """Copy a file, replacing the remote one only once it is complete."""
+        ...
+
+    def get(self, path: str, local: Path, mtime: int) -> None:
+        """Copy a remote file to local, with its modification time."""
         ...
 
     def remove(self, path: str) -> None: ...
@@ -285,6 +293,11 @@ class SftpFS:
                 self._sftp.remove(path)
             self._sftp.rename(tmp, path)
 
+    def get(self, path: str, local: Path, mtime: int) -> None:
+        with local.open("xb") as target:
+            self._sftp.getfo(path, target)
+        os.utime(local, (mtime, mtime))
+
     def remove(self, path: str) -> None:
         self._sftp.remove(path)
 
@@ -395,13 +408,18 @@ def rsync_put(local: Path, server: Server, secrets: Secrets, remote_root: str, n
         )  # fmt: skip
 
 
-def _run_rsync(argv: list[str]) -> str:
+def _run_rsync(argv: list[str], missing_ok: bool = False) -> str:
+    """Run rsync; missing_ok: a missing remote folder gives an empty output."""
     try:
         result = subprocess.run(  # noqa: S603  (fixed command, no shell)
-            argv, capture_output=True, text=True, check=False, stdin=subprocess.DEVNULL
-        )
+            argv, capture_output=True, text=True, check=False, stdin=subprocess.DEVNULL,
+            # The times listed by rsync are in the time zone of the client
+            env={**os.environ, "TZ": "UTC"},
+        )  # fmt: skip
     except OSError as ex:
         raise TransferError(f"rsync: {ex}") from ex
+    if missing_ok and result.returncode == 23 and "No such file or directory" in result.stderr:
+        return ""
     if result.returncode != 0:
         lines = [line for line in result.stderr.splitlines() if line.strip()]
         raise TransferError(f"rsync failed ({result.returncode}): {lines[-1] if lines else ''}")
@@ -454,6 +472,139 @@ def upload(
         raise TransferError(f"{server.protocol}: {ex}") from ex
     finally:
         fs.close()
+
+
+# -- outbound: from the server to the key -----------------------------------------------
+
+
+@dataclass
+class FetchResult:
+    # Files downloaded: new or changed compared with the key
+    fetched: list[str] = field(default_factory=list)
+    unchanged: int = 0
+    errors: list[tuple[str, str]] = field(default_factory=list)
+
+
+def relative_path(path: str) -> str:
+    """Why a path of the server cannot be one below a folder ("": it can)."""
+    parts = path.split("/")
+    if not path or path.startswith("/") or "\0" in path:
+        return "invalid path"
+    if any(part in ("", ".", "..") for part in parts):
+        return "invalid path"
+    return ""
+
+
+def fetch(
+    server: Server,
+    secrets: Secrets,
+    remote_root: str,
+    local_dir: Path,
+    have: dict[str, Entry],
+    fs_factory: Callable[[Server, Secrets], RemoteFS] = open_fs,
+) -> FetchResult:
+    """Download the files of the outbound folder of remote_root that the key does not have.
+
+    have: the files of the key (path, size, modification time); a file of the
+    server is downloaded when it is not on the key, or differs (size, time).
+    """
+    remote = f"{remote_root}/{OUTBOUND}"
+    if server.protocol == "rsync":
+        result = _choose(rsync_list(server, secrets, remote), have)
+        rsync_fetch(server, secrets, remote, local_dir, result.fetched)
+        result.fetched = [p for p in result.fetched if (local_dir / p).is_file()]
+        return result
+    fs = fs_factory(server, secrets)
+    try:
+        entries = fs.scan(remote) or {}
+        result = _choose(entries, have)
+        for path in result.fetched:
+            target = local_dir / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            fs.get(f"{remote}/{path}", target, entries[path].mtime)
+        return result
+    except OSError as ex:
+        raise TransferError(f"{server.protocol}: {ex}") from ex
+    finally:
+        fs.close()
+
+
+def _choose(entries: dict[str, Entry], have: dict[str, Entry]) -> FetchResult:
+    """The files of the server to download: new or changed (in fetched)."""
+    result = FetchResult()
+    for path, entry in sorted(entries.items()):
+        if entry.is_dir:
+            continue
+        reason = relative_path(path)
+        if reason:
+            result.errors.append((path, reason))
+        elif path in have and same(entry, have[path]):
+            result.unchanged += 1
+        else:
+            result.fetched.append(path)
+    return result
+
+
+def send_report(
+    report: Path,
+    server: Server,
+    secrets: Secrets,
+    remote_root: str,
+    report_name: str,
+    fs_factory: Callable[[Server, Secrets], RemoteFS] = open_fs,
+) -> None:
+    """Put the report alone in the .pandora-box folder of remote_root."""
+    if server.protocol == "rsync":
+        rsync_put(report, server, secrets, remote_root, report_name)
+        return
+    fs = fs_factory(server, secrets)
+    try:
+        fs.makedirs(f"{remote_root}/{REPORTS}")
+        fs.put(report, f"{remote_root}/{REPORTS}/{report_name}", int(report.stat().st_mtime),
+               lambda _sent: None)  # fmt: skip
+    except OSError as ex:
+        raise TransferError(f"{server.protocol}: {ex}") from ex
+    finally:
+        fs.close()
+
+
+def rsync_list(server: Server, secrets: Secrets, remote: str) -> dict[str, Entry]:
+    """The files below a remote folder (rsync --list-only); empty when it is missing."""
+    ssh = " ".join(_quote(a) for a in ssh_command(server, secrets))
+    argv = [
+        RSYNC, "--recursive", "--list-only", "--no-human-readable", "--8-bit-output",
+        f"--timeout={int(server.timeout)}", "-e", ssh, f"{_destination(server)}:{remote}/",
+    ]  # fmt: skip
+    output = _run_rsync(argv, missing_ok=True)
+    entries: dict[str, Entry] = {}
+    for line in output.splitlines():
+        fields = line.split(None, 4)
+        if len(fields) != 5 or fields[4] == ".":
+            continue
+        mode, size, day, clock, name = fields
+        stamp = calendar.timegm(time.strptime(f"{day} {clock}", "%Y/%m/%d %H:%M:%S"))
+        if mode.startswith("d"):
+            entries[name] = Entry(0, 0, True)
+        elif mode.startswith("-"):
+            entries[name] = Entry(int(size), stamp)
+    return entries
+
+
+def rsync_fetch(
+    server: Server, secrets: Secrets, remote: str, local_dir: Path, paths: Sequence[str]
+) -> None:
+    """Download these files of a remote folder into local_dir (rsync over SSH)."""
+    if not paths:
+        return
+    ssh = " ".join(_quote(a) for a in ssh_command(server, secrets))
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".list") as listing:
+        listing.write("\0".join(paths) + "\0")
+        listing.flush()
+        _run_rsync(
+            [RSYNC, "--times", "--no-links", "--from0", f"--files-from={listing.name}",
+             f"--timeout={int(server.timeout)}", "-e", ssh,
+             f"{_destination(server)}:{remote}/", f"{local_dir}/"]
+        )  # fmt: skip
 
 
 def describe(result: SyncResult) -> dict[str, Any]:

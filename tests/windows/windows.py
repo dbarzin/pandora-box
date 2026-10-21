@@ -33,7 +33,18 @@ from pathlib import Path
 import paramiko
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
-from pandora_box.remotes import REPORTS, Secrets, Server, TransferError, upload
+from pandora_box.remotes import (
+    OUTBOUND,
+    REPORTS,
+    Entry,
+    Secrets,
+    Server,
+    SftpFS,
+    TransferError,
+    fetch,
+    mirror,
+    upload,
+)
 
 HERE = Path(__file__).resolve().parent
 WORK = HERE / "work"
@@ -311,6 +322,26 @@ def test() -> int:
         check("readme.txt" not in files, "readme.txt left on the server")
         check(f"{REPORTS}/first.json" in files, "first report deleted")
         print("replaced over the old file, removed file deleted, reports kept")
+
+        step("outbound: the files waiting for the key, downloaded when it lacks them")
+        waiting = work / "waiting"
+        write(waiting / "same.txt", b"same")
+        write(waiting / "Documents/answer.pdf", b"%PDF-1.4 answer", mtime=1_700_000_100)
+        fs = SftpFS(server, credentials)
+        try:
+            mirror(waiting, fs, f"{remote}/{OUTBOUND}")
+        finally:
+            fs.close()
+        downloads = work / "downloads"
+        downloads.mkdir()
+        have = {"same.txt": Entry(4, 1_700_000_000)}
+        fetched = fetch(server, credentials, remote, downloads, have)
+        check(fetched.fetched == ["Documents/answer.pdf"], f"downloaded: {fetched.fetched}")
+        check(fetched.unchanged == 1, f"unchanged: {fetched.unchanged}")
+        answer = downloads / "Documents/answer.pdf"
+        check(answer.read_bytes() == b"%PDF-1.4 answer", "downloaded content")
+        check(abs(answer.stat().st_mtime - 1_700_000_100) <= 2, "downloaded date")
+        print("new file downloaded with its date, the one the key has left")
 
         step("nothing changed: nothing copied")
         result = upload(local, report, server, credentials, remote, "second.json")

@@ -255,6 +255,9 @@ class SiemConfig:
 
 
 AIRGAP_PROTOCOLS = ("rsync", "sftp")
+# inbound: the clean files of the key go to the server; outbound: the files
+# waiting on the server for the key come to it; both, at the same insertion
+AIRGAP_MODES = ("both", "inbound", "outbound")
 
 
 @dataclass(frozen=True)
@@ -263,6 +266,12 @@ class AirgapConfig:
     # (pandora-box-airgap.service, a networked image): off by default. The
     # key is not cleaned; the kiosk writes its identifier on it (.pandora-box)
     enabled: bool = False
+    # "both", "inbound" (key -> server) or "outbound" (server -> key)
+    mode: str = "both"
+    # Clean the key too (after the copy to the server, with a touch on the
+    # screen); quarantine.enabled keeps a copy of the removed files on the
+    # kiosk, scan.suspicious decides for the suspicious ones
+    clean: bool = False
     # "rsync" (over SSH, rsync on the server) or "sftp"
     protocol: str = "sftp"
     host: str = ""
@@ -497,6 +506,8 @@ def _parse_airgap(airgap: dict[str, Any]) -> AirgapConfig:
     default = AirgapConfig()
     config = AirgapConfig(
         enabled=_get(airgap, "airgap", "enabled", bool, False),
+        mode=_choice(airgap, "airgap", "mode", AIRGAP_MODES, default.mode),
+        clean=_get(airgap, "airgap", "clean", bool, False),
         protocol=_choice(airgap, "airgap", "protocol", AIRGAP_PROTOCOLS, default.protocol),
         host=_get(airgap, "airgap", "host", str, ""),
         port=_get(airgap, "airgap", "port", int, 0),

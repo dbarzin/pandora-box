@@ -20,6 +20,9 @@ RuntimeDirectoryMode=0750
 ImportCredential=pandora-box.airgap-ssh-key
 Restart=on-failure
 RestartSec=10
+# It downloads the files of the server for a key into the staging folder,
+# which the kiosk scans before copying them to the key (outbound)
+ReadWritePaths=/var/lib/pandora-box-airgap/staging
 
 NoNewPrivileges=yes
 CapabilityBoundingSet=

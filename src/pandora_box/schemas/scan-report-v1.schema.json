@@ -235,7 +235,7 @@
             "errors", "error"
           ],
           "properties": {
-            "status": { "enum": ["copied", "failed", "refused"], "description": "refused: the key was not verified, nothing was copied" },
+            "status": { "enum": ["copied", "failed", "refused", "skipped"], "description": "refused: the key was not verified, nothing was copied; skipped: no copy to the server (airgap.mode outbound)" },
             "key_id": { "type": "string", "description": "Identifier of the key (.pandora-box), the name of its folder on the server" },
             "destination": { "type": "string", "description": "Folder of the key on the server" },
             "copied": { "type": "integer", "minimum": 0 },
@@ -251,7 +251,28 @@
                 "properties": { "path": { "type": "string" }, "reason": { "type": "string" } }
               }
             },
-            "error": { "type": "string" }
+            "error": { "type": "string" },
+            "outbound": {
+              "description": "The files waiting on the server for the key, copied to it; null or absent: not attempted",
+              "type": ["object", "null"],
+              "additionalProperties": false,
+              "required": ["status", "copied", "unchanged", "rejected", "error"],
+              "properties": {
+                "status": { "enum": ["copied", "nothing", "refused", "failed"], "description": "nothing: no new or changed file; refused: the key holds dangerous files" },
+                "copied": { "type": "array", "items": { "type": "string" } },
+                "unchanged": { "type": "integer", "minimum": 0, "description": "Files of the server already on the key" },
+                "rejected": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["path", "reason"],
+                    "properties": { "path": { "type": "string" }, "reason": { "type": "string" } }
+                  }
+                },
+                "error": { "type": "string" }
+              }
+            }
           }
         }
       }

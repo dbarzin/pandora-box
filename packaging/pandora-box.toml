@@ -261,14 +261,24 @@ facility = "local0"
 timeout = 10.0
 
 [airgap]
-# Copy of the clean files of each verified key to a server (docs/airgap.md),
-# by pandora-box-airgap.service (image profile "online": the network). The
-# key is not cleaned: the kiosk only writes its identifier on it
-# (.pandora-box), and copies its clean files to <path>/<identifier>/ on the
-# server, kept in sync with the key (files no longer on it are deleted
-# there), with the scan reports in <path>/<identifier>/.pandora-box/. A key
-# not verified is refused. Credentials: [airgap] of image/credentials.toml.
+# File transfer station between the keys and a server (docs/airgap.md), by
+# pandora-box-airgap.service (image profile "online": the network). The key
+# is not cleaned: the kiosk writes its token on it (.pandora-box), copies its
+# clean files to <path>/<folder>/ on the server (named after a secret of the
+# token), kept in sync with the key, with the scan reports in
+# <path>/<folder>/.pandora-box/; then the files waiting for it in
+# <path>/<folder>/.pandora-box/outbound/ are scanned, and the clean ones
+# written at its root. A key not verified is refused; a key with dangerous
+# files gets nothing from the server. Credentials: [airgap] of
+# image/credentials.toml.
 enabled = false
+# "both", "inbound" (key -> server) or "outbound" (server -> key)
+mode = "both"
+# Clean the key too, after the copy to the server and a touch on the screen,
+# as any kiosk: scan.suspicious decides for the suspicious files, and
+# quarantine.enabled keeps a copy of the removed files on the kiosk (false:
+# the kiosk keeps nothing of the keys)
+clean = false
 # "rsync" (rsync over SSH, rsync on the server) or "sftp"
 protocol = "sftp"
 host = ""

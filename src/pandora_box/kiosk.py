@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import dataclasses
 import json
 import logging
@@ -12,7 +13,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 
-from pandora_box import __version__, airgap, imageupdate, keyid, maintenance
+from pandora_box import __version__, airgap, imageupdate, keyfs, keyid, maintenance
 from pandora_box.config import Config
 from pandora_box.device import DeviceError, Mounter, SystemMountWatcher, UsbDevice
 from pandora_box.engines import Engine, EngineError, EngineKind, Verdict
@@ -23,10 +24,12 @@ from pandora_box.logs import get_logger, log_event
 from pandora_box.monitor import Action, DeviceSource
 from pandora_box.policy import device_verdict
 from pandora_box.quarantine import Quarantine
+from pandora_box.remotes import Entry
 from pandora_box.report import (
     Actions,
     AirgapAction,
     DeviceUsage,
+    OutboundAction,
     PartitionUsage,
     ScanReport,
     build_report,
@@ -255,8 +258,9 @@ class Kiosk:
         self.source = source
         self.scanner = Scanner(pool, config.limits)
         self.mounter = mounter or make_mounter(config)
-        # A station (airgap) keeps nothing of the keys: no quarantine
-        keep = config.quarantine.enabled and not config.airgap.enabled
+        # A station (airgap) keeps nothing of the keys: no quarantine, unless
+        # it cleans them (airgap.clean)
+        keep = config.quarantine.enabled and (not config.airgap.enabled or config.airgap.clean)
         self.quarantine = Quarantine(config.quarantine.folder) if keep else None
         self.device: UsbDevice | None = None
         self.summary: ScanSummary | None = None
@@ -749,51 +753,18 @@ class Kiosk:
                 self.display.message("No infected file found. You can remove the device.")
             return State.WAIT
 
-        log_event(logger, "infected_files", count=len(infected))
-        self.display.show(Screen.THREATS, infected)
-        self._list(f"{len(infected)} infected files detected:", infected)
-        # The device is not mounted while the user decides: it can be removed
-        try:
-            self.mounter.unmount()
-        except DeviceError as ex:
-            log_event(logger, "unmount_failed", logging.ERROR, error=str(ex))
-            self.display.message(f"Cannot unmount device: {ex}")
+        outcome = self._clean(infected)
+        if outcome == "error":
             return State.ERROR
-        self.display.confirm("PRESS A KEY OR TOUCH THE SCREEN TO CLEAN")
-
-        device = self.device
-        if device is None or not self.mounter.device_present(device):
-            log_event(logger, "device_removed_before_clean", logging.WARNING)
+        if outcome == "removed":
             self.display.show(Screen.NOT_CLEANED, infected)
             self.display.message("Device removed before cleaning: NOT CLEANED")
             self._release()
             return State.WAIT
-        self.display.show(Screen.CLEANING)
-        for volume in device.volumes:
-            files = [r for r in infected if self._volume_of(r) == volume]
-            if not files:
-                continue
-            try:
-                # Read-write only to remove the infected files
-                self._mount(volume, read_only=False)
-            except DeviceError as ex:
-                log_event(logger, "mount_rw_failed", logging.ERROR, node=volume.node, error=str(ex))
-                self.display.message(f"Cannot clean device: {ex}")
-                if not device.multiple:
-                    return State.ERROR
-                self.actions.remove_failed += files
-                continue
-            log_event(logger, "device_mounted_rw", node=volume.node)
-            for result in files:
-                if self._remove(result):
-                    self.actions.removed.append(result)
-                else:
-                    self.actions.remove_failed.append(result)
-            self._unmount()
         removed = len(self.actions.removed)
-        self.actions.cleaned = removed == len(infected)
         self._save_report()
         self._release()
+        # Logged once the device is ejected: in the order things happen
         log_event(logger, "device_cleaned", removed=removed, infected=len(infected))
         if removed == len(infected) and not_verified:
             self.display.show(Screen.NOT_VERIFIED, self.summary.unscanned)
@@ -812,6 +783,53 @@ class Kiosk:
             self.display.message(f"Device NOT cleaned: {len(infected) - removed} files remain")
         return State.WAIT
 
+    def _clean(self, infected: list[FileResult]) -> str:
+        """Show the files to remove, wait for a touch, remove them.
+
+        Return "" once done (self.actions tells which were removed), "removed"
+        when the device was removed before, "error" when it cannot be cleaned.
+        """
+        log_event(logger, "infected_files", count=len(infected))
+        self.display.show(Screen.THREATS, infected)
+        self._list(f"{len(infected)} infected files detected:", infected)
+        # The device is not mounted while the user decides: it can be removed
+        try:
+            self.mounter.unmount()
+        except DeviceError as ex:
+            log_event(logger, "unmount_failed", logging.ERROR, error=str(ex))
+            self.display.message(f"Cannot unmount device: {ex}")
+            return "error"
+        self.display.confirm("PRESS A KEY OR TOUCH THE SCREEN TO CLEAN")
+
+        device = self.device
+        if device is None or not self.mounter.device_present(device):
+            log_event(logger, "device_removed_before_clean", logging.WARNING)
+            return "removed"
+        self.display.show(Screen.CLEANING)
+        for volume in device.volumes:
+            files = [r for r in infected if self._volume_of(r) == volume]
+            if not files:
+                continue
+            try:
+                # Read-write only to remove the infected files
+                self._mount(volume, read_only=False)
+            except DeviceError as ex:
+                log_event(logger, "mount_rw_failed", logging.ERROR, node=volume.node, error=str(ex))
+                self.display.message(f"Cannot clean device: {ex}")
+                if not device.multiple:
+                    return "error"
+                self.actions.remove_failed += files
+                continue
+            log_event(logger, "device_mounted_rw", node=volume.node)
+            for result in files:
+                if self._remove(result):
+                    self.actions.removed.append(result)
+                else:
+                    self.actions.remove_failed.append(result)
+            self._unmount()
+        self.actions.cleaned = len(self.actions.removed) == len(infected)
+        return ""
+
     def on_error(self) -> State:
         self._release()
         self.display.show(Screen.ERROR)
@@ -823,78 +841,212 @@ class Kiosk:
     # -- copy to a server (airgap) ------------------------------------------
 
     def _copy_to_server(self) -> State:
-        """Copy the clean files of a verified key to the server; the key is not cleaned."""
+        """airgap: the clean files of a verified key go to the server (inbound), the
+        files waiting on the server for it come to it (outbound); it is not cleaned.
+        """
         summary, device = self.summary, self.device
         if summary is None or device is None:
             return State.WAIT
+        mode = self.config.airgap.mode
+        inbound, outbound = mode in ("both", "inbound"), mode in ("both", "outbound")
         not_copied = [f for f in summary.files if f.verdict is not Verdict.CLEAN]
+        action = AirgapAction("failed" if inbound else "skipped", not_copied=not_copied)
+        self.actions.airgap = action
         # Only a key scanned entirely, whatever scan.on_error
         if not summary.complete:
-            self.actions.airgap = AirgapAction("refused", not_copied=not_copied)
-            self._save_report()
+            action.status = "refused"
+            if outbound:
+                action.outbound = OutboundAction("refused", error="key not verified")
             self._release()
             log_event(logger, "airgap_refused", logging.WARNING, reason="key not verified")
             self.display.show(Screen.NOT_VERIFIED, summary.unscanned)
-            self.display.message(
-                "DEVICE NOT VERIFIED: not copied to the server. Remove the device."
-            )
+            self.display.message("DEVICE NOT VERIFIED: nothing copied. Remove the device.")
             return State.WAIT
         self.display.show(Screen.TRANSFERRING)
-        self.display.message("Copying the clean files to the server...")
         config = self.config.airgap
         # The name of the folder of the key on the server: never logged,
         # never shown, never kept (pandora_box.keyid)
         folder = ""
-        action = AirgapAction("failed", not_copied=not_copied)
-        self.actions.airgap = action
+        left: list[FileResult] = []
+        error = ""
         try:
             identity = self._key_identity(device)
             folder = identity.folder
             action.key_id = identity.identifier
-            staged = self._stage(folder, device, summary)
-            action.errors = list(staged.errors)
-            self._stage_report(staged)
-            result = airgap.request(config, folder, self._report_id(), self._copy_progress())
+            if inbound:
+                left += self._send_files(folder, device, summary)
+            # airgap.clean: the station cleans the key too (scan.suspicious
+            # decides for the suspicious files, as on any kiosk)
+            dangerous = bool(self.to_remove)
+            if dangerous and config.clean:
+                outcome = self._clean(self.to_remove)
+                if outcome:
+                    raise airgap.AirgapError(
+                        "key removed before cleaning" if outcome == "removed" else "cannot clean"
+                    )
+                dangerous = not self.actions.cleaned
+                removed = len(self.actions.removed)
+                log_event(logger, "device_cleaned", removed=removed, infected=len(self.to_remove))
+                self.display.show(Screen.TRANSFERRING)
+            if outbound:
+                try:
+                    received, rejected = self._receive(folder, device, summary, dangerous)
+                except (airgap.AirgapError, DeviceError, OSError) as ex:
+                    error = airgap.hide(str(ex), folder)
+                    received, rejected = OutboundAction("failed", error=error), []
+                action.outbound = received
+                left += rejected
+                # The final report, with both directions
+                self._send_report(folder)
         except (airgap.AirgapError, keyid.TokenError, DeviceError, OSError) as ex:
-            error = airgap.hide(str(ex), folder)
-            action.error = error
-            self._save_report()
-            self._release()
-            log_event(logger, "airgap_failed", logging.ERROR, error=error)
-            self.display.show(Screen.TRANSFER_FAILED)
-            self.display.message(f"Copy to the server FAILED: {error}")
-            return State.WAIT
+            error = error or airgap.hide(str(ex), folder)
+            if action.status != "copied" and inbound:
+                action.error = error
         finally:
             if folder:
                 airgap.remove_staging(config, folder)
+        if error:
+            log_event(logger, "airgap_failed", logging.ERROR, error=error)
+        # Logged before the key is ejected: in the order things happen
+        self._release()
+        if error:
+            self.display.show(Screen.TRANSFER_FAILED)
+            self.display.message(f"Copy FAILED: {error}")
+            return State.WAIT
+        self.display.show(Screen.TRANSFERRED, left)
+        if left:
+            self._list(f"{len(left)} files not copied:", left)
+        self.display.message("You can remove the device.")
+        return State.WAIT
+
+    def _send_files(self, folder: str, device: UsbDevice, summary: ScanSummary) -> list[FileResult]:
+        """Inbound: copy the clean files of the key to the server; the files not copied."""
+        action = self.actions.airgap
+        if action is None:
+            raise airgap.AirgapError("no copy in progress")
+        self.display.message("Copying the clean files to the server...")
+        staged = self._stage(folder, device, summary)
+        action.errors = list(staged.errors)
+        self._stage_report(staged.folder)
+        result = airgap.request(
+            self.config.airgap, folder, self._report_id(), self._copy_progress()
+        )
         action.status = "copied"
         action.destination = result.destination
         action.copied, action.deleted = result.copied, result.deleted
         action.unchanged = result.unchanged
         action.errors += result.errors
-        self._save_report()
         log_event(
             logger,
             "airgap_copied",
             copied=result.copied,
             deleted=result.deleted,
             unchanged=result.unchanged,
-            not_copied=len(not_copied),
+            not_copied=len(action.not_copied),
             errors=len(action.errors),
         )
-        # Logged before the key is ejected: in the order things happen
-        self._release()
-        failed = {path for path, _ in action.errors}
-        left = not_copied + [f for f in summary.files if self._target(device, f) in failed]
-        self.display.show(Screen.TRANSFERRED, left)
         self.display.message(
             f"Copied to the server: {result.copied} new or changed files, "
             f"{result.unchanged} unchanged, {result.deleted} deleted from the server"
         )
-        if left:
-            self._list(f"{len(left)} files not copied:", left)
-        self.display.message("You can remove the device.")
-        return State.WAIT
+        failed = {path for path, _ in action.errors}
+        return action.not_copied + [f for f in summary.files if self._target(device, f) in failed]
+
+    def _receive(
+        self, folder: str, device: UsbDevice, summary: ScanSummary, key_dangerous: bool
+    ) -> tuple[OutboundAction, list[FileResult]]:
+        """Outbound: scan the files waiting on the server for the key, write the clean ones.
+
+        key_dangerous: the key still holds files the cleaning would remove.
+        Return what was done, and the files of the server not copied.
+        """
+        if key_dangerous:
+            log_event(logger, "airgap_received", logging.WARNING, status="refused")
+            self.display.message(
+                "Files of the server NOT copied: the key holds dangerous files. "
+                "Clean it at a kiosk that cleans, then insert it again."
+            )
+            return OutboundAction("refused", error="dangerous files on the key"), []
+        config = self.config.airgap
+        first = device.volumes[0]
+        root = self._mount(first)
+        # The files of the key, to download only what it does not have
+        have: dict[str, Entry] = {}
+        for result in summary.files:
+            if result.volume and result.volume != first.name:
+                continue
+            with contextlib.suppress(OSError):
+                info = (root / result.rel_path).lstat()
+                have[result.rel_path] = Entry(info.st_size, int(info.st_mtime))
+        downloads = airgap.prepare_outbound(config, folder, have)
+        self.display.message("Looking for files on the server for this key...")
+        fetched = airgap.request(config, folder, self._report_id(), operation="outbound")
+        rejected = list(fetched.errors)
+        if not fetched.fetched:
+            log_event(logger, "airgap_received", status="nothing", unchanged=fetched.unchanged)
+            self.display.message("No new file on the server for this key.")
+            return OutboundAction("nothing", unchanged=fetched.unchanged, rejected=rejected), []
+
+        # Scanned like the files of a key: only the clean ones are written
+        self.display.message(f"Scanning {fetched.fetched} files of the server...")
+        scanned = self.scanner.scan_tree(downloads)
+        clean = [
+            f
+            for f in scanned.files
+            if f.verdict is Verdict.CLEAN and not f.unscanned and f.info is not None
+        ]
+        dangerous = [f for f in scanned.files if f not in clean]
+        rejected += [(f.rel_path, f"{f.verdict.value}: {f.detail}") for f in dangerous]
+        reserved = {keyid.TOKEN_FILE, f"{keyid.TOKEN_FILE}.tmp"}
+        for f in [f for f in clean if f.rel_path.split("/", 1)[0] in reserved]:
+            clean.remove(f)
+            rejected.append((f.rel_path, "name reserved for the kiosk"))
+
+        # Read-write only to write the files of the server
+        root = self._mount(first, read_only=False)
+        st = os.statvfs(root)
+        layout = keyfs.plan(
+            first.fs_type, [(f.rel_path, f.size) for f in clean], st.f_bavail * st.f_frsize
+        )
+        rejected += layout.rejected
+        by_path = {f.rel_path: f for f in clean}
+        copied: list[str] = []
+        for path, _ in layout.accepted:
+            result = by_path[path]
+            source = downloads / path
+            try:
+                sha256 = result.info.sha256 if result.info is not None else ""
+                keyfs.write_file(root, path, source, sha256, source.stat().st_mtime)
+            except OSError as ex:
+                rejected.append((path, ex.strerror or str(ex)))
+                continue
+            copied.append(path)
+        # The FUSE driver writes its last changes before the key is ejected
+        self._unmount()
+        log_event(
+            logger,
+            "airgap_received",
+            status="copied",
+            copied=len(copied),
+            unchanged=fetched.unchanged,
+            rejected=len(rejected),
+        )
+        self.display.message(
+            f"Copied to the key from the server: {len(copied)} files, "
+            f"{fetched.unchanged} already on it"
+        )
+        refused = {path for path, _ in rejected}
+        left = dangerous + [f for f in clean if f.rel_path in refused]
+        status = "copied" if copied else "nothing"
+        action = OutboundAction(status, copied, fetched.unchanged, rejected)
+        return action, left
+
+    def _send_report(self, folder: str) -> None:
+        """Send the report alone to the folder of the key (after the outbound copy)."""
+        staged = airgap.staging_folder(self.config.airgap, folder)
+        staged.mkdir(mode=0o750, parents=True, exist_ok=True)
+        self._stage_report(staged)
+        airgap.request(self.config.airgap, folder, self._report_id(), operation="report")
 
     def _key_identity(self, device: UsbDevice) -> keyid.KeyIdentity:
         """The identity of the key, from its token, else a new one written on it."""
@@ -943,12 +1095,12 @@ class Kiosk:
         self._unmount()
         return staged
 
-    def _stage_report(self, staged: airgap.Staged) -> None:
+    def _stage_report(self, folder: Path) -> None:
         if self.report is None:
             raise airgap.AirgapError("no scan report")
         # Only on the server: a station keeps no report (_save_report)
         set_actions(self.report, self.actions)
-        target = staged.folder / airgap.REPORT
+        target = folder / airgap.REPORT
         target.write_text(json.dumps(self.report.data, indent=2, ensure_ascii=True) + "\n")
 
     def _report_id(self) -> str:

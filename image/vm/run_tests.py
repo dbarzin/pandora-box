@@ -416,7 +416,39 @@ def check_airgap(vm: Machine, workdir: Path) -> None:
         log.wait("device_removed")
         print("inserted again: same identifier, the removed file deleted from the server")
 
-        # The service reads the staging key_folder, not the reports of the kiosk
+        # Outbound: an infected key gets nothing from the server; a clean one
+        # gets the clean files waiting for it, not the malicious ones
+        for report in (key_folder / ".pandora-box").glob("*.json"):
+            outbound = json.loads(report.read_text())["actions"]["airgap"]["outbound"]
+            check(outbound["status"] == "refused", f"infected key, outbound: {outbound}")
+        content = workdir / "airgap-clean"
+        content.mkdir()
+        (content / "readme.txt").write_bytes(corpus.KEY["readme.txt"][0])
+        clean_image = workdir / "airgap-clean.img"
+        make_key(clean_image, content)
+        vm.insert_key(clean_image)
+        received = log.wait("airgap_received", timeout=180)
+        check(received["status"] == "nothing", f"nothing waiting yet: {received}")
+        log.wait("device_ejected")
+        vm.remove_key()
+        log.wait("device_removed")
+        clean_folder = next(f for f in (root / "keys").iterdir() if f != key_folder)
+        waiting = clean_folder / ".pandora-box" / "outbound"
+        (waiting / "docs").mkdir(parents=True)
+        (waiting / "docs" / "answer.txt").write_bytes(b"answer from the protected network\n")
+        (waiting / "virus.com").write_bytes(corpus.KEY["docs/eicar.com"][0])
+        vm.insert_key(clean_image)
+        received = log.wait("airgap_received", timeout=180)
+        check(received["status"] == "copied" and received["copied"] == 1, f"outbound: {received}")
+        log.wait("device_ejected")
+        vm.remove_key()
+        log.wait("device_removed")
+        files = read_key(clean_image)
+        check("docs/answer.txt" in files, f"file of the server not on the key: {files}")
+        check("virus.com" not in files, f"malicious file of the server on the key: {files}")
+        print("infected key refused; clean key: the clean file of the server written on it")
+
+        # The service reads the staging folder, not the reports of the kiosk
         airgap_user = "setpriv --reuid=pandora-box-airgap --regid=pandora-box-airgap --init-groups"
         check(
             not vm.shell.succeeds(f"{airgap_user} ls /var/lib/pandora-box"),

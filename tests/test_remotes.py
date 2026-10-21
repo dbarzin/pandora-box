@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 import os
 import shutil
 import subprocess
@@ -50,6 +51,10 @@ class LocalFS:
         tmp.replace(target)
         progress(local.stat().st_size)
         self.puts.append(path)
+
+    def get(self, path: str, local: Path, mtime: int) -> None:
+        shutil.copyfile(self._p(path), local)
+        os.utime(local, (mtime, mtime))
 
     def remove(self, path: str) -> None:
         self._p(path).unlink()
@@ -248,3 +253,77 @@ def test_rsync_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     server = Server("rsync", "h", 0, "u", "keys", known_hosts=known)
     with pytest.raises(TransferError, match=r"rsync failed \(255\)"):
         rsync_mirror(tmp_path, server, Secrets(ssh_key=known), "keys/k1")
+
+
+def test_fetch_the_files_the_key_does_not_have(tmp_path: Path) -> None:
+    server = tmp_path / "server"
+    outbound = server / "keys/k1" / remotes.OUTBOUND
+    write(outbound / "same.txt", "same")
+    write(outbound / "changed.txt", "new content", mtime=1_700_000_500)
+    write(outbound / "docs/new.txt", "new")
+    local = tmp_path / "downloads"
+    local.mkdir()
+    have = {"same.txt": Entry(4, 1_700_000_000), "changed.txt": Entry(3, 1_700_000_000)}
+    result = remotes.fetch(
+        Server("sftp", "h", 0, "u", "keys"), Secrets(), "keys/k1", local, have,
+        fs_factory=lambda _server, _secrets: LocalFS(server),
+    )  # fmt: skip
+    assert sorted(result.fetched) == ["changed.txt", "docs/new.txt"]
+    assert result.unchanged == 1
+    assert (local / "docs/new.txt").read_text() == "new"
+    assert (local / "changed.txt").stat().st_mtime == 1_700_000_500
+
+
+def test_fetch_without_outbound_folder(tmp_path: Path) -> None:
+    local = tmp_path / "downloads"
+    local.mkdir()
+    result = remotes.fetch(
+        Server("sftp", "h", 0, "u", "keys"), Secrets(), "keys/k1", local, {},
+        fs_factory=lambda server, secrets: LocalFS(tmp_path / "server"),
+    )  # fmt: skip
+    assert result.fetched == [] and result.unchanged == 0
+
+
+def test_rsync_list(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    known = tmp_path / "known_hosts"
+    known.write_text("h ssh-ed25519 AAAA\n")
+    output = (
+        "drwxr-xr-x           4096 2026/10/21 06:30:22 .\n"
+        "-rw-r--r--             12 2023/11/14 22:13:20 a file.txt\n"
+        "drwxr-xr-x           4096 2026/10/21 06:30:22 docs\n"
+        "-rw-r--r--        1234567 2026/10/21 06:30:22 docs/été.pdf\n"
+    )
+    calls: list[list[str]] = []
+
+    def run(argv: list[str], **kwargs: Any) -> Any:
+        calls.append(argv)
+        assert kwargs["env"]["TZ"] == "UTC"
+        return type("Done", (), {"returncode": 0, "stdout": output, "stderr": ""})()
+
+    monkeypatch.setattr(subprocess, "run", run)
+    server = Server("rsync", "h", 0, "u", "keys", known_hosts=known)
+    entries = remotes.rsync_list(server, Secrets(ssh_key=known), "keys/k1/.pandora-box/outbound")
+    assert entries == {
+        "a file.txt": Entry(12, 1_700_000_000),
+        "docs": Entry(0, 0, True),
+        "docs/été.pdf": Entry(1234567, calendar.timegm((2026, 10, 21, 6, 30, 22))),
+    }
+    assert "--no-human-readable" in calls[0] and "--list-only" in calls[0]
+
+
+def test_rsync_list_of_a_missing_folder(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    known = tmp_path / "known_hosts"
+    known.write_text("h ssh-ed25519 AAAA\n")
+
+    def run(argv: list[str], **kwargs: Any) -> Any:
+        err = 'rsync: change_dir "/keys/k1/x" failed: No such file or directory (2)\n'
+        return type("Failed", (), {"returncode": 23, "stdout": "", "stderr": err})()
+
+    monkeypatch.setattr(subprocess, "run", run)
+    server = Server("rsync", "h", 0, "u", "keys", known_hosts=known)
+    assert remotes.rsync_list(server, Secrets(ssh_key=known), "keys/k1/x") == {}
+
+
+@pytest.mark.parametrize("path", ["", "/etc/passwd", "../x", "a/../b", "a//b", "a/./b"])
+def test_invalid_paths_of_the_server(path: str) -> None:
+    assert remotes.relative_path(path)
