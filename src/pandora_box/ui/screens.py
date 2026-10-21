@@ -176,17 +176,28 @@ class Renderer:
         info_font = self.font(16)
         info_row = self.tx(21)
         info_top = bottom - len(info) * info_row
-        # Larger texts leave less room to the animation
-        frames = tuple(
-            self.resized(image, (self.px(430), self.px(240 / self.text_scale)))
-            for image in self.theme.insert
+        title_font, help_font = self.font(34, True), self.font(18)
+        title, help_text = self.theme.text("insert"), self.theme.text("insert_help")
+        # The texts above the versions; the animation gets the room left
+        # (less with larger texts, or longer ones in another language)
+        texts = (
+            len(canvas.wrap(title, title_font, right - left)) * canvas.line_height(title_font)
+            + self.px(10)
+            + len(canvas.wrap(help_text, help_font, right - left)) * canvas.line_height(help_font)
         )
-        x = (self.width - frames[0].width) // 2
-        canvas.frame.animation = Animation((x, top), frames, INSERT_INTERVAL)
-        y = top + frames[0].height + self.px(24)
-        y = canvas.paragraph(self.theme.text("insert"), self.font(34, True), "text", y, body, True)
+        room = info_top - top - texts - self.px(24 + 12)
+        height = min(self.px(240 / self.text_scale), room)
+        y = top
+        if height >= self.px(40):
+            frames = tuple(
+                self.resized(image, (self.px(430), height)) for image in self.theme.insert
+            )
+            x = (self.width - frames[0].width) // 2
+            canvas.frame.animation = Animation((x, top), frames, INSERT_INTERVAL)
+            y += frames[0].height + self.px(24)
+        y = canvas.paragraph(title, title_font, "text", y, body, True)
         y += self.px(10)
-        canvas.paragraph(self.theme.text("insert_help"), self.font(18), "muted", y, body, True)
+        canvas.paragraph(help_text, help_font, "muted", y, body, True)
         for i, line in enumerate(info):
             text = canvas.fit(line, info_font, right - left)
             canvas.text((left, info_top + i * info_row), text, info_font, self.color("muted"))
@@ -234,38 +245,54 @@ class Renderer:
         canvas.text((left, y), counts, font, self.color("text"))
         threats = self.theme.text("scan_threats", count=state.threats)
         color = self.color("threat") if state.threats else self.color("muted")
-        canvas.text((right, y), threats, font, color, anchor="ra")
+        # Side by side when they fit, else one below the other
+        if canvas.text_width(counts, font) + canvas.text_width(threats, font) + self.px(24) > (
+            right - left
+        ):
+            y += self.tx(30)
+            canvas.text((left, y), threats, font, color)
+        else:
+            canvas.text((right, y), threats, font, color, anchor="ra")
         y += self.tx(36)
         self._file_list(canvas, state.recent, (left, y, right, bottom), recent=True)
 
     def _threats(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
         left, top, right, bottom = body
-        # The whole screen is the button: a banner tells to touch it
-        banner = self.tx(64)
+        # The whole screen is the button: a banner tells to touch it, never
+        # cut (a long text, large texts: on two lines)
+        font = self.font(28, True)
+        lines = canvas.wrap(self.theme.text("touch_to_clean"), font, right - left - self.px(24))
+        height = canvas.line_height(font)
+        banner = max(self.tx(64), len(lines) * height + self.px(16))
         canvas.draw.rounded_rectangle(
             (left, bottom - banner, right, bottom), self.px(12), fill=self.color("threat")
         )
-        text = canvas.fit(self.theme.text("touch_to_clean"), self.font(28, True), right - left)
-        canvas.text(
-            ((left + right) // 2, bottom - banner // 2),
-            text,
-            self.font(28, True),
-            self.color("header_text"),
-            anchor="mm",
-        )
-        warning_y = bottom - banner - self.tx(32)
-        warning = canvas.fit(self.theme.text("threats_warning"), self.font(18, True), right - left)
-        canvas.text(
-            ((left + right) // 2, warning_y),
-            warning,
-            self.font(18, True),
-            self.color("threat"),
-            anchor="ma",
-        )
+        first = bottom - banner // 2 - (len(lines) - 1) * height // 2
+        for i, line in enumerate(lines):
+            canvas.text(
+                ((left + right) // 2, first + i * height),
+                line,
+                font,
+                self.color("header_text"),
+                anchor="mm",
+            )
+        banner_top = bottom - banner
         y = self._result(
-            canvas, (left, top, right, warning_y), "threat", "threat", "threats", "threats_help"
+            canvas, (left, top, right, banner_top), "threat", "threat", "threats", "threats_help"
         )
-        self._file_list(canvas, state.files, (left, y, right, warning_y - self.px(8)))
+        # The warning above the banner, unless the files then have no room
+        # (long texts, large texts): the banner tells what to do
+        warning_y = banner_top - self.tx(32)
+        listed = self.tx(48) * (2 if len(state.files) > 1 else 1)
+        list_bottom = banner_top - self.px(8)
+        if y + listed <= warning_y - self.px(8):
+            font = self.font(18, bold=True)
+            warning = canvas.fit(self.theme.text("threats_warning"), font, right - left)
+            canvas.text(
+                ((left + right) // 2, warning_y), warning, font, self.color("threat"), anchor="ma"
+            )
+            list_bottom = warning_y - self.px(8)
+        self._file_list(canvas, state.files, (left, y, right, list_bottom))
 
     def _cleaning(self, canvas: _Canvas, state: ViewState, body: Box) -> None:
         y = self._busy_title(canvas, self.theme.text("cleaning"), body)

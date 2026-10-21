@@ -28,8 +28,7 @@ The open tasks of the phases below, by priority.
 **2. Hardening and user features**
 
 1. Scan receipt for the user (phase 5)
-2. German and Dutch texts (phase 3)
-3. Protected administrator mode (phase 3)
+2. Protected administrator mode (phase 3)
 
 **3. Later**
 
@@ -233,7 +232,7 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [x] Touch-first interface for any screen size
 - [x] Theme customization by the administrator
 - [x] Internationalization: French and English
-- [ ] German and Dutch texts built in
+- [x] German and Dutch texts built in
 - [x] Accessibility: contrast and font size
 - [ ] Protected administrator mode
 
@@ -343,7 +342,7 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 
 - The interface is drawn with Pillow into the framebuffer, without display server, browser or local web server: the earlier plan (FastAPI and htmx in `cage` with Chromium) would have added a browser and a socket to the image. Cleaning is confirmed by a touch anywhere on the screen, without buttons.
 - Accessibility: a theme is refused when a text does not reach the WCAG 2.1 AA contrast with its background (4.5:1, 3:1 for large bold texts and the progress bar); `text_scale` enlarges every text up to 1.5 times, and the tests check that no text leaves the screen or overlaps another one, on every screen, language, screen size and text size. A user setting on the kiosk itself is not added: the screen has no buttons.
-- An administrator customizes it with a theme folder built into the image (logo, colors, texts of every screen, images, fonts), checked at build time; `pandora-box-theme preview` shows the screens without a kiosk. French and English are built in (`display.language`), a theme can add a language.
+- An administrator customizes it with a theme folder built into the image (logo, colors, texts of every screen, images, fonts), checked at build time; `pandora-box-theme preview` shows the screens without a kiosk. English, French, German and Dutch are built in (`display.language`), a theme can add a language or change their texts; the screens fit the longer texts (a title wraps, the animation of the waiting screen shrinks, the banner of the threats screen takes two lines).
 
 ## Contributing
 

@@ -69,7 +69,7 @@ Dans `packaging/pandora-box.toml`, section `[display]` :
 [display]
 # Dossier du thème, installé dans l'image depuis image/theme/
 theme = "/usr/share/pandora-box/theme"
-# Langue des textes : "en", "fr", ou une langue ajoutée par le thème
+# Langue des textes : "en", "fr", "de", "nl", ou une langue ajoutée par le thème
 language = "fr"
 # Secondes avant l'écran d'attente, une fois la clé retirée
 return_seconds = 5.0
@@ -123,9 +123,11 @@ la borne :
 | `scan_threats`, `cleaned_help`, `more_files` | `{count}` |
 | `device_usage` | `{size}`, `{used}` |
 
-Un texte avec un emplacement inconnu ou une clé inconnue est refusé. Un
-thème peut ajouter une langue : `[texts.de]` avec les textes qu'il traduit,
-les autres restent en anglais ; réglez ensuite `display.language = "de"`.
+Un texte avec un emplacement inconnu ou une clé inconnue est refusé.
+L'anglais (`en`), le français (`fr`), l'allemand (`de`) et le néerlandais
+(`nl`) sont intégrés ; un thème peut modifier certains de leurs textes, ou
+ajouter une langue : `[texts.it]` avec les textes qu'il traduit, les autres
+restent en anglais ; réglez ensuite `display.language = "it"`.
 
 Les messages des écrans `service`, `error`, `unavailable` et `cleaning` sont
 ceux des journaux de la borne (en anglais) : ils s'adressent à
@@ -161,7 +163,8 @@ de PandoraBox.
   plus petit texte intégré fait 16 pixels sur l'écran de 7 pouces
   (1024x600). Les titres longs passent à la ligne ; quand la place manque,
   une liste montre toujours son premier fichier et le nombre des autres.
-  Les tests vérifient chaque écran en anglais et en français, sur trois
+  Les tests vérifient chaque écran en anglais, en français, en allemand et
+  en néerlandais, sur trois
   tailles d'écran et trois tailles de texte : aucun texte ne sort de l'écran
   ni n'en chevauche un autre.
 - **Jamais la couleur seule** : chaque résultat a son titre, son icône et,

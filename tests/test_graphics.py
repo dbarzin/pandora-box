@@ -77,7 +77,7 @@ def test_video_mode() -> None:
 
 
 def test_builtin_theme() -> None:
-    assert theme_languages(None) == ["en", "fr"]
+    assert theme_languages(None) == ["de", "en", "fr", "nl"]
     theme = load_theme(None, "fr")
     assert theme.text("insert") == "Veuillez insérer une clé USB"
     assert theme.text("scan_progress", done=3, total=10) == "3 / 10 fichiers analysés"
@@ -99,7 +99,8 @@ def test_custom_theme(tmp_path: Path) -> None:
         'logo = "logo.png"\n'
         '[colors]\nheader = "#003366"\n'
         '[texts.fr]\ntitle = "Hôpital de Mons"\nfooter = "Service informatique - 1234"\n'
-        '[texts.de]\ninsert = "Bitte einen USB-Stick einstecken"\n',
+        '[texts.de]\ninsert = "USB-Stick der Klinik einstecken"\n'
+        '[texts.it]\ninsert = "Inserire una chiavetta USB"\n',
     )
     theme = load_theme(folder, "fr")
     assert theme.logo is not None and theme.logo.size == (400, 100)
@@ -108,11 +109,15 @@ def test_custom_theme(tmp_path: Path) -> None:
     assert theme.colors["threat"] == load_theme(None, "fr").colors["threat"]
     assert theme.text("title") == "Hôpital de Mons"
     assert theme.text("insert") == "Veuillez insérer une clé USB"
-    # A new language, with the English texts it does not translate
+    # A built-in language: the theme replaces one of its texts
     german = load_theme(folder, "de")
-    assert german.text("insert") == "Bitte einen USB-Stick einstecken"
-    assert german.text("clean") == "No threat found"
-    assert theme_languages(folder) == ["de", "en", "fr"]
+    assert german.text("insert") == "USB-Stick der Klinik einstecken"
+    assert german.text("clean") == "Keine Bedrohung gefunden"
+    # A new language, with the English texts it does not translate
+    italian = load_theme(folder, "it")
+    assert italian.text("insert") == "Inserire una chiavetta USB"
+    assert italian.text("clean") == "No threat found"
+    assert theme_languages(folder) == ["de", "en", "fr", "it", "nl"]
 
 
 def test_theme_folder_without_theme_file(tmp_path: Path) -> None:
@@ -166,8 +171,8 @@ def test_text_scale(tmp_path: Path) -> None:
 
 
 def test_theme_language_missing(tmp_path: Path) -> None:
-    with pytest.raises(ThemeError, match="no texts for the language 'nl'"):
-        load_theme(None, "nl")
+    with pytest.raises(ThemeError, match="no texts for the language 'it'"):
+        load_theme(None, "it")
     with pytest.raises(ThemeError, match="theme folder not found"):
         load_theme(tmp_path / "missing", "en")
 
@@ -176,7 +181,7 @@ def test_theme_language_missing(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize("size", [(1024, 600), (800, 480), (1280, 800)])
-@pytest.mark.parametrize("language", ["en", "fr"])
+@pytest.mark.parametrize("language", ["de", "en", "fr", "nl"])
 def test_every_screen(size: tuple[int, int], language: str) -> None:
     renderer = Renderer(load_theme(None, language), size)
     for state in sample_states().values():
@@ -188,7 +193,7 @@ def test_every_screen(size: tuple[int, int], language: str) -> None:
 
 @pytest.mark.parametrize("scale", [1.0, 1.25, 1.5])
 @pytest.mark.parametrize("size", [(1024, 600), (800, 480), (1280, 800)])
-@pytest.mark.parametrize("language", ["en", "fr"])
+@pytest.mark.parametrize("language", ["de", "en", "fr", "nl"])
 def test_texts_fit_the_screen(scale: float, size: tuple[int, int], language: str) -> None:
     """Every text inside the screen, never over another one, whatever their size."""
     theme = dataclasses.replace(load_theme(None, language), text_scale=scale)
@@ -260,15 +265,17 @@ def test_sample_files_follow_the_language() -> None:
 
     assert names("en")[0] == "Invoices/invoice-2026-10.pdf.exe"
     assert names("fr")[0] == "Factures/facture-2026-10.pdf.exe"
+    assert names("de")[0] == "Rechnungen/rechnung-2026-10.pdf.exe"
+    assert names("nl")[0] == "Facturen/factuur-2026-10.pdf.exe"
     # A language a theme adds gets the English names
-    assert names("de") == names("en")
+    assert names("it") == names("en")
     device = sample_states("fr")["scanning"].device
     assert device is not None and device.label == "CLE-USB"
 
 
 def test_preview(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert theme_main(["check"]) == 0
-    assert "OK (en, fr)" in capsys.readouterr().out
+    assert "OK (de, en, fr, nl)" in capsys.readouterr().out
     assert theme_main(["preview", "--language", "fr", "--size", "800x480", str(tmp_path)]) == 0
     with Image.open(tmp_path / "fr-threats.png") as image:
         assert image.size == (800, 480)

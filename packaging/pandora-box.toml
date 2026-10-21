@@ -21,7 +21,7 @@ interface = "framebuffer"
 # theme, the default). In the image, the files of image/theme/: see
 # docs/interface.md.
 theme = "/usr/share/pandora-box/theme"
-# Language of the texts: "en", "fr", or a language the theme adds
+# Language of the texts: "en", "fr", "de", "nl", or a language the theme adds
 language = "en"
 # Framebuffer device
 framebuffer = "/dev/fb0"

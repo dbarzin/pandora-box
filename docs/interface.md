@@ -65,7 +65,7 @@ In `packaging/pandora-box.toml`, section `[display]`:
 [display]
 # Theme folder, installed in the image from image/theme/
 theme = "/usr/share/pandora-box/theme"
-# Language of the texts: "en", "fr", or a language the theme adds
+# Language of the texts: "en", "fr", "de", "nl", or a language the theme adds
 language = "fr"
 # Seconds before the waiting screen, once the key is removed
 return_seconds = 5.0
@@ -118,9 +118,11 @@ the files. Some texts have placeholders, replaced by the kiosk:
 | `scan_threats`, `cleaned_help`, `more_files` | `{count}` |
 | `device_usage` | `{size}`, `{used}` |
 
-A text with an unknown placeholder or an unknown key is refused. A theme may
-add a language: `[texts.de]` with the texts it translates, the others are in
-English; then set `display.language = "de"`.
+A text with an unknown placeholder or an unknown key is refused. English
+(`en`), French (`fr`), German (`de`) and Dutch (`nl`) are built in; a theme
+may change some of their texts, or add a language: `[texts.it]` with the
+texts it translates, the others are in English; then set
+`display.language = "it"`.
 
 The messages of the `service`, `error`, `unavailable` and `cleaning` screens
 are those of the kiosk logs (in English): they are meant for the
@@ -153,7 +155,7 @@ built-in images come from the first version of PandoraBox.
   waiting screen shrink to make room. The smallest built-in text is 16
   pixels on the 7-inch screen (1024x600). Long titles wrap; when space runs
   short, a list always shows its first file and the number of the others.
-  The tests check every screen in English and French, at three screen sizes
+  The tests check every screen in English, French, German and Dutch, at three screen sizes
   and three text sizes: no text leaves the screen or overlaps another one.
 - **No color alone**: each result has its title, its icon and, for each
   file, its verdict in words; the whole screen is the button to clean.

@@ -15,8 +15,8 @@ from pandora_box.ui.base import Screen
 from pandora_box.ui.screens import REFERENCE, Renderer, ViewState
 from pandora_box.ui.theme import TEXT_SCALES, ThemeError, load_theme, theme_languages
 
-# Made-up file names and device label, in French for the French texts and in
-# English for the others
+# Made-up file names and device label, in the language of the built-in texts,
+# in English for a language a theme adds
 SAMPLE_NAMES = {
     "en": {
         "invoice": "Invoices/invoice-2026-10.pdf.exe",
@@ -37,6 +37,26 @@ SAMPLE_NAMES = {
         "photo_2": "Photos/vacances/IMG_2040.jpg",
         "notes": "Notes de réunion.docx",
         "label": "CLE-USB",
+    },
+    "de": {
+        "invoice": "Rechnungen/rechnung-2026-10.pdf.exe",
+        "budget": "Dokumente/budget.xlsm",
+        "protected": "geschütztes-archiv.zip",
+        "invoice_previous": "Rechnungen/rechnung-2026-09.pdf",
+        "photo_1": "Fotos/urlaub/IMG_2041.jpg",
+        "photo_2": "Fotos/urlaub/IMG_2040.jpg",
+        "notes": "Besprechungsnotizen.docx",
+        "label": "USB-STICK",
+    },
+    "nl": {
+        "invoice": "Facturen/factuur-2026-10.pdf.exe",
+        "budget": "Documenten/budget.xlsm",
+        "protected": "beveiligd-archief.zip",
+        "invoice_previous": "Facturen/factuur-2026-09.pdf",
+        "photo_1": "Foto's/vakantie/IMG_2041.jpg",
+        "photo_2": "Foto's/vakantie/IMG_2040.jpg",
+        "notes": "Vergadernotities.docx",
+        "label": "USB-STICK",
     },
 }
 
