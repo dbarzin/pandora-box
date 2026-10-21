@@ -66,6 +66,109 @@ Every entry holds `timestamp`, `level`, `kiosk` and `event`, then the fields
 of the event. The timestamps come from the clock of the kiosk, synchronized
 by NTP in the profile `online` ([Time](build.md#time)).
 
+## Dashboards
+
+The statistics of a fleet of kiosks (keys scanned, verdicts, detections,
+cleanings, state of the signatures) are computed by the SIEM from the
+entries it receives: nothing to install on the kiosks. It is the same work
+in every SIEM: decode the JSON of the entry into fields, then count the
+events below. `format = "json"` is the simplest: the message is the JSON
+entry alone; with `format = "syslog"`, it is the message part (MSG) of the
+syslog message.
+
+### Events
+
+| Event | When | Fields |
+|---|---|---|
+| `device_verdict` | Once per scanned key: the summary to count | `report_id`, `verdict` (`clean`, `malicious`, `suspicious`, `not_verified`), `complete`, `files`, `infected`, `suspicious`, `not_scanned`, `duration` (seconds), `used` (bytes), `detections` (list of `engine: name`) |
+| `device_cleaned` | The key was cleaned | `report_id`, `removed`, `infected` |
+| `airgap_copied`, `airgap_received`, `airgap_refused`, `airgap_failed` | Copy to and from a server ([Copy to a server](airgap.md)) | `report_id`, counts, `status` |
+| `kiosk_started` | Start of the kiosk | `image_version`, `signature_set`, `engines`, `signatures` |
+| `signatures_installed`, `signatures_changed` | New signature set | `serial`, `created` |
+| `file_scanned` | Each file (many entries) | `verdict`, `detail`, `engines`, `path` |
+
+Every entry also holds `timestamp` and `kiosk` (`kiosk.name`). `report_id`
+ties the events of a key together, and to its scan report. `device_verdict`
+never holds a name of a file; `file_scanned` and `device_inserted` hold the
+names of the files and the label and serial number of the key (left out on
+a [station](airgap.md#a-stolen-kiosk)): drop them in the SIEM when they are
+not needed.
+
+### Indicators
+
+| Indicator | From |
+|---|---|
+| Keys scanned, per day and per kiosk | count of `device_verdict` |
+| Verdicts | `device_verdict` by `verdict` |
+| Most frequent detections | `detections` of `device_verdict`, one value each |
+| Keys not verified (to look at) | `device_verdict` with `verdict` = `not_verified` |
+| Keys cleaned | count of `device_cleaned`, `removed` |
+| Scan time | `duration` of `device_verdict` (average, 95th percentile) |
+| Signature set of each kiosk | latest `serial` of `signatures_installed` / `signatures_changed`, or `signature_set` of `kiosk_started` |
+| Silent kiosks | time of the latest entry of each `kiosk` |
+
+### Examples
+
+The same indicators in a few SIEMs, as a starting point: index and field
+names depend on how the entries are received (here, the fields of the JSON
+entry at the top level).
+
+**Splunk** (TCP input, `sourcetype = _json`; a JSON list is the field
+`detections{}`):
+
+```text
+event=device_verdict | timechart span=1d count by verdict
+event=device_verdict | stats count by kiosk
+event=device_verdict | top limit=10 detections{}
+event=device_verdict | stats avg(duration) perc95(duration) by kiosk
+event=device_verdict verdict=not_verified | table _time kiosk report_id not_scanned
+event=signatures_installed OR event=signatures_changed | stats latest(serial) by kiosk
+```
+
+**Elastic** (Logstash or Elastic Agent, `json` codec; ES|QL in Kibana):
+
+```text
+FROM pandora-box-* | WHERE event == "device_verdict"
+  | STATS keys = COUNT(*) BY verdict, day = DATE_TRUNC(1 day, @timestamp)
+FROM pandora-box-* | WHERE event == "device_verdict" | MV_EXPAND detections
+  | STATS seen = COUNT(*) BY detections | SORT seen DESC | LIMIT 10
+```
+
+**Graylog** (Syslog TCP input; the JSON of the message decoded by a
+pipeline rule, then searches and aggregation widgets on `event:device_verdict`,
+grouped by `verdict`, `kiosk` or `detections`):
+
+```text
+rule "PandoraBox JSON"
+when
+  starts_with(to_string($message.message), "{")
+then
+  set_fields(to_map(parse_json(to_string($message.message))));
+end
+```
+
+**Wazuh** (decoded by its JSON decoder): Wazuh only indexes the entries that
+match a rule; a local rule per event to count, then dashboards on
+`data.event` in OpenSearch Dashboards:
+
+```xml
+<group name="pandora-box,">
+  <rule id="100100" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="event">^device_verdict$</field>
+    <description>PandoraBox $(kiosk): key scanned, $(verdict)</description>
+  </rule>
+</group>
+```
+
+**Grafana Loki** (syslog receiver of Grafana Alloy; LogQL, whose `json`
+parser leaves the lists out, `detections` among them):
+
+```text
+sum by (verdict) (count_over_time({app="pandora-box"} | json | event="device_verdict" [1d]))
+avg_over_time({app="pandora-box"} | json | event="device_verdict" | unwrap duration [1d])
+```
+
 ## Transport
 
 | `transport` | Default port | |

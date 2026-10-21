@@ -615,7 +615,6 @@ class Kiosk:
             f"{len(s.infected)} files infected, {len(s.suspicious)} files suspicious, "
             f"{len(s.unscanned)} files not fully scanned"
         )
-        log_event(logger, "device_verdict", verdict=device_verdict(s).value, complete=s.complete)
         self.to_remove = s.infected
         if self.config.scan.suspicious == "block":
             self.to_remove = s.infected + s.suspicious
@@ -628,6 +627,22 @@ class Kiosk:
             started,
             datetime.now(UTC),
             self.scanner.pool.size,
+        )
+        # The summary of the scan of a key, for the dashboards of a SIEM
+        # (docs/siem.md); its report_id ties the events of the key together
+        log_event(
+            logger,
+            "device_verdict",
+            report_id=self.report.report_id,
+            verdict=device_verdict(s).value,
+            complete=s.complete,
+            files=len(s.files),
+            infected=len(s.infected),
+            suspicious=len(s.suspicious),
+            not_scanned=len(s.unscanned),
+            duration=round(s.duration, 1),
+            used=usage.used,
+            detections=detections(s.files),
         )
         self.actions = Actions()
         self._save_report()
@@ -765,7 +780,13 @@ class Kiosk:
         self._save_report()
         self._release()
         # Logged once the device is ejected: in the order things happen
-        log_event(logger, "device_cleaned", removed=removed, infected=len(infected))
+        log_event(
+            logger,
+            "device_cleaned",
+            report_id=self._report_id(),
+            removed=removed,
+            infected=len(infected),
+        )
         if removed == len(infected) and not_verified:
             self.display.show(Screen.NOT_VERIFIED, self.summary.unscanned)
             self.display.message(
@@ -858,7 +879,13 @@ class Kiosk:
             if outbound:
                 action.outbound = OutboundAction("refused", error="key not verified")
             self._release()
-            log_event(logger, "airgap_refused", logging.WARNING, reason="key not verified")
+            log_event(
+                logger,
+                "airgap_refused",
+                logging.WARNING,
+                report_id=self._report_id(),
+                reason="key not verified",
+            )
             self.display.show(Screen.NOT_VERIFIED, summary.unscanned)
             self.display.message("DEVICE NOT VERIFIED: nothing copied. Remove the device.")
             return State.WAIT
@@ -886,7 +913,13 @@ class Kiosk:
                     )
                 dangerous = not self.actions.cleaned
                 removed = len(self.actions.removed)
-                log_event(logger, "device_cleaned", removed=removed, infected=len(self.to_remove))
+                log_event(
+                    logger,
+                    "device_cleaned",
+                    report_id=self._report_id(),
+                    removed=removed,
+                    infected=len(self.to_remove),
+                )
                 self.display.show(Screen.TRANSFERRING)
             if outbound:
                 try:
@@ -906,7 +939,9 @@ class Kiosk:
             if folder:
                 airgap.remove_staging(config, folder)
         if error:
-            log_event(logger, "airgap_failed", logging.ERROR, error=error)
+            log_event(
+                logger, "airgap_failed", logging.ERROR, report_id=self._report_id(), error=error
+            )
         # Logged before the key is ejected: in the order things happen
         self._release()
         if error:
@@ -939,6 +974,7 @@ class Kiosk:
         log_event(
             logger,
             "airgap_copied",
+            report_id=self._report_id(),
             copied=result.copied,
             deleted=result.deleted,
             unchanged=result.unchanged,
@@ -961,7 +997,13 @@ class Kiosk:
         Return what was done, and the files of the server not copied.
         """
         if key_dangerous:
-            log_event(logger, "airgap_received", logging.WARNING, status="refused")
+            log_event(
+                logger,
+                "airgap_received",
+                logging.WARNING,
+                report_id=self._report_id(),
+                status="refused",
+            )
             self.display.message(
                 "Files of the server NOT copied: the key holds dangerous files. "
                 "Clean it at a kiosk that cleans, then insert it again."
@@ -983,7 +1025,13 @@ class Kiosk:
         fetched = airgap.request(config, folder, self._report_id(), operation="outbound")
         rejected = list(fetched.errors)
         if not fetched.fetched:
-            log_event(logger, "airgap_received", status="nothing", unchanged=fetched.unchanged)
+            log_event(
+                logger,
+                "airgap_received",
+                report_id=self._report_id(),
+                status="nothing",
+                unchanged=fetched.unchanged,
+            )
             self.display.message("No new file on the server for this key.")
             return OutboundAction("nothing", unchanged=fetched.unchanged, rejected=rejected), []
 
@@ -1026,6 +1074,7 @@ class Kiosk:
         log_event(
             logger,
             "airgap_received",
+            report_id=self._report_id(),
             status="copied",
             copied=len(copied),
             unchanged=fetched.unchanged,
@@ -1240,6 +1289,17 @@ class Kiosk:
             self.mounter.unmount()
         except DeviceError as ex:
             log_event(logger, "unmount_failed", logging.ERROR, error=str(ex))
+
+
+def detections(files: list[FileResult]) -> list[str]:
+    """The detections of a scan, "engine: name", each once (never the names of the files)."""
+    found = {
+        f"{r.engine}: {r.detail}"
+        for f in files
+        for r in f.results
+        if r.verdict in (Verdict.MALICIOUS, Verdict.SUSPICIOUS) and r.detail
+    }
+    return sorted(found)
 
 
 def describe_engines(engines: list[EngineInfo]) -> str:

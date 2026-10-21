@@ -81,7 +81,7 @@ redémarre la borne.
 
 | Événement | Signification |
 |---|---|
-| `device_verdict` | Verdict d'une clé analysée |
+| `device_verdict` | Synthèse de l'analyse d'une clé : verdict, compteurs, durée, détections, `report_id` (voir [Tableaux de bord](siem.md#dashboards)) |
 | `infected_files` | Fichiers dangereux trouvés sur une clé |
 | `signatures_installed`, `signatures_refused`, `signatures_not_newer` | Résultat d'une clé de mise à jour des signatures |
 | `signatures_changed` | Nouveau jeu de signatures chargé après une mise à jour en ligne |

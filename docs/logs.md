@@ -78,7 +78,7 @@ comes last as it restarts the kiosk.
 
 | Event | Meaning |
 |---|---|
-| `device_verdict` | Verdict of a scanned device |
+| `device_verdict` | Summary of the scan of a device: verdict, counts, duration, detections, `report_id` (see [Dashboards](siem.md#dashboards)) |
 | `infected_files` | Dangerous files found on a device |
 | `signatures_installed`, `signatures_refused`, `signatures_not_newer` | Result of a signature update device |
 | `signatures_changed` | New signature set loaded after an online update |

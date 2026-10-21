@@ -31,7 +31,7 @@ The open tasks of the phases below, by priority.
 
 **3. Later**
 
-1. Fleet management: central server, update distribution, dashboard (phase 5)
+1. Fleet management: central server, update distribution (phase 5)
 2. Fuzzing, then external security audit (phase 6)
 3. Mapping to NIS2 and ISO 27001 (phase 6)
 4. Executables with `capa`, content disarm and reconstruction with Dangerzone (phase 4)
@@ -253,10 +253,10 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [x] Signed identifier of each key for the file transfer stations
 - [x] Inbound file transfer station: copy the clean files of a key to a server ([docs/airgap.md](docs/airgap.md))
 - [x] Outbound file transfer station: copy the clean files waiting on a server to a key
-- [ ] Printed or exported scan receipt for the user
-- [ ] Optional central server: kiosk inventory, reports, signature status
+- [ ] ~~Printed or exported scan receipt for the user~~ *(not retained)*
+- [ ] ~~Optional central server: kiosk inventory, reports, signature status~~ *(not retained)*
 - [ ] Centralized distribution of signed updates
-- [ ] Statistics dashboard (devices scanned, detections)
+- [x] Statistics dashboard (devices scanned, detections): in the SIEM ([docs/siem.md](docs/siem.md#dashboards))
 
 ## Phase 6 — Assurance and compliance
 
@@ -337,6 +337,10 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - Outbound station (`airgap.mode`, `both` by default: both directions at the same insertion): a key holding a file the cleaning would remove (a malicious file, or a suspicious file with `scan.suspicious = "block"`) gets nothing until it is cleaned, then inserted again. A station does not clean by default; with `airgap.clean` it cleans the key as any kiosk (a touch on the screen, `scan.suspicious` for the suspicious files, `quarantine.enabled` for a copy of the removed files, the only data of the keys it then keeps), after the copy to the server, and a key cleaned entirely gets the files of the server at the same insertion. The protected network puts the files for a key in `<folder>/.pandora-box/outbound/` on the server (protected from the inbound mirror), found by the identifier of the key in its reports. The kiosk sends the files of the key (path, size, modification time); the service downloads into the staging folder (memory) those the key does not have or has in another version, and leaves them on the server. They are scanned like the files of a key, then the clean ones are written at the root of its first filesystem, replacing a file of the same name, checked against the scanned SHA-256 (the service could change them after the scan), after a check of its free space; the limits of each filesystem are handled (4 GiB files on vfat, forbidden characters, name length, case-insensitive names), a file that cannot be written is reported, never renamed, and `.pandora-box` stays reserved for the token. The key stays in the kiosk from the scan to the end of the copy.
 - Identifier: the USB serial number is missing or shared on some keys, so at the first insertion of a verified key the kiosk writes a token in a hidden file `.pandora-box` at its root (on the first supported partition): a random UUID and a random 256-bit secret, signed with a key of the kiosks of the organization (Ed25519, systemd credential of the image). The file is read as hostile data (size limit, strict format); a malformed or unsigned token is logged and replaced with a new one (new identifier, empty outbound directory). The signature prevents forging an identifier, not copying the file to another key.
 - An ext4 key with a journal to replay is not reformatted to receive files: its identifier could not be read, and it would lose its outbound files.
+
+### Logs and statistics
+
+- The statistics of a fleet (keys scanned, verdicts, detections, cleanings, signature sets) are dashboards of the SIEM that receives the logs, not a server of PandoraBox: one documentation for every SIEM (Splunk, Elastic, Graylog, Wazuh, Loki), built on `device_verdict`, the summary of the scan of a key (counts, duration, detection names, never a file name), tied to the other events of the key by its `report_id`.
 
 ### Interface
 

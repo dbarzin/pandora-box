@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import json
+import logging
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -479,3 +480,27 @@ def test_describe_engines() -> None:
         "malwarebazaar, hashlookup, clamav (ClamAV 1.4.3), yara (YARA-X 1.21.0), heuristics"
     )
     assert describe_engines([]) == "none loaded (no valid signatures)"
+
+
+def test_device_verdict_sums_up_the_scan(
+    config: Config,
+    display: RecordingDisplay,
+    usb_tree: Path,
+    pool: WorkerPool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """One event per key for the dashboards of a SIEM, tied to the other events by report_id."""
+    with caplog.at_level(logging.INFO, logger="pandora_box"):
+        make_kiosk(config, display, DirectoryMounter(usb_tree), [DeviceEvent(Action.ADD, DEVICE)],
+                   pool).run()  # fmt: skip
+    events = {r.getMessage(): getattr(r, "fields", {}) for r in caplog.records}
+    verdict = events["device_verdict"]
+    report = json.loads(next((config.report.folder).glob("*.json")).read_text())
+    assert verdict["report_id"] == report["report_id"]
+    assert verdict["verdict"] == "malicious" and verdict["complete"] is True
+    assert (verdict["files"], verdict["infected"], verdict["suspicious"]) == (3, 1, 0)
+    assert verdict["not_scanned"] == 0 and verdict["duration"] >= 0 and verdict["used"] > 0
+    assert len(verdict["detections"]) == 1 and verdict["detections"][0].startswith("fake: ")
+    # No name of a file in the summary
+    assert "eicar.com" not in json.dumps(verdict)
+    assert events["device_cleaned"]["report_id"] == report["report_id"]

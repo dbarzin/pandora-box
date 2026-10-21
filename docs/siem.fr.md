@@ -67,6 +67,110 @@ Chaque entrée contient `timestamp`, `level`, `kiosk` et `event`, puis les
 champs de l'événement. Les horodatages viennent de l'horloge de la borne,
 synchronisée par NTP dans le profil `online` ([Heure](build.md#time)).
 
+## Tableaux de bord { #dashboards }
+
+Les statistiques d'un parc de bornes (clés analysées, verdicts, détections,
+nettoyages, état des signatures) sont calculées par le SIEM à partir des
+entrées qu'il reçoit : rien à installer sur les bornes. Le travail est le
+même dans tous les SIEM : décoder le JSON de l'entrée en champs, puis
+compter les événements ci-dessous. `format = "json"` est le plus simple :
+le message est l'entrée JSON seule ; avec `format = "syslog"`, c'est la
+partie message (MSG) du message syslog.
+
+### Événements { #events }
+
+| Événement | Quand | Champs |
+|---|---|---|
+| `device_verdict` | Une fois par clé analysée : la synthèse à compter | `report_id`, `verdict` (`clean`, `malicious`, `suspicious`, `not_verified`), `complete`, `files`, `infected`, `suspicious`, `not_scanned`, `duration` (secondes), `used` (octets), `detections` (liste de `moteur: nom`) |
+| `device_cleaned` | La clé a été nettoyée | `report_id`, `removed`, `infected` |
+| `airgap_copied`, `airgap_received`, `airgap_refused`, `airgap_failed` | Copie vers et depuis un serveur ([Copie vers un serveur](airgap.md)) | `report_id`, compteurs, `status` |
+| `kiosk_started` | Démarrage de la borne | `image_version`, `signature_set`, `engines`, `signatures` |
+| `signatures_installed`, `signatures_changed` | Nouveau jeu de signatures | `serial`, `created` |
+| `file_scanned` | Chaque fichier (beaucoup d'entrées) | `verdict`, `detail`, `engines`, `path` |
+
+Chaque entrée contient aussi `timestamp` et `kiosk` (`kiosk.name`).
+`report_id` relie les événements d'une clé entre eux, et à son rapport
+d'analyse. `device_verdict` ne contient jamais de nom de fichier ;
+`file_scanned` et `device_inserted` contiennent les noms des fichiers, le
+libellé et le numéro de série de la clé (omis sur une
+[borne de transfert](airgap.md#a-stolen-kiosk)) : écartez-les dans le SIEM
+s'ils ne servent pas.
+
+### Indicateurs { #indicators }
+
+| Indicateur | À partir de |
+|---|---|
+| Clés analysées, par jour et par borne | nombre de `device_verdict` |
+| Verdicts | `device_verdict` par `verdict` |
+| Détections les plus fréquentes | `detections` de `device_verdict`, une valeur à la fois |
+| Clés non vérifiées (à examiner) | `device_verdict` avec `verdict` = `not_verified` |
+| Clés nettoyées | nombre de `device_cleaned`, `removed` |
+| Durée d'analyse | `duration` de `device_verdict` (moyenne, 95e centile) |
+| Jeu de signatures de chaque borne | dernier `serial` de `signatures_installed` / `signatures_changed`, ou `signature_set` de `kiosk_started` |
+| Bornes silencieuses | heure de la dernière entrée de chaque `kiosk` |
+
+### Exemples { #examples }
+
+Les mêmes indicateurs dans quelques SIEM, comme point de départ : les noms
+des index et des champs dépendent de la façon dont les entrées sont reçues
+(ici, les champs de l'entrée JSON au premier niveau).
+
+**Splunk** (entrée TCP, `sourcetype = _json` ; une liste JSON est le champ
+`detections{}`) :
+
+```text
+event=device_verdict | timechart span=1d count by verdict
+event=device_verdict | stats count by kiosk
+event=device_verdict | top limit=10 detections{}
+event=device_verdict | stats avg(duration) perc95(duration) by kiosk
+event=device_verdict verdict=not_verified | table _time kiosk report_id not_scanned
+event=signatures_installed OR event=signatures_changed | stats latest(serial) by kiosk
+```
+
+**Elastic** (Logstash ou Elastic Agent, codec `json` ; ES|QL dans Kibana) :
+
+```text
+FROM pandora-box-* | WHERE event == "device_verdict"
+  | STATS keys = COUNT(*) BY verdict, day = DATE_TRUNC(1 day, @timestamp)
+FROM pandora-box-* | WHERE event == "device_verdict" | MV_EXPAND detections
+  | STATS seen = COUNT(*) BY detections | SORT seen DESC | LIMIT 10
+```
+
+**Graylog** (entrée Syslog TCP ; le JSON du message décodé par une règle de
+pipeline, puis des recherches et des widgets d'agrégation sur
+`event:device_verdict`, groupés par `verdict`, `kiosk` ou `detections`) :
+
+```text
+rule "PandoraBox JSON"
+when
+  starts_with(to_string($message.message), "{")
+then
+  set_fields(to_map(parse_json(to_string($message.message))));
+end
+```
+
+**Wazuh** (décodé par son décodeur JSON) : Wazuh n'indexe que les entrées
+qui correspondent à une règle ; une règle locale par événement à compter,
+puis des tableaux de bord sur `data.event` dans OpenSearch Dashboards :
+
+```xml
+<group name="pandora-box,">
+  <rule id="100100" level="3">
+    <decoded_as>json</decoded_as>
+    <field name="event">^device_verdict$</field>
+    <description>PandoraBox $(kiosk): key scanned, $(verdict)</description>
+  </rule>
+</group>
+```
+
+**Grafana Loki** (récepteur syslog de Grafana Alloy ; LogQL, dont
+l'analyseur `json` ignore les listes, dont `detections`) :
+
+```text
+sum by (verdict) (count_over_time({app="pandora-box"} | json | event="device_verdict" [1d]))
+avg_over_time({app="pandora-box"} | json | event="device_verdict" | unwrap duration [1d])
+```
+
 ## Transport { #transport }
 
 | `transport` | Port par défaut | |
