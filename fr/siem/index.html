@@ -813,6 +813,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dashboards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tableaux de bord
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tableaux de bord">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Événements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#indicators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Indicateurs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#transport" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1266,6 +1316,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dashboards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tableaux de bord
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tableaux de bord">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Événements
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#indicators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Indicateurs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exemples
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#transport" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1429,6 +1529,151 @@ d'un message brut.</p>
 <p>Chaque entrée contient <code>timestamp</code>, <code>level</code>, <code>kiosk</code> et <code>event</code>, puis les
 champs de l'événement. Les horodatages viennent de l'horloge de la borne,
 synchronisée par NTP dans le profil <code>online</code> (<a href="../build/#time">Heure</a>).</p>
+<h2 id="dashboards">Tableaux de bord<a class="headerlink" href="#dashboards" title="Permanent link">&para;</a></h2>
+<p>Les statistiques d'un parc de bornes (clés analysées, verdicts, détections,
+nettoyages, état des signatures) sont calculées par le SIEM à partir des
+entrées qu'il reçoit : rien à installer sur les bornes. Le travail est le
+même dans tous les SIEM : décoder le JSON de l'entrée en champs, puis
+compter les événements ci-dessous. <code>format = "json"</code> est le plus simple :
+le message est l'entrée JSON seule ; avec <code>format = "syslog"</code>, c'est la
+partie message (MSG) du message syslog.</p>
+<h3 id="events">Événements<a class="headerlink" href="#events" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Événement</th>
+<th>Quand</th>
+<th>Champs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>device_verdict</code></td>
+<td>Une fois par clé analysée : la synthèse à compter</td>
+<td><code>report_id</code>, <code>verdict</code> (<code>clean</code>, <code>malicious</code>, <code>suspicious</code>, <code>not_verified</code>), <code>complete</code>, <code>files</code>, <code>infected</code>, <code>suspicious</code>, <code>not_scanned</code>, <code>duration</code> (secondes), <code>used</code> (octets), <code>detections</code> (liste de <code>moteur: nom</code>)</td>
+</tr>
+<tr>
+<td><code>device_cleaned</code></td>
+<td>La clé a été nettoyée</td>
+<td><code>report_id</code>, <code>removed</code>, <code>infected</code></td>
+</tr>
+<tr>
+<td><code>airgap_copied</code>, <code>airgap_received</code>, <code>airgap_refused</code>, <code>airgap_failed</code></td>
+<td>Copie vers et depuis un serveur (<a href="../airgap/">Copie vers un serveur</a>)</td>
+<td><code>report_id</code>, compteurs, <code>status</code></td>
+</tr>
+<tr>
+<td><code>kiosk_started</code></td>
+<td>Démarrage de la borne</td>
+<td><code>image_version</code>, <code>signature_set</code>, <code>engines</code>, <code>signatures</code></td>
+</tr>
+<tr>
+<td><code>signatures_installed</code>, <code>signatures_changed</code></td>
+<td>Nouveau jeu de signatures</td>
+<td><code>serial</code>, <code>created</code></td>
+</tr>
+<tr>
+<td><code>file_scanned</code></td>
+<td>Chaque fichier (beaucoup d'entrées)</td>
+<td><code>verdict</code>, <code>detail</code>, <code>engines</code>, <code>path</code></td>
+</tr>
+</tbody>
+</table>
+<p>Chaque entrée contient aussi <code>timestamp</code> et <code>kiosk</code> (<code>kiosk.name</code>).
+<code>report_id</code> relie les événements d'une clé entre eux, et à son rapport
+d'analyse. <code>device_verdict</code> ne contient jamais de nom de fichier ;
+<code>file_scanned</code> et <code>device_inserted</code> contiennent les noms des fichiers, le
+libellé et le numéro de série de la clé (omis sur une
+<a href="../airgap/#a-stolen-kiosk">borne de transfert</a>) : écartez-les dans le SIEM
+s'ils ne servent pas.</p>
+<h3 id="indicators">Indicateurs<a class="headerlink" href="#indicators" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Indicateur</th>
+<th>À partir de</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Clés analysées, par jour et par borne</td>
+<td>nombre de <code>device_verdict</code></td>
+</tr>
+<tr>
+<td>Verdicts</td>
+<td><code>device_verdict</code> par <code>verdict</code></td>
+</tr>
+<tr>
+<td>Détections les plus fréquentes</td>
+<td><code>detections</code> de <code>device_verdict</code>, une valeur à la fois</td>
+</tr>
+<tr>
+<td>Clés non vérifiées (à examiner)</td>
+<td><code>device_verdict</code> avec <code>verdict</code> = <code>not_verified</code></td>
+</tr>
+<tr>
+<td>Clés nettoyées</td>
+<td>nombre de <code>device_cleaned</code>, <code>removed</code></td>
+</tr>
+<tr>
+<td>Durée d'analyse</td>
+<td><code>duration</code> de <code>device_verdict</code> (moyenne, 95e centile)</td>
+</tr>
+<tr>
+<td>Jeu de signatures de chaque borne</td>
+<td>dernier <code>serial</code> de <code>signatures_installed</code> / <code>signatures_changed</code>, ou <code>signature_set</code> de <code>kiosk_started</code></td>
+</tr>
+<tr>
+<td>Bornes silencieuses</td>
+<td>heure de la dernière entrée de chaque <code>kiosk</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="examples">Exemples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h3>
+<p>Les mêmes indicateurs dans quelques SIEM, comme point de départ : les noms
+des index et des champs dépendent de la façon dont les entrées sont reçues
+(ici, les champs de l'entrée JSON au premier niveau).</p>
+<p><strong>Splunk</strong> (entrée TCP, <code>sourcetype = _json</code> ; une liste JSON est le champ
+<code>detections{}</code>) :</p>
+<div class="highlight"><pre><span></span><code>event=device_verdict | timechart span=1d count by verdict
+event=device_verdict | stats count by kiosk
+event=device_verdict | top limit=10 detections{}
+event=device_verdict | stats avg(duration) perc95(duration) by kiosk
+event=device_verdict verdict=not_verified | table _time kiosk report_id not_scanned
+event=signatures_installed OR event=signatures_changed | stats latest(serial) by kiosk
+</code></pre></div>
+<p><strong>Elastic</strong> (Logstash ou Elastic Agent, codec <code>json</code> ; ES|QL dans Kibana) :</p>
+<div class="highlight"><pre><span></span><code>FROM pandora-box-* | WHERE event == "device_verdict"
+  | STATS keys = COUNT(*) BY verdict, day = DATE_TRUNC(1 day, @timestamp)
+FROM pandora-box-* | WHERE event == "device_verdict" | MV_EXPAND detections
+  | STATS seen = COUNT(*) BY detections | SORT seen DESC | LIMIT 10
+</code></pre></div>
+<p><strong>Graylog</strong> (entrée Syslog TCP ; le JSON du message décodé par une règle de
+pipeline, puis des recherches et des widgets d'agrégation sur
+<code>event:device_verdict</code>, groupés par <code>verdict</code>, <code>kiosk</code> ou <code>detections</code>) :</p>
+<div class="highlight"><pre><span></span><code>rule "PandoraBox JSON"
+when
+  starts_with(to_string($message.message), "{")
+then
+  set_fields(to_map(parse_json(to_string($message.message))));
+end
+</code></pre></div>
+<p><strong>Wazuh</strong> (décodé par son décodeur JSON) : Wazuh n'indexe que les entrées
+qui correspondent à une règle ; une règle locale par événement à compter,
+puis des tableaux de bord sur <code>data.event</code> dans OpenSearch Dashboards :</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;group</span><span class="w"> </span><span class="na">name=</span><span class="s">"pandora-box,"</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;rule</span><span class="w"> </span><span class="na">id=</span><span class="s">"100100"</span><span class="w"> </span><span class="na">level=</span><span class="s">"3"</span><span class="nt">&gt;</span>
+<span class="w">    </span><span class="nt">&lt;decoded_as&gt;</span>json<span class="nt">&lt;/decoded_as&gt;</span>
+<span class="w">    </span><span class="nt">&lt;field</span><span class="w"> </span><span class="na">name=</span><span class="s">"event"</span><span class="nt">&gt;</span>^device_verdict$<span class="nt">&lt;/field&gt;</span>
+<span class="w">    </span><span class="nt">&lt;description&gt;</span>PandoraBox<span class="w"> </span>$(kiosk):<span class="w"> </span>key<span class="w"> </span>scanned,<span class="w"> </span>$(verdict)<span class="nt">&lt;/description&gt;</span>
+<span class="w">  </span><span class="nt">&lt;/rule&gt;</span>
+<span class="nt">&lt;/group&gt;</span>
+</code></pre></div>
+<p><strong>Grafana Loki</strong> (récepteur syslog de Grafana Alloy ; LogQL, dont
+l'analyseur <code>json</code> ignore les listes, dont <code>detections</code>) :</p>
+<div class="highlight"><pre><span></span><code>sum by (verdict) (count_over_time({app="pandora-box"} | json | event="device_verdict" [1d]))
+avg_over_time({app="pandora-box"} | json | event="device_verdict" | unwrap duration [1d])
+</code></pre></div>
 <h2 id="transport">Transport<a class="headerlink" href="#transport" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
