@@ -841,6 +841,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#outbound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sortie
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleaning-the-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nettoyer la clé
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1328,6 +1350,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#outbound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sortie
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleaning-the-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Nettoyer la clé
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1478,10 +1522,19 @@
 
 
 <h1 id="copie-vers-un-serveur-air-gap">Copie vers un serveur (air-gap)<a class="headerlink" href="#copie-vers-un-serveur-air-gap" title="Permanent link">&para;</a></h1>
-<p>Une borne peut servir de borne d'entrée : une fois une clé analysée et
-vérifiée, la borne copie ses fichiers sains sur un serveur de l'organisation
-(rsync sur SSH ou SFTP), où ils sont récupérés depuis le réseau protégé.
-La clé elle-même n'est pas nettoyée et repart avec ses fichiers.</p>
+<p>Une borne peut servir de borne de transfert de fichiers, entre les clés des
+utilisateurs et un serveur de l'organisation (rsync sur SSH ou SFTP), à la
+même insertion :</p>
+<ul>
+<li><strong>entrée</strong> : une fois une clé analysée et vérifiée, la borne copie ses
+  fichiers sains sur le serveur, où ils sont récupérés depuis le réseau
+  protégé ;</li>
+<li><strong>sortie</strong> : les fichiers que le réseau protégé a déposés sur le serveur
+  pour cette clé sont analysés, puis les fichiers sains sont écrits sur la
+  clé.</li>
+</ul>
+<p>La clé elle-même n'est pas nettoyée, sauf avec <code>airgap.clean</code> (voir
+<a href="#cleaning-the-key">Nettoyer la clé</a>).</p>
 <h2 id="in-short">En bref<a class="headerlink" href="#in-short" title="Permanent link">&para;</a></h2>
 <ol>
 <li>L'utilisateur insère une clé ; la borne l'analyse.</li>
@@ -1496,6 +1549,10 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.</p>
 <li>Quand la clé revient, son répertoire sur le serveur est <strong>synchronisé</strong> :
    les fichiers nouveaux et modifiés sont copiés, ceux qui ne sont plus sur
    la clé, ou plus sains, sont supprimés du serveur.</li>
+<li>Ensuite, les fichiers de <code>&lt;path&gt;/&lt;répertoire&gt;/.pandora-box/outbound/</code>
+   que la clé n'a pas, ou a dans une autre version, sont téléchargés,
+   <strong>analysés</strong>, et les fichiers sains sont écrits à la racine de la clé
+   (voir <a href="#outbound">Sortie</a>).</li>
 </ol>
 <div class="highlight"><pre><span></span><code>/srv/keys/                                   path sur le serveur, non listable
 └── 3f9c…e1a7/                               répertoire de la clé (64 chiffres hexadécimaux)
@@ -1503,7 +1560,9 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.</p>
     ├── readme.txt
     └── .pandora-box/                        rapports d'analyse, un par insertion
         ├── 7c9e6679-7425-40de-944b-e07fc1f90ae7.json
-        └── 3f2504e0-4f89-41d3-9a0c-0305e82c3301.json
+        ├── 3f2504e0-4f89-41d3-9a0c-0305e82c3301.json
+        └── outbound/                        fichiers en attente pour la clé
+            └── reponse.pdf
 </code></pre></div>
 <h2 id="how-it-works">Fonctionnement<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1533,7 +1592,8 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.</p>
   résultat.</li>
 <li><strong>Rien des clés sur la borne.</strong> Une borne qui copie vers un serveur ne
   garde aucun rapport d'analyse (ils partent sur le serveur, avec les
-  fichiers), n'a pas de quarantaine (elle ne nettoie pas), et son journal
+  fichiers), n'a pas de quarantaine sauf si elle nettoie les clés avec
+  <code>quarantine.enabled</code>, et son journal
   omet les noms et les empreintes des fichiers, le libellé, le fabricant, le
   modèle et le numéro de série de la clé, et les lignes de l'écran :
   seulement des événements, des verdicts et des compteurs. Voir
@@ -1557,14 +1617,70 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.</p>
   <code>NUL</code>, <code>COM1</code>...), ou qui ne diffère d'un autre que par la casse, n'est
   pas copié et est signalé comme tel.</li>
 </ul>
-<p>L'écran montre la copie, puis <strong>Fichiers copiés sur le serveur</strong> avec les
-fichiers qui n'ont pas été copiés (dangereux, suspects ou refusés par le
-serveur), ou <strong>La copie vers le serveur a échoué</strong> : la clé n'est alors ni
-nettoyée ni copiée, et peut être insérée à nouveau plus tard.</p>
+<p>L'écran montre la copie, puis <strong>Fichiers copiés</strong> avec les fichiers qui
+n'ont pas été copiés, dans un sens ou dans l'autre (dangereux, suspects, ou
+refusés par le serveur ou par la clé), ou <strong>La copie a échoué</strong> : la clé
+peut être insérée à nouveau plus tard.</p>
+<h2 id="outbound">Sortie<a class="headerlink" href="#outbound" title="Permanent link">&para;</a></h2>
+<p>Le réseau protégé dépose les fichiers destinés à une clé dans le répertoire
+<code>.pandora-box/outbound/</code> de son répertoire sur le serveur : un opérateur
+retrouve ce répertoire grâce à l'identifiant de la clé, dans ses rapports
+d'analyse (<code>key_id</code>). À chaque insertion :</p>
+<ul>
+<li><strong>Seulement une clé saine.</strong> Une clé qui contient un fichier que le
+  nettoyage supprimerait (un fichier malveillant, ou suspect avec
+  <code>scan.suspicious = "block"</code>) ne reçoit rien : nettoyez-la sur une borne
+  qui nettoie, puis insérez-la à nouveau. Une clé non vérifiée ne reçoit
+  rien non plus.</li>
+<li><strong>Fichiers nouveaux ou modifiés.</strong> La borne indique au service les
+  fichiers du premier système de fichiers de la clé (chemin, taille, date
+  de modification) ; le service télécharge dans le répertoire de transit
+  (en mémoire) les fichiers du répertoire <code>outbound</code> que la clé n'a pas, ou
+  a dans une autre version. Les fichiers restent sur le serveur : un fichier
+  modifié là-bas est copié à nouveau ; supprimez-le une fois livré.</li>
+<li><strong>Analysés.</strong> Les fichiers téléchargés passent par les mêmes moteurs que
+  les fichiers d'une clé : un fichier malveillant, suspect ou pas
+  entièrement analysé n'est pas écrit, et il est signalé.</li>
+<li><strong>Écrits à la racine de la clé</strong>, avec leurs dossiers et leurs dates de
+  modification, à la place d'un fichier de même nom. Chaque fichier est
+  écrit sous un nom temporaire, comparé au SHA-256 analysé, puis renommé. La
+  borne vérifie la place libre de la clé et les limites de son système de
+  fichiers : fichiers de 4 Gio au plus en vfat ; noms que FAT, exFAT et NTFS
+  refusent (<code>\ : * ? " &lt; &gt; |</code>, une espace ou un point final, <code>CON</code>,
+  <code>NUL</code>...) ; noms de 255 caractères au plus ; noms égaux à la casse près
+  sur FAT, exFAT et NTFS. Un fichier qui ne peut pas être écrit est signalé,
+  jamais renommé. <code>.pandora-box</code> à la racine est réservé au jeton de la clé.</li>
+</ul>
+<p><code>airgap.mode</code> choisit les sens : <code>both</code> (par défaut), <code>inbound</code> ou
+<code>outbound</code>.</p>
+<h2 id="cleaning-the-key">Nettoyer la clé<a class="headerlink" href="#cleaning-the-key" title="Permanent link">&para;</a></h2>
+<p>Par défaut, une borne de transfert ne nettoie pas les clés : les fichiers
+dangereux ne sont jamais copiés sur le serveur, mais restent sur la clé, qui
+ne reçoit alors rien du serveur. Avec <code>airgap.clean = true</code>, la borne
+nettoie aussi la clé, comme toute borne, à la même insertion :</p>
+<ol>
+<li>les fichiers sains partent sur le serveur ;</li>
+<li>les fichiers à supprimer sont affichés, et un appui sur l'écran les
+   supprime ; retirer la clé à la place la laisse telle quelle (rien du
+   serveur) ;</li>
+<li>une clé entièrement nettoyée reçoit ensuite les fichiers qui l'attendent
+   sur le serveur.</li>
+</ol>
+<p>Ce qui est supprimé suit les réglages de toute borne : <code>scan.suspicious =
+"block"</code> (par défaut) supprime les fichiers suspects avec les fichiers
+malveillants, <code>"warn"</code> les garde (la clé ne reçoit alors rien du serveur
+que s'il reste un fichier malveillant). <code>quarantine.enabled</code> garde une copie
+des fichiers supprimés sur la borne (<code>quarantine.folder</code>) : la seule donnée
+des clés qu'elle garde ; réglez-le à <code>false</code> pour une borne qui ne garde
+rien des clés.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p><code>[airgap]</code> de <code>packaging/pandora-box.toml</code> :</p>
 <div class="highlight"><pre><span></span><code><span class="k">[airgap]</span>
 <span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1"># "both" (par défaut), "inbound" (clé -&gt; serveur) ou "outbound" (serveur -&gt; clé)</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"both"</span>
+<span class="c1"># Nettoyer aussi la clé, après un appui sur l'écran (voir plus bas)</span>
+<span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <span class="c1"># "rsync" (rsync sur SSH) ou "sftp"</span>
 <span class="n">protocol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sftp"</span>
 <span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"files.example.org"</span>
@@ -1747,7 +1863,7 @@ répertoire reste sur le serveur, à archiver ou supprimer.</p>
 <tbody>
 <tr>
 <td><code>status</code></td>
-<td><code>copied</code>, <code>failed</code>, ou <code>refused</code> (clé non vérifiée)</td>
+<td><code>copied</code>, <code>failed</code>, <code>refused</code> (clé non vérifiée), ou <code>skipped</code> (<code>mode = "outbound"</code>)</td>
 </tr>
 <tr>
 <td><code>key_id</code></td>
@@ -1773,25 +1889,32 @@ répertoire reste sur le serveur, à archiver ou supprimer.</p>
 <td><code>error</code></td>
 <td>pourquoi la copie a échoué</td>
 </tr>
+<tr>
+<td><code>outbound</code></td>
+<td>les fichiers du serveur : <code>status</code> (<code>copied</code>, <code>nothing</code>, <code>refused</code> quand la clé contient des fichiers dangereux, <code>failed</code>), <code>copied</code>, <code>unchanged</code> (déjà sur la clé), <code>rejected</code> (avec la raison), <code>error</code></td>
+</tr>
 </tbody>
 </table>
 <p>Le journal de la borne contient les événements <code>key_token_written</code>,
-<code>key_identified</code>, <code>key_token_invalid</code>, <code>airgap_copied</code>, <code>airgap_failed</code> et
-<code>airgap_refused</code> ; le service journalise <code>airgap_done</code> et <code>airgap_failed</code>
+<code>key_identified</code>, <code>key_token_invalid</code>, <code>airgap_copied</code>, <code>airgap_received</code>,
+<code>airgap_failed</code> et <code>airgap_refused</code> ; le service journalise <code>airgap_done</code> et <code>airgap_failed</code>
 dans son journal (<code>journalctl -u pandora-box-airgap</code>).</p>
 <h2 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>tests/airgap/run.sh</code> copie vers un vrai serveur OpenSSH avec rsync, dans
   un conteneur (SFTP, rsync sur SSH, et rsync limité par <code>rrsync</code> comme
   ci-dessus) : une première copie, puis une synchronisation (fichiers
-  modifiés, nouveaux et supprimés), une clé d'hôte inconnue refusée, et le
-  service par son socket.</li>
+  modifiés, nouveaux et supprimés), une clé d'hôte inconnue refusée, les
+  répertoires des clés non listables, le téléchargement des fichiers en
+  attente que la clé n'a pas, et le service par son socket.</li>
 <li><code>tests/windows/windows.sh</code> copie vers un Windows Server dans une machine
   virtuelle QEMU, configuré comme ci-dessus (voir plus bas).</li>
 <li>Le <a href="../vm/">test en machine virtuelle</a> active la copie vers un serveur SFTP
   de test : une clé est copiée, puis insérée à nouveau sans l'un de ses
   fichiers, qui est supprimé du serveur ; la clé garde ses fichiers
-  malveillants et reçoit son identifiant.</li>
+  malveillants et reçoit son identifiant. Cette clé infectée ne reçoit rien
+  du serveur ; une clé saine reçoit le fichier sain qui l'attend, pas le
+  fichier EICAR à côté.</li>
 </ul>
 <h3 id="windows-server-in-a-virtual-machine">Serveur Windows en machine virtuelle<a class="headerlink" href="#windows-server-in-a-virtual-machine" title="Permanent link">&para;</a></h3>
 <p>La copie vers un serveur Windows est vérifiée sur un vrai Windows Server

@@ -1587,14 +1587,24 @@ anglais) :</p>
 <span class="n">timeout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">10.0</span>
 
 <span class="k">[airgap]</span>
-<span class="c1"># Copy of the clean files of each verified key to a server (docs/airgap.md),</span>
-<span class="c1"># by pandora-box-airgap.service (image profile "online": the network). The</span>
-<span class="c1"># key is not cleaned: the kiosk only writes its identifier on it</span>
-<span class="c1"># (.pandora-box), and copies its clean files to &lt;path&gt;/&lt;identifier&gt;/ on the</span>
-<span class="c1"># server, kept in sync with the key (files no longer on it are deleted</span>
-<span class="c1"># there), with the scan reports in &lt;path&gt;/&lt;identifier&gt;/.pandora-box/. A key</span>
-<span class="c1"># not verified is refused. Credentials: [airgap] of image/credentials.toml.</span>
+<span class="c1"># File transfer station between the keys and a server (docs/airgap.md), by</span>
+<span class="c1"># pandora-box-airgap.service (image profile "online": the network). The key</span>
+<span class="c1"># is not cleaned: the kiosk writes its token on it (.pandora-box), copies its</span>
+<span class="c1"># clean files to &lt;path&gt;/&lt;folder&gt;/ on the server (named after a secret of the</span>
+<span class="c1"># token), kept in sync with the key, with the scan reports in</span>
+<span class="c1"># &lt;path&gt;/&lt;folder&gt;/.pandora-box/; then the files waiting for it in</span>
+<span class="c1"># &lt;path&gt;/&lt;folder&gt;/.pandora-box/outbound/ are scanned, and the clean ones</span>
+<span class="c1"># written at its root. A key not verified is refused; a key with dangerous</span>
+<span class="c1"># files gets nothing from the server. Credentials: [airgap] of</span>
+<span class="c1"># image/credentials.toml.</span>
 <span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<span class="c1"># "both", "inbound" (key -&gt; server) or "outbound" (server -&gt; key)</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"both"</span>
+<span class="c1"># Clean the key too, after the copy to the server and a touch on the screen,</span>
+<span class="c1"># as any kiosk: scan.suspicious decides for the suspicious files, and</span>
+<span class="c1"># quarantine.enabled keeps a copy of the removed files on the kiosk (false:</span>
+<span class="c1"># the kiosk keeps nothing of the keys)</span>
+<span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <span class="c1"># "rsync" (rsync over SSH, rsync on the server) or "sftp"</span>
 <span class="n">protocol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sftp"</span>
 <span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span>

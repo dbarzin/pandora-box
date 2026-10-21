@@ -841,6 +841,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#outbound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outbound
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleaning-the-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cleaning the key
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1328,6 +1350,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#outbound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outbound
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleaning-the-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cleaning the key
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1478,10 +1522,18 @@
 
 
 <h1 id="copy-to-a-server-airgap">Copy to a server (airgap)<a class="headerlink" href="#copy-to-a-server-airgap" title="Permanent link">&para;</a></h1>
-<p>A kiosk can act as an inbound station: once a key is scanned and verified,
-the kiosk copies its clean files to a server of the organization (rsync over
-SSH or SFTP), where they are picked up from the protected network. The
-key itself is not cleaned and leaves with its files.</p>
+<p>A kiosk can act as a file transfer station, between the keys of the users
+and a server of the organization (rsync over SSH or SFTP), at the same
+insertion:</p>
+<ul>
+<li><strong>inbound</strong>: once a key is scanned and verified, the kiosk copies its
+  clean files to the server, where they are picked up from the protected
+  network;</li>
+<li><strong>outbound</strong>: the files that the protected network put on the server for
+  that key are scanned, then the clean ones are written on the key.</li>
+</ul>
+<p>The key itself is not cleaned, unless <code>airgap.clean</code> is set (see
+<a href="#cleaning-the-key">Cleaning the key</a>).</p>
 <h2 id="in-short">In short<a class="headerlink" href="#in-short" title="Permanent link">&para;</a></h2>
 <ol>
 <li>The user inserts a key; the kiosk scans it.</li>
@@ -1496,6 +1548,10 @@ key itself is not cleaned and leaves with its files.</p>
 <li>When the key comes back, its folder on the server is <strong>synchronized</strong>:
    new and changed files are copied, files that are no longer on the key, or
    no longer clean, are deleted from the server.</li>
+<li>Then the files of <code>&lt;path&gt;/&lt;folder&gt;/.pandora-box/outbound/</code> that the key
+   does not have, or has in another version, are downloaded, <strong>scanned</strong>,
+   and the clean ones are written at the root of the key (see
+   <a href="#outbound">Outbound</a>).</li>
 </ol>
 <div class="highlight"><pre><span></span><code>/srv/keys/                                   path on the server, not listable
 └── 3f9c…e1a7/                               folder of the key (64 hexadecimal digits)
@@ -1503,7 +1559,9 @@ key itself is not cleaned and leaves with its files.</p>
     ├── readme.txt
     └── .pandora-box/                        scan reports, one per insertion
         ├── 7c9e6679-7425-40de-944b-e07fc1f90ae7.json
-        └── 3f2504e0-4f89-41d3-9a0c-0305e82c3301.json
+        ├── 3f2504e0-4f89-41d3-9a0c-0305e82c3301.json
+        └── outbound/                        files waiting for the key
+            └── answer.pdf
 </code></pre></div>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1530,7 +1588,8 @@ key itself is not cleaned and leaves with its files.</p>
   whatever its result.</li>
 <li><strong>Nothing of the keys on the station.</strong> A kiosk that copies to a server
   keeps no scan report (they go to the server, with the files), has no
-  quarantine (it does not clean), and its log leaves out the names and
+  quarantine unless it cleans the keys with <code>quarantine.enabled</code>, and its
+  log leaves out the names and
   hashes of the files, the label, vendor, model and serial number of the
   key and the lines of the screen: only events, verdicts and counts. See
   <a href="#a-stolen-kiosk">A stolen kiosk</a> for what is still there.</li>
@@ -1552,14 +1611,65 @@ key itself is not cleaned and leaves with its files.</p>
   <code>COM1</code>...), or that differs from another one only by its case, is not
   copied and is listed as such.</li>
 </ul>
-<p>The screen shows the copy, then <strong>Files copied to the server</strong> with the
-files that were not copied (dangerous, suspicious, or that the server refused),
-or <strong>Copy to the server failed</strong>: the key is then neither cleaned nor
-copied, and can be inserted again later.</p>
+<p>The screen shows the copy, then <strong>Files copied</strong> with the
+files that were not copied, in either direction (dangerous, suspicious, or
+refused by the server or the key), or <strong>Copy failed</strong>: the key can be
+inserted again later.</p>
+<h2 id="outbound">Outbound<a class="headerlink" href="#outbound" title="Permanent link">&para;</a></h2>
+<p>The protected network puts files for a key in the folder <code>.pandora-box/outbound/</code>
+of its folder on the server: an operator finds that folder with the
+identifier of the key, in its scan reports (<code>key_id</code>). At each insertion:</p>
+<ul>
+<li><strong>Only a clean key.</strong> A key that holds a file the cleaning would remove (a
+  malicious file, or a suspicious one with <code>scan.suspicious = "block"</code>) gets
+  nothing: clean it at a kiosk that cleans, then insert it again. A key not
+  verified gets nothing either.</li>
+<li><strong>New or changed files.</strong> The kiosk tells the service the files of the
+  first filesystem of the key (path, size, modification time); the service
+  downloads into the staging folder (in memory) the files of the outbound
+  folder that the key does not have, or has in another version. The files
+  stay on the server: a file changed there is copied again; delete it there
+  when it is delivered.</li>
+<li><strong>Scanned.</strong> The downloaded files go through the same engines as the files
+  of a key: a malicious, suspicious or not fully scanned file is not
+  written, and is reported.</li>
+<li><strong>Written at the root of the key</strong>, with their folders and modification
+  times, replacing a file of the same name. Each file is written to a
+  temporary name, checked against the SHA-256 that was scanned, then
+  renamed. The kiosk checks the free space of the key and the limits of its
+  filesystem: files of 4 GiB at most on vfat; names that FAT, exFAT and NTFS
+  refuse (<code>\ : * ? " &lt; &gt; |</code>, a trailing space or dot, <code>CON</code>, <code>NUL</code>...);
+  names of 255 characters at most; names equal but for the case on FAT,
+  exFAT and NTFS. A file that cannot be written is reported, never renamed.
+  <code>.pandora-box</code> at the root is reserved for the token of the key.</li>
+</ul>
+<p><code>airgap.mode</code> chooses the directions: <code>both</code> (default), <code>inbound</code> or
+<code>outbound</code>.</p>
+<h2 id="cleaning-the-key">Cleaning the key<a class="headerlink" href="#cleaning-the-key" title="Permanent link">&para;</a></h2>
+<p>By default a station does not clean the keys: the dangerous files are never
+copied to the server, but stay on the key, which then gets nothing from the
+server. With <code>airgap.clean = true</code>, the station cleans the key too, as any
+kiosk, at the same insertion:</p>
+<ol>
+<li>the clean files go to the server;</li>
+<li>the files to remove are listed, and a touch on the screen removes them;
+   removing the key instead leaves it as it is (nothing from the server);</li>
+<li>a key cleaned entirely then gets the files waiting for it on the server.</li>
+</ol>
+<p>What is removed follows the settings of every kiosk: <code>scan.suspicious =
+"block"</code> (default) removes the suspicious files with the malicious ones,
+<code>"warn"</code> keeps them (and the key then gets nothing from the server only if
+a malicious file remains). <code>quarantine.enabled</code> keeps a copy of the removed
+files on the station (<code>quarantine.folder</code>): the only data of the keys it
+keeps; set it to <code>false</code> for a station that keeps nothing of the keys.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <p><code>[airgap]</code> of <code>packaging/pandora-box.toml</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="k">[airgap]</span>
 <span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<span class="c1"># "both" (default), "inbound" (key -&gt; server) or "outbound" (server -&gt; key)</span>
+<span class="n">mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"both"</span>
+<span class="c1"># Clean the key too, after a touch on the screen (see below)</span>
+<span class="n">clean</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <span class="c1"># "rsync" (rsync over SSH) or "sftp"</span>
 <span class="n">protocol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sftp"</span>
 <span class="n">host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"files.example.org"</span>
@@ -1739,7 +1849,7 @@ its old folder stays on the server, to archive or delete.</p>
 <tbody>
 <tr>
 <td><code>status</code></td>
-<td><code>copied</code>, <code>failed</code>, or <code>refused</code> (key not verified)</td>
+<td><code>copied</code>, <code>failed</code>, <code>refused</code> (key not verified), or <code>skipped</code> (<code>mode = "outbound"</code>)</td>
 </tr>
 <tr>
 <td><code>key_id</code></td>
@@ -1765,10 +1875,15 @@ its old folder stays on the server, to archive or delete.</p>
 <td><code>error</code></td>
 <td>why the copy failed</td>
 </tr>
+<tr>
+<td><code>outbound</code></td>
+<td>the files of the server: <code>status</code> (<code>copied</code>, <code>nothing</code>, <code>refused</code> when the key holds dangerous files, <code>failed</code>), <code>copied</code>, <code>unchanged</code> (already on the key), <code>rejected</code> (with why), <code>error</code></td>
+</tr>
 </tbody>
 </table>
 <p>The kiosk log has the events <code>key_token_written</code>, <code>key_identified</code>,
-<code>key_token_invalid</code>, <code>airgap_copied</code>, <code>airgap_failed</code> and <code>airgap_refused</code>;
+<code>key_token_invalid</code>, <code>airgap_copied</code>, <code>airgap_received</code>, <code>airgap_failed</code>
+and <code>airgap_refused</code>;
 the service logs <code>airgap_done</code> and <code>airgap_failed</code> in its journal
 (<code>journalctl -u pandora-box-airgap</code>).</p>
 <h2 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h2>
@@ -1776,13 +1891,16 @@ the service logs <code>airgap_done</code> and <code>airgap_failed</code> in its 
 <li><code>tests/airgap/run.sh</code> copies to a real OpenSSH server with rsync, in a
   container (SFTP, rsync over SSH, and rsync restricted by <code>rrsync</code> as
   above): first a copy, then a synchronization (changed, new and removed
-  files), an unknown host key refused, and the service over its socket.</li>
+  files), an unknown host key refused, the folders of the keys not listable,
+  the download of the outbound files the key lacks, and the service over
+  its socket.</li>
 <li><code>tests/windows/windows.sh</code> copies to a Windows Server in a QEMU virtual
   machine, set up as above (see below).</li>
 <li>The <a href="../vm/">virtual machine test</a> enables the copy to an SFTP server of the
   test: a key is copied, then inserted again without one of its files, which
   is deleted from the server; the key keeps its malicious files and gets its
-  identifier.</li>
+  identifier. That infected key gets nothing from the server; a clean key
+  gets the clean file waiting for it, not the EICAR file next to it.</li>
 </ul>
 <h3 id="windows-server-in-a-virtual-machine">Windows server in a virtual machine<a class="headerlink" href="#windows-server-in-a-virtual-machine" title="Permanent link">&para;</a></h3>
 <p>The copy to a Windows server is checked against a real Windows Server 2025,
