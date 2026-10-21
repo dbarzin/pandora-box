@@ -27,16 +27,16 @@ The open tasks of the phases below, by priority.
 
 **2. Hardening and user features**
 
-1. Scan receipt for the user (phase 5)
+1. Update server: one image per kiosk identifier, checked at boot and every hour (phase 5)
+2. Scan receipt for the user (phase 5)
 
 **3. Later**
 
-1. Fleet management: central server, update distribution (phase 5)
-2. Fuzzing, then external security audit (phase 6)
-3. Mapping to NIS2 and ISO 27001 (phase 6)
-4. Executables with `capa`, content disarm and reconstruction with Dangerzone (phase 4)
-5. Software TPM, once measured boot is used (phase 2)
-6. Maintenance console or SSH, to reconsider (phase 2)
+1. Fuzzing, then external security audit (phase 6)
+2. Mapping to NIS2 and ISO 27001 (phase 6)
+3. Executables with `capa`, content disarm and reconstruction with Dangerzone (phase 4)
+4. Software TPM, once measured boot is used (phase 2)
+5. Maintenance console or SSH, to reconsider (phase 2)
 
 ---
 
@@ -253,10 +253,28 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [x] Signed identifier of each key for the file transfer stations
 - [x] Inbound file transfer station: copy the clean files of a key to a server ([docs/airgap.md](docs/airgap.md))
 - [x] Outbound file transfer station: copy the clean files waiting on a server to a key
+- [x] Statistics dashboard (devices scanned, detections): in the SIEM ([docs/siem.md](docs/siem.md#dashboards))
+- [ ] Centralized distribution of signed updates: the update server, below
 - [ ] ~~Printed or exported scan receipt for the user~~ *(not retained)*
 - [ ] ~~Optional central server: kiosk inventory, reports, signature status~~ *(not retained)*
-- [ ] Centralized distribution of signed updates
-- [x] Statistics dashboard (devices scanned, detections): in the SIEM ([docs/siem.md](docs/siem.md#dashboards))
+
+### Update server
+
+An organization of about a hundred kiosks publishes their updates on its own server. Each image has a unique identifier (uid), and the server holds one image per uid, ready to install, and the signature set shared by every kiosk. A kiosk checks for a newer image of its uid, and for newer signatures, at boot and then every hour; it downloads either or both. Most of the chain exists: the online image update (`updates.image_url`: signed manifest, newer version only, download as an unprivileged user, installation without network, restart when idle, A/B with rollback) and the published signature set (`updates.url`). What is missing:
+
+- [ ] Image uid: 128 random bits, chosen by the fleet inventory, kept in the image (read-only), named in every log entry and in the maintenance export
+- [ ] Fleet inventory (uid, kiosk name, profile, configuration and theme of each image), and build of every image of the fleet with one PIN of the YubiKey, from a common base build: only the configuration differs
+- [ ] Tree of the update server, built by the fleet tool: `<uid>/` (image update of that uid) and `signatures/` (shared set); a static HTTPS server, no code on the server
+- [ ] The signed manifest of an image update names its uid: a kiosk refuses the image of another uid, even validly signed and newer
+- [ ] `updates.server` in the configuration: the kiosk derives the folder of its image and of the signatures from it and from its uid
+- [ ] Check at boot (once the network and the time are there) and every hour, with a random delay; only the manifests are downloaded when nothing changed
+- [ ] A version that failed to boot (rollback) is not installed again: the kiosk waits for a newer one
+- [ ] Interrupted downloads resumed (HTTP range): an image update is about 215 MB
+- [ ] A signature key separate from the update key, which the kiosk only trusts for signature sets: the publication host signs the sets unattended, the update key stays offline for the image updates and maintenance requests
+- [ ] Gradual rollout: an image is published to a few pilot uids first, then to the others
+- [ ] Events and SIEM dashboard of the fleet: uid, image version and signature serial of each kiosk, updates found, installed, refused or rolled back
+- [ ] Test in the virtual machine: an update server in a container, two uids, a refused image of another uid, a rollback not installed again
+- [ ] Guide: deploying the update server and adding a kiosk to the fleet
 
 ## Phase 6 — Assurance and compliance
 
@@ -337,6 +355,14 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - Outbound station (`airgap.mode`, `both` by default: both directions at the same insertion): a key holding a file the cleaning would remove (a malicious file, or a suspicious file with `scan.suspicious = "block"`) gets nothing until it is cleaned, then inserted again. A station does not clean by default; with `airgap.clean` it cleans the key as any kiosk (a touch on the screen, `scan.suspicious` for the suspicious files, `quarantine.enabled` for a copy of the removed files, the only data of the keys it then keeps), after the copy to the server, and a key cleaned entirely gets the files of the server at the same insertion. The protected network puts the files for a key in `<folder>/.pandora-box/outbound/` on the server (protected from the inbound mirror), found by the identifier of the key in its reports. The kiosk sends the files of the key (path, size, modification time); the service downloads into the staging folder (memory) those the key does not have or has in another version, and leaves them on the server. They are scanned like the files of a key, then the clean ones are written at the root of its first filesystem, replacing a file of the same name, checked against the scanned SHA-256 (the service could change them after the scan), after a check of its free space; the limits of each filesystem are handled (4 GiB files on vfat, forbidden characters, name length, case-insensitive names), a file that cannot be written is reported, never renamed, and `.pandora-box` stays reserved for the token. The key stays in the kiosk from the scan to the end of the copy.
 - Identifier: the USB serial number is missing or shared on some keys, so at the first insertion of a verified key the kiosk writes a token in a hidden file `.pandora-box` at its root (on the first supported partition): a random UUID and a random 256-bit secret, signed with a key of the kiosks of the organization (Ed25519, systemd credential of the image). The file is read as hostile data (size limit, strict format); a malformed or unsigned token is logged and replaced with a new one (new identifier, empty outbound directory). The signature prevents forging an identifier, not copying the file to another key.
 - An ext4 key with a journal to replay is not reformatted to receive files: its identifier could not be read, and it would lose its outbound files.
+
+### Fleet updates
+
+- One image per uid, not one image for the fleet with a configuration per kiosk: the configuration stays in the read-only root filesystem, covered by dm-verity and Secure Boot, and each kiosk can have its own (name, network, SIEM, file transfer server, theme). A uid can also be given to several identical kiosks.
+- The update server is a static HTTPS server that holds no key: the kiosks only download signed files, so a compromised server can delay updates, not install anything. The uid in the signed manifest stops it from giving a kiosk the image of another one.
+- The uid is long and random: the folder of an image cannot be guessed, as an image of the profile `online` holds credentials (abuse.ch Auth-Key). Client certificates on the server are possible, not required.
+- The kiosks pull, the server pushes nothing and knows nothing of them: with a hundred kiosks checking every hour, a few kilobytes of manifests per check; the state of the fleet is in the SIEM, as the statistics, not on a server of PandoraBox.
+- Signature sets are signed automatically, many times a day, by the publication host (`publish/`), which copies them to the update server: with a key of their own, trusted only for signature sets, the update key and the Secure Boot key stay offline in the YubiKeys. Whoever steals the signature key can weaken the detection (a set with fewer signatures, still newer and loaded by the engines), not change the system nor get the logs.
 
 ### Logs and statistics
 
