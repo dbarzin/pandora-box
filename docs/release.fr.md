@@ -22,8 +22,19 @@ Les clés privées ne quittent jamais une **YubiKey 5** (application PIV,
 firmware 5.7 ou plus récent pour Ed25519). Le conteneur de construction les
 utilise par `ykcs11` et le fournisseur PKCS#11 d'OpenSSL
 (`image/pkcs11.sh`). Il atteint la YubiKey par le démon PC/SC de
-l'ordinateur de construction quand il en fait tourner un (`/run/pcscd`),
-sinon il démarre le sien.
+l'ordinateur de construction quand il en fait tourner un qui lui répond
+(`/run/pcscd`), sinon il démarre le sien, avec les périphériques USB. Le
+client du conteneur (pcsc-lite 2, Debian 13) ne parle pas à un démon plus
+ancien (Debian 12) : arrêtez celui-ci pendant la signature, car il retient la
+YubiKey (`sudo systemctl stop pcscd.socket pcscd`) ; les scripts le disent.
+
+Il faut deux YubiKeys de la **série 5** (5 NFC, 5C NFC, 5 Nano…). Le
+firmware d'une YubiKey ne se met pas à jour : vérifiez qu'il est en 5.7 ou
+plus récent avant l'achat. Les modèles *Security Key by Yubico* n'ont que
+FIDO, pas PIV : ils ne peuvent pas porter les clés. `ykman info` (paquet
+`yubikey-manager`, sur l'ordinateur de construction) donne le modèle, le
+firmware et les applications actives en USB ; `ykman config usb --enable PIV`
+active PIV quand il est désactivé.
 
 Les parties publiques sont dans le dépôt, dans `image/release/`. Leurs
 empreintes sont aussi publiées ici, pour vérifier une version avec une autre
@@ -46,11 +57,16 @@ puis effacées. Une clé Secure Boot perdue signifie que les bornes ne peuvent
 plus qu'être réinstallées, à la main ; une clé de mise à jour perdue, qu'elles
 ne reçoivent plus de jeux de signatures.
 
-Dans le conteneur de construction, avec les fichiers en mémoire seulement :
+Dans le conteneur de construction, avec les fichiers en mémoire seulement.
+Le conteneur utilise son propre démon PC/SC : arrêtez d'abord celui de
+l'ordinateur, s'il en fait tourner un (`sudo systemctl stop pcscd.socket
+pcscd`, puis `sudo systemctl start pcscd.socket` à la fin).
 
 ```sh
-docker run --rm -it -v /run/pcscd:/run/pcscd -v "$PWD/image/release:/release" \
-    --tmpfs /keys:mode=0700 pandora-box-builder bash
+docker run --rm -it --device /dev/bus/usb -v /run/udev:/run/udev:ro \
+    -v "$PWD/image/release:/release" --tmpfs /keys:mode=0700 pandora-box-builder bash
+pcscd
+opensc-tool -l      # liste le lecteur de la YubiKey : Yubico YubiKey ... CCID
 cd /keys
 openssl req -new -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=PandoraBox release Secure Boot key/" \
     -keyout secure-boot.key -out secure-boot.crt

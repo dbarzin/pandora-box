@@ -20,9 +20,16 @@ pkcs11_docker_options() {
     options="$options -e PANDORA_BOX_SECURE_BOOT_KEY -e PANDORA_BOX_UPDATE_KEY"
     options="$options -e PANDORA_BOX_PKCS11_MODULE"
     # The YubiKey is reached through the PC/SC daemon of the build computer
-    # when it runs one (it holds the reader); else the container starts its own
+    # when it runs one that answers the container (it holds the reader); else
+    # the container starts its own, with the USB devices
     if [ -S /run/pcscd/pcscd.comm ]; then
-        options="$options -v /run/pcscd:/run/pcscd"
+        options="$options -v /run/pcscd:/run/pcscd-host"
+    fi
+    if [ -d /dev/bus/usb ]; then
+        options="$options --device /dev/bus/usb"
+    fi
+    if [ -d /run/udev ]; then
+        options="$options -v /run/udev:/run/udev:ro"
     fi
     if [ -n "${PANDORA_BOX_SOFTHSM:-}" ]; then
         options="$options -v $(realpath "$PANDORA_BOX_SOFTHSM"):/run/softhsm"
@@ -82,9 +89,7 @@ pkcs11-module-quirks = no-deinit no-operation-state"
     else
         echo "module: ${PANDORA_BOX_PKCS11_MODULE:-/usr/lib/x86_64-linux-gnu/libykcs11.so}" \
             >"$module"
-        if [ ! -S /run/pcscd/pcscd.comm ]; then
-            pcscd
-        fi
+        _pcsc_start || return 1
     fi
     # The openssl command of the container loads the provider too
     cat >/etc/ssl/openssl.cnf <<EOF
@@ -114,4 +119,70 @@ _pkcs11_with_pin() {
     *\?*) printf '%s&pin-source=file:/run/pandora-box/pin' "$1" ;;
     *) printf '%s?pin-source=file:/run/pandora-box/pin' "$1" ;;
     esac
+}
+
+# The PC/SC daemon of the build computer when it answers and has the reader of
+# the token, else one of the container. The client library of the container
+# (Debian 13, pcsc-lite 2) does not talk to a daemon older than pcsc-lite 2
+# (Debian 12): the daemon of the build computer is then stopped, as it holds
+# the reader. The tools of mkosi find the socket at its usual place, in /run.
+_pcsc_start() {
+    local host=/run/pcscd-host/pcscd.comm readers
+    mkdir -p /run/pcscd
+    if [ -S "$host" ] && readers=$(_pcsc_readers "$host") && _pcsc_has_token "$readers"; then
+        ln -sf "$host" /run/pcscd/pcscd.comm
+        return 0
+    fi
+    pcscd
+    # The daemon finds the readers after it starts
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        if readers=$(_pcsc_readers /run/pcscd/pcscd.comm) && _pcsc_has_token "$readers"; then
+            return 0
+        fi
+        sleep 0.5
+    done
+    echo "error: no reader of the release token" >&2
+    if [ -S "$host" ] && ! _pcsc_readers "$host" >/dev/null; then
+        echo "The PC/SC daemon of this computer holds it, but is too old for the container" >&2
+        echo "(pcsc-lite < 2): stop it while signing (sudo systemctl stop pcscd.socket pcscd)." >&2
+    elif [ -z "${PANDORA_BOX_PKCS11_MODULE:-}" ]; then
+        echo "Plug in the YubiKey: a YubiKey 5 with PIV over USB (ykman info), not a Security Key." >&2
+    fi
+    return 1
+}
+
+# Names of the readers of a PC/SC daemon (its socket), one per line; fails if
+# it does not answer
+_pcsc_readers() {
+    PCSCLITE_CSOCK_NAME=$1 python3 - <<'EOF'
+import ctypes
+import sys
+
+pcsc = ctypes.CDLL("libpcsclite.so.1")
+pcsc.SCardEstablishContext.restype = pcsc.SCardListReaders.restype = ctypes.c_long
+context = ctypes.c_long()
+if pcsc.SCardEstablishContext(2, None, None, ctypes.byref(context)):  # SCARD_SCOPE_SYSTEM
+    sys.exit(1)
+size = ctypes.c_ulong()
+rv = pcsc.SCardListReaders(context, None, None, ctypes.byref(size)) & 0xFFFFFFFF
+if rv == 0x8010002E:  # SCARD_E_NO_READERS_AVAILABLE
+    sys.exit(0)
+names = ctypes.create_string_buffer(size.value)
+if rv or pcsc.SCardListReaders(context, None, names, ctypes.byref(size)):
+    sys.exit(1)
+print("\n".join(n.decode(errors="replace") for n in names.raw.split(b"\0") if n))
+EOF
+}
+
+# A reader of the token among these: a YubiKey for ykcs11, any reader for
+# another module
+_pcsc_has_token() {
+    if [ -n "${PANDORA_BOX_PKCS11_MODULE:-}" ]; then
+        [ -n "$1" ]
+    else
+        case "$1" in
+        *[Yy]ubico*) return 0 ;;
+        *) return 1 ;;
+        esac
+    fi
 }
