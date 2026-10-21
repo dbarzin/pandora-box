@@ -1054,7 +1054,11 @@ class Kiosk:
         root = self._mount(first, read_only=False)
         st = os.statvfs(root)
         layout = keyfs.plan(
-            first.fs_type, [(f.rel_path, f.size) for f in clean], st.f_bavail * st.f_frsize
+            first.fs_type,
+            # In the order of their paths: of two names equal but for the case,
+            # the same one is kept whatever the order of the scan
+            [(f.rel_path, f.size) for f in sorted(clean, key=lambda f: f.rel_path)],
+            st.f_bavail * st.f_frsize,
         )
         rejected += layout.rejected
         by_path = {f.rel_path: f for f in clean}
