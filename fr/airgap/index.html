@@ -908,6 +908,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-stolen-kiosk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Une borne volée
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#scan-report" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1384,6 +1395,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-stolen-kiosk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Une borne volée
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#scan-report" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1465,18 +1487,18 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.</p>
 <li>L'utilisateur insère une clé ; la borne l'analyse.</li>
 <li>Une clé <strong>non vérifiée</strong> (un fichier n'a pas pu être entièrement analysé)
    est refusée : rien n'est copié, rien n'est écrit dessus.</li>
-<li>Sinon, la borne lit l'identifiant de la clé (le fichier caché
-   <code>.pandora-box</code> à sa racine), ou en écrit un nouveau.</li>
-<li>Les <strong>fichiers sains</strong> sont copiés dans <code>&lt;path&gt;/&lt;identifiant&gt;/</code> sur le
-   serveur, avec le rapport d'analyse dans
-   <code>&lt;path&gt;/&lt;identifiant&gt;/.pandora-box/</code>. Les fichiers malveillants et
-   suspects ne sont jamais copiés.</li>
+<li>Sinon, la borne lit le jeton de la clé (le fichier caché <code>.pandora-box</code>
+   à sa racine), ou en écrit un nouveau.</li>
+<li>Les <strong>fichiers sains</strong> sont copiés dans <code>&lt;path&gt;/&lt;répertoire&gt;/</code> sur le
+   serveur, le répertoire portant un nom dérivé d'un secret du jeton, avec
+   le rapport d'analyse dans <code>&lt;path&gt;/&lt;répertoire&gt;/.pandora-box/</code>. Les
+   fichiers malveillants et suspects ne sont jamais copiés.</li>
 <li>Quand la clé revient, son répertoire sur le serveur est <strong>synchronisé</strong> :
    les fichiers nouveaux et modifiés sont copiés, ceux qui ne sont plus sur
    la clé, ou plus sains, sont supprimés du serveur.</li>
 </ol>
-<div class="highlight"><pre><span></span><code>/srv/keys/                                   path sur le serveur
-└── 0f8fad5b-d9cb-469f-a165-70867728950e/    identifiant de la clé
+<div class="highlight"><pre><span></span><code>/srv/keys/                                   path sur le serveur, non listable
+└── 3f9c…e1a7/                               répertoire de la clé (64 chiffres hexadécimaux)
     ├── docs/report.pdf                      fichiers sains de la clé
     ├── readme.txt
     └── .pandora-box/                        rapports d'analyse, un par insertion
@@ -1485,21 +1507,37 @@ La clé elle-même n'est pas nettoyée et repart avec ses fichiers.</p>
 </code></pre></div>
 <h2 id="how-it-works">Fonctionnement<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Identifiant de la clé.</strong> Le numéro de série d'une clé USB est absent ou
-  partagé sur certaines clés : à sa première insertion, la borne écrit un
-  identifiant aléatoire (UUID) dans <code>.pandora-box</code>, à la racine de son
-  premier système de fichiers, signé avec une clé des bornes de
-  l'organisation (Ed25519). Le fichier vient de la clé : il est lu comme une
-  donnée hostile (taille limitée, format strict, signature vérifiée). Un
-  jeton absent, mal formé ou étranger est remplacé par un nouveau : la clé
-  reçoit alors un nouveau répertoire sur le serveur. La signature empêche de
-  forger un identifiant, pas de copier le fichier sur une autre clé. Ce
-  fichier est la seule modification apportée à la clé.</li>
+<li><strong>Jeton de la clé.</strong> Le numéro de série d'une clé USB est absent ou
+  partagé sur certaines clés : à sa première insertion, la borne écrit dans
+  <code>.pandora-box</code>, à la racine de son premier système de fichiers, un
+  identifiant aléatoire (UUID, écrit dans le rapport d'analyse) et un secret
+  aléatoire de 256 bits, signés avec une clé des bornes de l'organisation
+  (Ed25519). Le fichier vient de la clé : il est lu comme une donnée hostile
+  (taille limitée, format strict, signature vérifiée). Un jeton absent, mal
+  formé ou étranger est remplacé par un nouveau : la clé reçoit alors un
+  nouveau répertoire sur le serveur. La signature empêche de forger un
+  jeton, pas de copier le fichier sur une autre clé. Ce fichier est la seule
+  modification apportée à la clé.</li>
+<li><strong>Répertoire de la clé.</strong> Son nom est le SHA-256 du secret du jeton : la
+  borne le calcule à l'insertion de la clé et ne l'écrit, ne l'affiche ni ne
+  le garde jamais. Sans la clé, impossible de retrouver le répertoire de ses
+  fichiers : ni à partir d'une borne volée, ni avec le compte des bornes sur
+  le serveur, qui ne peut pas lister les répertoires (voir
+  <a href="#the-server">Le serveur</a>).</li>
 <li><strong>Ce qui est copié.</strong> Les fichiers dont le verdict est sain. Chacun est
   d'abord copié par la borne dans un répertoire de transit
   (<code>airgap.staging</code>) et comparé au SHA-256 analysé ; un fichier modifié
-  depuis l'analyse n'est pas copié. Le répertoire de transit est effacé à la
-  fin de la copie, quel qu'en soit le résultat.</li>
+  depuis l'analyse n'est pas copié. Le répertoire de transit est en mémoire
+  (un tmpfs d'au plus la moitié de la mémoire : une copie plus grosse est
+  refusée) et il est effacé à la fin de la copie, quel qu'en soit le
+  résultat.</li>
+<li><strong>Rien des clés sur la borne.</strong> Une borne qui copie vers un serveur ne
+  garde aucun rapport d'analyse (ils partent sur le serveur, avec les
+  fichiers), n'a pas de quarantaine (elle ne nettoie pas), et son journal
+  omet les noms et les empreintes des fichiers, le libellé, le fabricant, le
+  modèle et le numéro de série de la clé, et les lignes de l'écran :
+  seulement des événements, des verdicts et des compteurs. Voir
+  <a href="#a-stolen-kiosk">Une borne volée</a> pour ce qui reste.</li>
 <li><strong>Qui copie.</strong> La borne n'a pas de réseau. Le service <code>pandora-box-airgap</code>
   tourne sous son propre utilisateur, sans privilèges, et c'est le seul,
   avec les services de mise à jour et de SIEM, que le pare-feu laisse
@@ -1587,7 +1625,10 @@ ssh-keygen<span class="w"> </span>-lf<span class="w"> </span>image/airgap-known-
 <p>Avec un autre port, l'hôte s'écrit <code>[files.example.org]:2222</code>.</p>
 <h2 id="the-server">Le serveur<a class="headerlink" href="#the-server" title="Permanent link">&para;</a></h2>
 <p>Donnez aux bornes un compte qui ne peut écrire que dans le répertoire des
-clés.</p>
+clés, et <strong>qui ne peut pas le lister</strong> : le compte crée le répertoire d'une
+clé et l'ouvre par son nom, qui vient de la clé. Avec les secrets d'une
+borne volée, les répertoires des clés ne peuvent alors être ni listés ni
+retrouvés.</p>
 <ul>
 <li>
 <p><strong>SFTP</strong> : un compte limité à SFTP dans un chroot, par exemple dans
@@ -1598,14 +1639,21 @@ clés.</p>
     AllowTcpForwarding no
     X11Forwarding no
 </code></pre></div>
-<p>avec <code>path = "/keys"</code> (le répertoire dans le chroot, accessible en
-écriture au compte).
+<p>avec <code>path = "/keys"</code>, le répertoire dans le chroot appartenant au
+compte, qui peut y écrire et le traverser, mais pas le lire :</p>
+<p><div class="highlight"><pre><span></span><code>install<span class="w"> </span>-d<span class="w"> </span>-m<span class="w"> </span><span class="m">0300</span><span class="w"> </span>-o<span class="w"> </span>kiosk<span class="w"> </span>-g<span class="w"> </span>kiosk<span class="w"> </span>/srv/sftp/keys
+</code></pre></div>
 - <strong>rsync sur SSH</strong> : rsync doit être installé sur le serveur. Limitez la
   clé de la borne à rsync dans son répertoire avec <code>rrsync</code> (fourni avec
   rsync), dans <code>~kiosk/.ssh/authorized_keys</code> :</p>
-<div class="highlight"><pre><span></span><code>command="rrsync /srv/keys",restrict ssh-ed25519 AAAA... pandora-box-kiosk
+<div class="highlight"><pre><span></span><code>command="rrsync /srv/rsync",restrict ssh-ed25519 AAAA... pandora-box-kiosk
 </code></pre></div>
-<p>puis <code>path = "."</code>, les chemins étant relatifs au répertoire de <code>rrsync</code>.</p>
+<p><code>rrsync</code> doit lire son répertoire (il le verrouille) : les clés vont dans
+son sous-répertoire <code>keys</code>, que le compte ne peut pas lire, et
+<code>path = "keys"</code>, les chemins étant relatifs au répertoire de <code>rrsync</code> :</p>
+<div class="highlight"><pre><span></span><code>install<span class="w"> </span>-d<span class="w"> </span>-m<span class="w"> </span><span class="m">0700</span><span class="w"> </span>-o<span class="w"> </span>kiosk<span class="w"> </span>-g<span class="w"> </span>kiosk<span class="w"> </span>/srv/rsync
+install<span class="w"> </span>-d<span class="w"> </span>-m<span class="w"> </span><span class="m">0300</span><span class="w"> </span>-o<span class="w"> </span>kiosk<span class="w"> </span>-g<span class="w"> </span>kiosk<span class="w"> </span>/srv/rsync/keys
+</code></pre></div>
 </li>
 </ul>
 <p>Seules les bornes suppriment des fichiers dans le répertoire d'une clé :
@@ -1643,9 +1691,15 @@ ou plus récents) : utilisez <code>protocol = "sftp"</code> (Windows n'a pas rsy
     AllowTcpForwarding no
     PermitTTY no
 </code></pre></div>
-<p>avec <code>path = "/keys"</code>, le répertoire <code>C:\PandoraBox\keys</code> étant
-accessible en écriture au compte. Sans chroot, les chemins s'écrivent
-<code>/C:/PandoraBox/keys</code>.
+<p>avec <code>path = "/keys"</code>. Le répertoire <code>C:\PandoraBox\keys</code> permet au
+compte de créer le répertoire d'une clé (<code>AD</code>), de le traverser (<code>X</code>) et
+d'en lire les attributs (<code>RA</code>), mais pas de le lister, sans les droits
+hérités de <code>C:\</code> (le groupe Users peut le lister) ; dans les répertoires
+des clés, le compte peut modifier :</p>
+<div class="highlight"><pre><span></span><code><span class="n">icacls</span> <span class="n">C</span><span class="p">:\</span><span class="n">PandoraBox</span><span class="p">\</span><span class="n">keys</span> <span class="p">/</span><span class="n">inheritance</span><span class="p">:</span><span class="nb">r </span><span class="p">/</span><span class="n">grant</span> <span class="s2">"SYSTEM:(OI)(CI)F"</span> <span class="p">`</span>
+    <span class="s2">"Administrators:(OI)(CI)F"</span> <span class="s2">"kiosk:(AD,X,RA)"</span> <span class="s2">"kiosk:(OI)(CI)(IO)M"</span>
+</code></pre></div>
+<p>Sans chroot, les chemins s'écrivent <code>/C:/PandoraBox/keys</code>.
 4. Ouvrez le port 22 au réseau des bornes : la règle de pare-feu fournie
    avec OpenSSH n'autorise que le profil réseau <strong>Privé</strong>, et un réseau non
    identifié est Public. Par exemple :
@@ -1660,6 +1714,27 @@ place de l'ancien (extension SFTP <code>posix-rename</code>) ; sur un serveur qu
 propose pas, l'ancien fichier est d'abord supprimé, puis le nouveau renommé.</p>
 <p>Un serveur Windows peut être testé dans une machine virtuelle : voir
 <a href="#tests">Tests</a>.</p>
+<h2 id="a-stolen-kiosk">Une borne volée<a class="headerlink" href="#a-stolen-kiosk" title="Permanent link">&para;</a></h2>
+<p>Ce que contient une borne d'entrée volée, et ce qu'il faut faire :</p>
+<ul>
+<li><strong>Absent</strong> : les fichiers des clés, leurs noms et leurs empreintes, les
+  rapports d'analyse, les répertoires des clés sur le serveur.</li>
+<li><strong>Encore présent</strong> : le journal du système et le journal d'audit
+  d'USBGuard gardent le fabricant, le produit et le numéro de série des
+  périphériques USB branchés, tels que le noyau et USBGuard les rapportent ;
+  le disque n'est pas chiffré (pas encore de TPM).</li>
+<li><strong>Les secrets de l'image</strong> : la clé SSH du compte des bornes, et la clé
+  qui signe les jetons. Avec eux, on peut se connecter au serveur comme une
+  borne, mais ni lister les répertoires des clés ni en retrouver un sans sa
+  clé.</li>
+</ul>
+<p>Après un vol, retirez la clé publique des bornes du serveur
+(<code>authorized_keys</code>), puis construisez les images avec une nouvelle clé SSH
+et installez-les comme mise à jour sur les autres bornes. Pour révoquer une
+borne sans les autres, construisez chaque borne avec son propre
+<code>image/credentials.toml</code>. Une nouvelle <code>token_key</code> rend tous les jetons
+invalides : chaque clé reçoit alors un nouveau répertoire, et son ancien
+répertoire reste sur le serveur, à archiver ou supprimer.</p>
 <h2 id="scan-report">Rapport d'analyse<a class="headerlink" href="#scan-report" title="Permanent link">&para;</a></h2>
 <p><code>actions.airgap</code> du rapport (voir <a href="../engines/#scan-report">Rapport d'analyse</a>) :</p>
 <table>
@@ -1676,7 +1751,7 @@ propose pas, l'ancien fichier est d'abord supprimé, puis le nouveau renommé.</
 </tr>
 <tr>
 <td><code>key_id</code></td>
-<td>identifiant de la clé, le nom de son répertoire</td>
+<td>identifiant de la clé (pas le nom de son répertoire)</td>
 </tr>
 <tr>
 <td><code>destination</code></td>

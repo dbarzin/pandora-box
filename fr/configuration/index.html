@@ -1608,7 +1608,8 @@ anglais) :</p>
 <span class="n">windows_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 <span class="c1"># rsync, sftp: host keys of the server; in the image: image/airgap-known-hosts</span>
 <span class="n">known_hosts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/etc/pandora-box/airgap-known-hosts"</span>
-<span class="c1"># Clean files of a key, prepared by the kiosk for the service, deleted once copied</span>
+<span class="c1"># Clean files of a key, prepared by the kiosk for the service, deleted once</span>
+<span class="c1"># copied; in the image, a tmpfs (memory) of at most half the memory</span>
 <span class="n">staging</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/var/lib/pandora-box-airgap/staging"</span>
 <span class="n">socket</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/run/pandora-box-airgap/airgap.sock"</span>
 <span class="c1"># Timeout of the connection and of each network operation, in seconds</span>

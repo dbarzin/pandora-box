@@ -1746,7 +1746,9 @@ trusted.</p>
   sandboxed.</li>
 <li><strong>Physical access beyond the scanning ports.</strong> Opening the enclosure gives
   access to the disk: <code>/var</code> is not encrypted (no TPM), so the reports, the
-  logs and the quarantine can be read. Lost BIOS password, disconnected
+  logs and the quarantine can be read. A station that copies to a server
+  keeps none of them, nor the folders of the keys on the server: see
+  <a href="../airgap/#a-stolen-kiosk">A stolen kiosk</a>. Lost BIOS password, disconnected
   intrusion switch or reachable internal ports defeat the boot protections.</li>
 <li><strong>The release keys.</strong> Whoever holds the YubiKeys and their PIN can build
   an image that the kiosks boot and trust.</li>

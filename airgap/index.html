@@ -908,6 +908,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-stolen-kiosk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A stolen kiosk
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#scan-report" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1384,6 +1395,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#a-stolen-kiosk" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A stolen kiosk
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#scan-report" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1465,17 +1487,18 @@ key itself is not cleaned and leaves with its files.</p>
 <li>The user inserts a key; the kiosk scans it.</li>
 <li>A key that was <strong>not verified</strong> (a file could not be fully scanned) is
    refused: nothing is copied, nothing is written on it.</li>
-<li>Otherwise the kiosk reads the identifier of the key (the hidden file
+<li>Otherwise the kiosk reads the token of the key (the hidden file
    <code>.pandora-box</code> at its root), or writes a new one on it.</li>
-<li>The <strong>clean files</strong> are copied to <code>&lt;path&gt;/&lt;identifier&gt;/</code> on the server,
-   with the scan report in <code>&lt;path&gt;/&lt;identifier&gt;/.pandora-box/</code>. Malicious
-   and suspicious files are never copied.</li>
+<li>The <strong>clean files</strong> are copied to <code>&lt;path&gt;/&lt;folder&gt;/</code> on the server, the
+   folder being named after a secret of the token, with the scan report in
+   <code>&lt;path&gt;/&lt;folder&gt;/.pandora-box/</code>. Malicious and suspicious files are never
+   copied.</li>
 <li>When the key comes back, its folder on the server is <strong>synchronized</strong>:
    new and changed files are copied, files that are no longer on the key, or
    no longer clean, are deleted from the server.</li>
 </ol>
-<div class="highlight"><pre><span></span><code>/srv/keys/                                   path on the server
-└── 0f8fad5b-d9cb-469f-a165-70867728950e/    identifier of the key
+<div class="highlight"><pre><span></span><code>/srv/keys/                                   path on the server, not listable
+└── 3f9c…e1a7/                               folder of the key (64 hexadecimal digits)
     ├── docs/report.pdf                      clean files of the key
     ├── readme.txt
     └── .pandora-box/                        scan reports, one per insertion
@@ -1484,20 +1507,33 @@ key itself is not cleaned and leaves with its files.</p>
 </code></pre></div>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Identifier of the key.</strong> The serial number of a USB key is missing or
-  shared on some keys: at its first insertion, the kiosk writes a random
-  identifier (UUID) in <code>.pandora-box</code>, at the root of its first filesystem,
-  signed with a key of the kiosks of the organization (Ed25519). The file
-  comes from the key: it is read as hostile data (size limit, strict format,
-  signature checked). A missing, malformed or foreign token is replaced with
-  a new one, so the key gets a new folder on the server. The signature
-  prevents forging an identifier, not copying the file to another key. This
-  file is the only change made to the key.</li>
+<li><strong>Token of the key.</strong> The serial number of a USB key is missing or shared
+  on some keys: at its first insertion, the kiosk writes in <code>.pandora-box</code>,
+  at the root of its first filesystem, a random identifier (UUID, written in
+  the scan report) and a random secret of 256 bits, signed with a key of the
+  kiosks of the organization (Ed25519). The file comes from the key: it is
+  read as hostile data (size limit, strict format, signature checked). A
+  missing, malformed or foreign token is replaced with a new one, so the key
+  gets a new folder on the server. The signature prevents forging a token,
+  not copying the file to another key. This file is the only change made to
+  the key.</li>
+<li><strong>Folder of the key.</strong> Its name is the SHA-256 of the secret of the token:
+  the kiosk computes it when the key is inserted and never logs, shows or
+  keeps it. Without the key, the folder of its files cannot be found: not
+  from a stolen kiosk, nor from the account of the kiosks on the server,
+  which cannot list the folders (see <a href="#the-server">The server</a>).</li>
 <li><strong>What is copied.</strong> The files whose verdict is clean. Each one is first
   copied by the kiosk into a staging folder (<code>airgap.staging</code>) and checked
   against the SHA-256 that was scanned; a file changed since the scan is not
-  copied. The staging folder is deleted once the copy is over, whatever its
-  result.</li>
+  copied. The staging folder is in memory (a tmpfs of at most half the
+  memory: a bigger copy is refused) and is deleted once the copy is over,
+  whatever its result.</li>
+<li><strong>Nothing of the keys on the station.</strong> A kiosk that copies to a server
+  keeps no scan report (they go to the server, with the files), has no
+  quarantine (it does not clean), and its log leaves out the names and
+  hashes of the files, the label, vendor, model and serial number of the
+  key and the lines of the screen: only events, verdicts and counts. See
+  <a href="#a-stolen-kiosk">A stolen kiosk</a> for what is still there.</li>
 <li><strong>Who copies.</strong> The kiosk has no network. The service
   <code>pandora-box-airgap</code> runs as its own user, without privileges, and is the
   only one besides the update and SIEM services that the firewall lets out.
@@ -1583,7 +1619,10 @@ ssh-keygen<span class="w"> </span>-lf<span class="w"> </span>image/airgap-known-
 </code></pre></div>
 <p>With another port, the host is written <code>[files.example.org]:2222</code>.</p>
 <h2 id="the-server">The server<a class="headerlink" href="#the-server" title="Permanent link">&para;</a></h2>
-<p>Give the kiosks an account that can only write into the folder of the keys.</p>
+<p>Give the kiosks an account that can only write into the folder of the keys,
+and <strong>that cannot list it</strong>: the account creates the folder of a key and
+opens it by its name, which comes from the key. With the credentials of a
+stolen kiosk, the folders of the keys can then neither be listed nor found.</p>
 <ul>
 <li>
 <p><strong>SFTP</strong>: an account restricted to SFTP in a chroot, for instance in
@@ -1594,13 +1633,21 @@ ssh-keygen<span class="w"> </span>-lf<span class="w"> </span>image/airgap-known-
     AllowTcpForwarding no
     X11Forwarding no
 </code></pre></div>
-<p>with <code>path = "/keys"</code> (the folder in the chroot, writable by the account).
+<p>with <code>path = "/keys"</code>, the folder in the chroot owned by the account,
+which may write into it and go through it, but not read it:</p>
+<p><div class="highlight"><pre><span></span><code>install<span class="w"> </span>-d<span class="w"> </span>-m<span class="w"> </span><span class="m">0300</span><span class="w"> </span>-o<span class="w"> </span>kiosk<span class="w"> </span>-g<span class="w"> </span>kiosk<span class="w"> </span>/srv/sftp/keys
+</code></pre></div>
 - <strong>rsync over SSH</strong>: rsync must be installed on the server. Restrict the key
   of the kiosk to rsync in its folder with <code>rrsync</code> (shipped with rsync), in
   <code>~kiosk/.ssh/authorized_keys</code>:</p>
-<div class="highlight"><pre><span></span><code>command="rrsync /srv/keys",restrict ssh-ed25519 AAAA... pandora-box-kiosk
+<div class="highlight"><pre><span></span><code>command="rrsync /srv/rsync",restrict ssh-ed25519 AAAA... pandora-box-kiosk
 </code></pre></div>
-<p>then <code>path = "."</code>, paths being relative to the folder of <code>rrsync</code>.</p>
+<p><code>rrsync</code> must read its folder (it locks it): the keys go into its
+subfolder <code>keys</code>, which the account cannot read, and <code>path = "keys"</code>,
+paths being relative to the folder of <code>rrsync</code>:</p>
+<div class="highlight"><pre><span></span><code>install<span class="w"> </span>-d<span class="w"> </span>-m<span class="w"> </span><span class="m">0700</span><span class="w"> </span>-o<span class="w"> </span>kiosk<span class="w"> </span>-g<span class="w"> </span>kiosk<span class="w"> </span>/srv/rsync
+install<span class="w"> </span>-d<span class="w"> </span>-m<span class="w"> </span><span class="m">0300</span><span class="w"> </span>-o<span class="w"> </span>kiosk<span class="w"> </span>-g<span class="w"> </span>kiosk<span class="w"> </span>/srv/rsync/keys
+</code></pre></div>
 </li>
 </ul>
 <p>The folder of a key is deleted by nobody but the kiosks: archive or purge the
@@ -1637,8 +1684,15 @@ later): use <code>protocol = "sftp"</code> (Windows has no rsync) and
     AllowTcpForwarding no
     PermitTTY no
 </code></pre></div>
-<p>with <code>path = "/keys"</code>, the folder <code>C:\PandoraBox\keys</code> writable by the
-account. Without a chroot, the paths are written <code>/C:/PandoraBox/keys</code>.
+<p>with <code>path = "/keys"</code>. The folder <code>C:\PandoraBox\keys</code> lets the account
+create the folder of a key (<code>AD</code>), go through it (<code>X</code>) and read its
+attributes (<code>RA</code>), but not list it, without the rights inherited from
+<code>C:\</code> (the group Users may list it); in the folders of the keys, the
+account may modify:</p>
+<div class="highlight"><pre><span></span><code><span class="n">icacls</span> <span class="n">C</span><span class="p">:\</span><span class="n">PandoraBox</span><span class="p">\</span><span class="n">keys</span> <span class="p">/</span><span class="n">inheritance</span><span class="p">:</span><span class="nb">r </span><span class="p">/</span><span class="n">grant</span> <span class="s2">"SYSTEM:(OI)(CI)F"</span> <span class="p">`</span>
+    <span class="s2">"Administrators:(OI)(CI)F"</span> <span class="s2">"kiosk:(AD,X,RA)"</span> <span class="s2">"kiosk:(OI)(CI)(IO)M"</span>
+</code></pre></div>
+<p>Without a chroot, the paths are written <code>/C:/PandoraBox/keys</code>.
 4. Open port 22 to the network of the kiosks: the firewall rule that comes
    with OpenSSH only allows the <strong>Private</strong> network profile, and an
    unidentified network is Public. For instance:
@@ -1653,6 +1707,26 @@ one (SFTP extension <code>posix-rename</code>); a server without it gets the old
 deleted first, then the new one renamed.</p>
 <p>A Windows server can be tested in a virtual machine: see
 <a href="#tests">Tests</a>.</p>
+<h2 id="a-stolen-kiosk">A stolen kiosk<a class="headerlink" href="#a-stolen-kiosk" title="Permanent link">&para;</a></h2>
+<p>What a stolen station holds, and what to do:</p>
+<ul>
+<li><strong>Not on it</strong>: the files of the keys, their names and hashes, the scan
+  reports, the folders of the keys on the server.</li>
+<li><strong>Still on it</strong>: the journal of the system and the audit log of USBGuard
+  keep the vendor, product and serial number of the USB devices plugged in,
+  as the kernel and USBGuard report them; the disk is not encrypted (no TPM
+  yet).</li>
+<li><strong>The credentials of the image</strong>: the SSH key of the account of the
+  kiosks, and the key that signs the tokens. With them, someone can connect
+  to the server as a kiosk, but neither list the folders of the keys nor
+  find one without its key.</li>
+</ul>
+<p>After a theft, remove the public key of the kiosks from the server
+(<code>authorized_keys</code>), then build the images with a new SSH key and install
+them as an update on the other kiosks. To revoke one kiosk without the
+others, build each kiosk with its own <code>image/credentials.toml</code>. A new
+<code>token_key</code> makes every token invalid: each key then gets a new folder, and
+its old folder stays on the server, to archive or delete.</p>
 <h2 id="scan-report">Scan report<a class="headerlink" href="#scan-report" title="Permanent link">&para;</a></h2>
 <p><code>actions.airgap</code> of the report (see <a href="../engines/#scan-report">Scan report</a>):</p>
 <table>
@@ -1669,7 +1743,7 @@ deleted first, then the new one renamed.</p>
 </tr>
 <tr>
 <td><code>key_id</code></td>
-<td>identifier of the key, the name of its folder</td>
+<td>identifier of the key (not the name of its folder)</td>
 </tr>
 <tr>
 <td><code>destination</code></td>

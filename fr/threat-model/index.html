@@ -1751,7 +1751,9 @@ publication sont de confiance.</p>
   une faille à cet endroit n'est pas confinée.</li>
 <li><strong>L'accès physique au-delà des ports d'analyse.</strong> Ouvrir le boîtier donne
   accès au disque : <code>/var</code> n'est pas chiffré (pas de TPM), les rapports, les
-  journaux et la quarantaine peuvent donc être lus. Un mot de passe du BIOS
+  journaux et la quarantaine peuvent donc être lus. Une borne qui copie vers
+  un serveur n'en garde aucun, ni les répertoires des clés sur le serveur :
+  voir <a href="../airgap/#a-stolen-kiosk">Une borne volée</a>. Un mot de passe du BIOS
   perdu, un contacteur d'ouverture débranché ou des ports internes
   accessibles annulent les protections du démarrage.</li>
 <li><strong>Les clés de publication.</strong> Qui détient les YubiKey et leur code PIN peut
