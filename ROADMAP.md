@@ -28,7 +28,6 @@ The open tasks of the phases below, by priority.
 **2. Hardening and user features**
 
 1. Scan receipt for the user (phase 5)
-2. Protected administrator mode (phase 3)
 
 **3. Later**
 
@@ -53,7 +52,7 @@ Goal: restart from a clean base while reusing what works in PandoraBox v1.
 | USB detection with `pyudev` | Kept |
 | Device mounting / unmounting | Kept, hardened (mount options, read-only) |
 | Quarantine of infected files | Kept |
-| Curses interface (administrator mode) | Kept |
+| Curses interface (administrator mode) | Kept as a text display of the kiosk, without administrator functions |
 | Logging, logrotate, systemd service | Kept, moved to structured JSON |
 | USB auto-mount mode | Kept for development only (`device.auto_mount`): never on the kiosk, which mounts devices read-only itself |
 | Image slideshow display (`fim`) | Removed, replaced by the graphical kiosk interface in phase 3, which reuses its images |
@@ -234,7 +233,7 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 - [x] Internationalization: French and English
 - [x] German and Dutch texts built in
 - [x] Accessibility: contrast and font size
-- [ ] Protected administrator mode
+- [ ] ~~Protected administrator mode~~ *(not retained)*
 
 ## Phase 4 — Advanced analysis
 
@@ -308,6 +307,7 @@ The kiosk draws a graphical interface on its touch screen: waiting for a key, sc
 ### Hardening
 
 - No `login` program, no root password, no login console, Ctrl-Alt-Del masked. The maintenance device (a request signed with the update key, valid 7 days) brings back the logs without login or network; a maintenance console or SSH goes against the absence of any login, and is only reconsidered if the logs are not enough.
+- No administrator mode on the kiosk itself (screen of status, logs and actions, behind a PIN or a signed key): the maintenance device already brings the logs back, the updates come on signed keys, and the actions (restart, switch off) need nothing more than the power; a PIN would add a shared secret, observable and only changed with a new image, to a system that has none.
 - Kernel: `lockdown=confidentiality`, memory initialization, IOMMU, unused modules removed. USBGuard authorizes no device before it starts (`usbcore.authorized_default=0`); USB HID is kept for the touchscreen, keyboards and mice are blocked; systemd-boot does not read the keyboard.
 - systemd services: `ProtectSystem`, `NoNewPrivileges`, seccomp filters, `PrivateNetwork` and `MemoryDenyWriteExecute` for clamd, exposure measured by `systemd-analyze security` in the virtual machine test.
 - Scan workers: one per engine, each in a `bubblewrap` sandbox without network, under a dedicated user without capabilities, with a system call filter. The kiosk opens the files and passes their descriptors, hashes the files itself (hash engines never get the file), only accepts validated JSON from the workers and combines the results.
