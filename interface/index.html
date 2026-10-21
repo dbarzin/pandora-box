@@ -1479,7 +1479,7 @@ image update).</p>
 <div class="highlight"><pre><span></span><code><span class="k">[display]</span>
 <span class="c1"># Theme folder, installed in the image from image/theme/</span>
 <span class="n">theme</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/usr/share/pandora-box/theme"</span>
-<span class="c1"># Language of the texts: "en", "fr", or a language the theme adds</span>
+<span class="c1"># Language of the texts: "en", "fr", "de", "nl", or a language the theme adds</span>
 <span class="n">language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"fr"</span>
 <span class="c1"># Seconds before the waiting screen, once the key is removed</span>
 <span class="n">return_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5.0</span>
@@ -1539,9 +1539,11 @@ the files. Some texts have placeholders, replaced by the kiosk:</p>
 </tr>
 </tbody>
 </table>
-<p>A text with an unknown placeholder or an unknown key is refused. A theme may
-add a language: <code>[texts.de]</code> with the texts it translates, the others are in
-English; then set <code>display.language = "de"</code>.</p>
+<p>A text with an unknown placeholder or an unknown key is refused. English
+(<code>en</code>), French (<code>fr</code>), German (<code>de</code>) and Dutch (<code>nl</code>) are built in; a theme
+may change some of their texts, or add a language: <code>[texts.it]</code> with the
+texts it translates, the others are in English; then set
+<code>display.language = "it"</code>.</p>
 <p>The messages of the <code>service</code>, <code>error</code>, <code>unavailable</code> and <code>cleaning</code> screens
 are those of the kiosk logs (in English): they are meant for the
 administrator, and are not part of the theme.</p>
@@ -1568,7 +1570,7 @@ built-in images come from the first version of PandoraBox.</p>
   waiting screen shrink to make room. The smallest built-in text is 16
   pixels on the 7-inch screen (1024x600). Long titles wrap; when space runs
   short, a list always shows its first file and the number of the others.
-  The tests check every screen in English and French, at three screen sizes
+  The tests check every screen in English, French, German and Dutch, at three screen sizes
   and three text sizes: no text leaves the screen or overlaps another one.</li>
 <li><strong>No color alone</strong>: each result has its title, its icon and, for each
   file, its verdict in words; the whole screen is the button to clean.</li>

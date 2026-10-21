@@ -1483,7 +1483,7 @@ image (ou une mise à jour de l'image).</p>
 <div class="highlight"><pre><span></span><code><span class="k">[display]</span>
 <span class="c1"># Dossier du thème, installé dans l'image depuis image/theme/</span>
 <span class="n">theme</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"/usr/share/pandora-box/theme"</span>
-<span class="c1"># Langue des textes : "en", "fr", ou une langue ajoutée par le thème</span>
+<span class="c1"># Langue des textes : "en", "fr", "de", "nl", ou une langue ajoutée par le thème</span>
 <span class="n">language</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"fr"</span>
 <span class="c1"># Secondes avant l'écran d'attente, une fois la clé retirée</span>
 <span class="n">return_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">5.0</span>
@@ -1544,9 +1544,11 @@ la borne :</p>
 </tr>
 </tbody>
 </table>
-<p>Un texte avec un emplacement inconnu ou une clé inconnue est refusé. Un
-thème peut ajouter une langue : <code>[texts.de]</code> avec les textes qu'il traduit,
-les autres restent en anglais ; réglez ensuite <code>display.language = "de"</code>.</p>
+<p>Un texte avec un emplacement inconnu ou une clé inconnue est refusé.
+L'anglais (<code>en</code>), le français (<code>fr</code>), l'allemand (<code>de</code>) et le néerlandais
+(<code>nl</code>) sont intégrés ; un thème peut modifier certains de leurs textes, ou
+ajouter une langue : <code>[texts.it]</code> avec les textes qu'il traduit, les autres
+restent en anglais ; réglez ensuite <code>display.language = "it"</code>.</p>
 <p>Les messages des écrans <code>service</code>, <code>error</code>, <code>unavailable</code> et <code>cleaning</code> sont
 ceux des journaux de la borne (en anglais) : ils s'adressent à
 l'administrateur, et ne font pas partie du thème.</p>
@@ -1576,7 +1578,8 @@ de PandoraBox.</p>
   plus petit texte intégré fait 16 pixels sur l'écran de 7 pouces
   (1024x600). Les titres longs passent à la ligne ; quand la place manque,
   une liste montre toujours son premier fichier et le nombre des autres.
-  Les tests vérifient chaque écran en anglais et en français, sur trois
+  Les tests vérifient chaque écran en anglais, en français, en allemand et
+  en néerlandais, sur trois
   tailles d'écran et trois tailles de texte : aucun texte ne sort de l'écran
   ni n'en chevauche un autre.</li>
 <li><strong>Jamais la couleur seule</strong> : chaque résultat a son titre, son icône et,
