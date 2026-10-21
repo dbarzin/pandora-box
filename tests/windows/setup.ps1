@@ -27,8 +27,14 @@ if (Get-LocalGroup -Name "OpenSSH Users" -ErrorAction SilentlyContinue) {
     Add-LocalGroupMember -Group "OpenSSH Users" -Member kiosk
 }
 
+# The account creates and opens the folder of a key by its name, but cannot
+# list the folders of the keys (docs/airgap.md): no inherited rights (Users,
+# of which kiosk is a member, may list C:\ and below), on keys itself only
+# create a folder (AD), go through (X) and read the attributes (RA); in the
+# folders of the keys, modify
 New-Item -ItemType Directory -Force -Path C:\PandoraBox\keys | Out-Null
-icacls C:\PandoraBox\keys /grant "kiosk:(OI)(CI)M" | Out-Null
+icacls C:\PandoraBox\keys /inheritance:r /grant "SYSTEM:(OI)(CI)F" "Administrators:(OI)(CI)F" `
+    "kiosk:(AD,X,RA)" "kiosk:(OI)(CI)(IO)M" | Out-Null
 
 # OpenSSH refuses a key file that others could change
 $keys = "C:\ProgramData\ssh\kiosk_authorized_keys"

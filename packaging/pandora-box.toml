@@ -282,7 +282,8 @@ path = ""
 windows_names = false
 # rsync, sftp: host keys of the server; in the image: image/airgap-known-hosts
 known_hosts = "/etc/pandora-box/airgap-known-hosts"
-# Clean files of a key, prepared by the kiosk for the service, deleted once copied
+# Clean files of a key, prepared by the kiosk for the service, deleted once
+# copied; in the image, a tmpfs (memory) of at most half the memory
 staging = "/var/lib/pandora-box-airgap/staging"
 socket = "/run/pandora-box-airgap/airgap.sock"
 # Timeout of the connection and of each network operation, in seconds

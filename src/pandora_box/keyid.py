@@ -1,41 +1,64 @@
 """Identifier of a USB key: a signed token in a hidden file at its root (airgap).
 
 The serial number of a USB key is missing or shared on some keys: the kiosk
-writes its own identifier, a random UUID signed with a key of the kiosks of
-the organization (Ed25519, systemd credential), in .pandora-box at the root
-of the first filesystem of the key:
+writes its own identifier, a random UUID, with a random secret, signed with
+a key of the kiosks of the organization (Ed25519, systemd credential), in
+.pandora-box at the root of the first filesystem of the key:
 
-    pandora-box-key 1 <uuid> <base64 signature of "pandora-box-key 1 <uuid>">
+    pandora-box-key 2 <uuid> <secret> <base64 signature of the rest of the line>
+
+The folder of the key on the server is named after the secret (folder_of):
+the kiosk computes it when the key is inserted and never keeps it, so that
+neither a stolen kiosk nor the account of the kiosks on the server, which
+cannot list the folders, leads to the files of a key without the key.
 
 The file comes from the key: it is read as hostile data (size limit, strict
 format, signature checked before the identifier is used). A missing,
-malformed or unsigned token is replaced with a new one. The signature
-prevents forging an identifier, not copying the file to another key.
+malformed or unsigned token is replaced with a new one (a new folder). The
+signature prevents forging a token, not copying the file to another key.
 """
 
 from __future__ import annotations
 
 import base64
 import binascii
+import hashlib
 import os
 import re
 import stat
 import subprocess
 import tempfile
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 
 from pandora_box.sigsets import OPENSSL, SignatureSetError, verify_signature
 
 TOKEN_FILE = ".pandora-box"  # noqa: S105  (a file name)
-MAGIC = "pandora-box-key 1"
-# A token is about 150 bytes: a bigger file is not one
+MAGIC = "pandora-box-key 2"
+# A token is about 190 bytes: a bigger file is not one
 MAX_SIZE = 512
+SECRET_BYTES = 32
 _TOKEN = re.compile(
-    rf"^{MAGIC} ([0-9a-f]{{8}}-[0-9a-f]{{4}}-4[0-9a-f]{{3}}-[89ab][0-9a-f]{{3}}-[0-9a-f]{{12}})"
-    r" ([A-Za-z0-9+/]{86}==)\n?$"
+    rf"^({MAGIC} ([0-9a-f]{{8}}-[0-9a-f]{{4}}-4[0-9a-f]{{3}}-[89ab][0-9a-f]{{3}}-[0-9a-f]{{12}})"
+    r" ([A-Za-z0-9_-]{43})) ([A-Za-z0-9+/]{86}==)\n?$"
 )
 UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+# Name of the folder of a key on the server
+FOLDER = re.compile(r"^[0-9a-f]{64}$")
+
+
+@dataclass(frozen=True)
+class KeyIdentity:
+    # In the scan report
+    identifier: str
+    # Name of the folder of the key on the server: never kept by the kiosk
+    folder: str
+
+
+def folder_of(secret: bytes) -> str:
+    """The name of the folder of a key on the server, from the secret of its token."""
+    return hashlib.sha256(b"pandora-box-folder 1 " + secret).hexdigest()
 
 
 class TokenError(Exception):
@@ -67,8 +90,8 @@ def read_token(root: Path) -> bytes:
     return data
 
 
-def verify_token(data: bytes, private_key: Path) -> str:
-    """The identifier of a token signed with the key of the kiosks; raise TokenError."""
+def verify_token(data: bytes, private_key: Path) -> KeyIdentity:
+    """The identity of a token signed with the key of the kiosks; raise TokenError."""
     try:
         text = data.decode("ascii")
     except UnicodeDecodeError:
@@ -76,24 +99,27 @@ def verify_token(data: bytes, private_key: Path) -> str:
     match = _TOKEN.match(text)
     if match is None:
         raise TokenError("malformed token")
-    identifier, signature = match[1], match[2]
+    message, identifier, secret, signature = match[1], match[2], match[3], match[4]
     try:
         raw = base64.b64decode(signature, validate=True)
-    except binascii.Error:
+        secret_bytes = base64.urlsafe_b64decode(secret + "=")
+    except (binascii.Error, ValueError):
         raise TokenError("malformed token") from None
     with tempfile.TemporaryDirectory(prefix="pandora-box-keyid-") as tmp:
         public = _public_key(private_key, Path(tmp))
         try:
-            verify_signature(f"{MAGIC} {identifier}".encode(), raw, [public])
+            verify_signature(message.encode(), raw, [public])
         except SignatureSetError:
             raise TokenError("token not signed by the kiosks") from None
-    return identifier
+    return KeyIdentity(identifier, folder_of(secret_bytes))
 
 
-def new_token(private_key: Path) -> tuple[str, bytes]:
-    """A new identifier and its token, signed with the key of the kiosks."""
+def new_token(private_key: Path) -> tuple[KeyIdentity, bytes]:
+    """A new identity and its token, signed with the key of the kiosks."""
     identifier = str(uuid.uuid4())
-    message = f"{MAGIC} {identifier}"
+    secret = os.urandom(SECRET_BYTES)
+    encoded_secret = base64.urlsafe_b64encode(secret).decode().rstrip("=")
+    message = f"{MAGIC} {identifier} {encoded_secret}"
     with tempfile.TemporaryDirectory(prefix="pandora-box-keyid-") as tmp:
         data = Path(tmp, "message")
         data.write_text(message, encoding="ascii")
@@ -103,7 +129,7 @@ def new_token(private_key: Path) -> tuple[str, bytes]:
             "-in", str(data), "-out", str(signature),
         )  # fmt: skip
         encoded = base64.b64encode(signature.read_bytes()).decode()
-    return identifier, f"{message} {encoded}\n".encode()
+    return KeyIdentity(identifier, folder_of(secret)), f"{message} {encoded}\n".encode()
 
 
 def write_token(root: Path, token: bytes) -> None:

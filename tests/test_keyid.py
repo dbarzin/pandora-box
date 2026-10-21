@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,7 @@ from pandora_box.keyid import (
     MAX_SIZE,
     TOKEN_FILE,
     TokenError,
+    folder_of,
     generate_key,
     new_token,
     read_token,
@@ -26,17 +28,23 @@ def key(tmp_path: Path) -> Path:
 
 
 def test_new_token_is_verified(key: Path, tmp_path: Path) -> None:
-    identifier, token = new_token(key)
-    assert token.startswith(f"pandora-box-key 1 {identifier} ".encode())
+    identity, token = new_token(key)
+    assert token.startswith(f"pandora-box-key 2 {identity.identifier} ".encode())
+    # The name of the folder comes from the secret of the token, not from the
+    # identifier: the identifier alone does not lead to the folder
+    secret = token.split()[3]
+    assert identity.folder == folder_of(base64.urlsafe_b64decode(secret + b"="))
+    assert identity.identifier not in identity.folder and len(identity.folder) == 64
     assert len(token) < MAX_SIZE
     root = tmp_path / "key"
     root.mkdir()
     write_token(root, token)
     assert (root / TOKEN_FILE).read_bytes() == token
     assert not (root / f"{TOKEN_FILE}.tmp").exists()
-    assert verify_token(read_token(root), key) == identifier
-    # Two keys never get the same identifier
-    assert new_token(key)[0] != identifier
+    assert verify_token(read_token(root), key) == identity
+    # Two keys never get the same identifier, nor the same folder
+    other = new_token(key)[0]
+    assert other.identifier != identity.identifier and other.folder != identity.folder
 
 
 def test_token_of_another_organization(key: Path, tmp_path: Path) -> None:
@@ -47,11 +55,24 @@ def test_token_of_another_organization(key: Path, tmp_path: Path) -> None:
         verify_token(token, key)
 
 
-def test_forged_identifier(key: Path) -> None:
-    identifier, token = new_token(key)
-    forged = token.replace(identifier[:8].encode(), b"00000000")
+def test_forged_token(key: Path) -> None:
+    identity, token = new_token(key)
+    forged = token.replace(identity.identifier[:8].encode(), b"00000000")
     with pytest.raises(TokenError, match="not signed"):
         verify_token(forged, key)
+    # Another secret (another folder) with the same signature
+    parts = token.split()
+    parts[3] = b"A" * 43
+    with pytest.raises(TokenError, match="not signed"):
+        verify_token(b" ".join(parts) + b"\n", key)
+
+
+def test_token_of_the_first_version_is_replaced(key: Path) -> None:
+    """A token without secret (version 1) is not one any more: a new one is written."""
+    with pytest.raises(TokenError, match="malformed"):
+        verify_token(
+            b"pandora-box-key 1 12345678-1234-4234-8234-123456789abc " + b"A" * 86 + b"==\n", key
+        )
 
 
 @pytest.mark.parametrize(
@@ -61,7 +82,11 @@ def test_forged_identifier(key: Path) -> None:
         b"hello",
         b"pandora-box-key 1 not-a-uuid AAAA\n",
         "pandora-box-key 1 é".encode(),
-        b"pandora-box-key 1 12345678-1234-4234-8234-123456789abc " + b"A" * 86 + b"==\nmore",
+        b"pandora-box-key 2 12345678-1234-4234-8234-123456789abc "
+        + b"B" * 43
+        + b" "
+        + b"A" * 86
+        + b"==\nmore",
         b"\x00" * 100,
     ],
 )

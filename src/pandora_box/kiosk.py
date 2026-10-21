@@ -6,7 +6,6 @@ import dataclasses
 import json
 import logging
 import os
-import shutil
 import stat
 import subprocess
 from collections.abc import Callable
@@ -256,9 +255,9 @@ class Kiosk:
         self.source = source
         self.scanner = Scanner(pool, config.limits)
         self.mounter = mounter or make_mounter(config)
-        self.quarantine = (
-            Quarantine(config.quarantine.folder) if config.quarantine.enabled else None
-        )
+        # A station (airgap) keeps nothing of the keys: no quarantine
+        keep = config.quarantine.enabled and not config.airgap.enabled
+        self.quarantine = Quarantine(config.quarantine.folder) if keep else None
         self.device: UsbDevice | None = None
         self.summary: ScanSummary | None = None
         # Files to quarantine and remove, depending on the suspicious policy
@@ -843,28 +842,31 @@ class Kiosk:
         self.display.show(Screen.TRANSFERRING)
         self.display.message("Copying the clean files to the server...")
         config = self.config.airgap
-        identifier = ""
+        # The name of the folder of the key on the server: never logged,
+        # never shown, never kept (pandora_box.keyid)
+        folder = ""
         action = AirgapAction("failed", not_copied=not_copied)
         self.actions.airgap = action
         try:
-            identifier = self._key_identifier(device)
-            action.key_id = identifier
-            staged = self._stage(identifier, device, summary)
+            identity = self._key_identity(device)
+            folder = identity.folder
+            action.key_id = identity.identifier
+            staged = self._stage(folder, device, summary)
             action.errors = list(staged.errors)
-            self._save_report()
             self._stage_report(staged)
-            result = airgap.request(config, identifier, self._report_id(), self._copy_progress())
+            result = airgap.request(config, folder, self._report_id(), self._copy_progress())
         except (airgap.AirgapError, keyid.TokenError, DeviceError, OSError) as ex:
-            action.error = str(ex)
+            error = airgap.hide(str(ex), folder)
+            action.error = error
             self._save_report()
             self._release()
-            log_event(logger, "airgap_failed", logging.ERROR, key=identifier, error=str(ex))
+            log_event(logger, "airgap_failed", logging.ERROR, error=error)
             self.display.show(Screen.TRANSFER_FAILED)
-            self.display.message(f"Copy to the server FAILED: {ex}")
+            self.display.message(f"Copy to the server FAILED: {error}")
             return State.WAIT
         finally:
-            if identifier:
-                airgap.remove_staging(config, identifier)
+            if folder:
+                airgap.remove_staging(config, folder)
         action.status = "copied"
         action.destination = result.destination
         action.copied, action.deleted = result.copied, result.deleted
@@ -874,8 +876,6 @@ class Kiosk:
         log_event(
             logger,
             "airgap_copied",
-            key=identifier,
-            destination=result.destination,
             copied=result.copied,
             deleted=result.deleted,
             unchanged=result.unchanged,
@@ -896,8 +896,8 @@ class Kiosk:
         self.display.message("You can remove the device.")
         return State.WAIT
 
-    def _key_identifier(self, device: UsbDevice) -> str:
-        """The identifier of the key, from its token, else a new one written on it."""
+    def _key_identity(self, device: UsbDevice) -> keyid.KeyIdentity:
+        """The identity of the key, from its token, else a new one written on it."""
         key = airgap.credential(airgap.TOKEN_KEY_CREDENTIAL)
         if key is None:
             raise airgap.AirgapError(
@@ -906,22 +906,22 @@ class Kiosk:
         first = device.volumes[0]
         root = self._mount(first)
         try:
-            identifier = keyid.verify_token(keyid.read_token(root), key)
+            identity = keyid.verify_token(keyid.read_token(root), key)
         except keyid.TokenError as ex:
             if str(ex) != "no token":
                 log_event(logger, "key_token_invalid", logging.WARNING, error=str(ex))
         else:
-            log_event(logger, "key_identified", key=identifier)
-            return identifier
-        identifier, token = keyid.new_token(key)
+            log_event(logger, "key_identified")
+            return identity
+        identity, token = keyid.new_token(key)
         # Read-write only to write the token
         root = self._mount(first, read_only=False)
         keyid.write_token(root, token)
         self._unmount()
-        log_event(logger, "key_token_written", key=identifier, node=first.node)
-        return identifier
+        log_event(logger, "key_token_written", node=first.node)
+        return identity
 
-    def _stage(self, identifier: str, device: UsbDevice, summary: ScanSummary) -> airgap.Staged:
+    def _stage(self, folder: str, device: UsbDevice, summary: ScanSummary) -> airgap.Staged:
         """Copy the clean files of the key into the staging folder of the service."""
         files = [
             f
@@ -929,7 +929,7 @@ class Kiosk:
             if f.verdict is Verdict.CLEAN and f.info is not None and not self._is_token(device, f)
         ]
         needed = sum(f.size for f in files)
-        staged = airgap.prepare(self.config.airgap, identifier, needed)
+        staged = airgap.prepare(self.config.airgap, folder, needed)
         for volume in device.volumes:
             mine = [f for f in files if self._volume_of(f) == volume]
             if not mine:
@@ -946,11 +946,10 @@ class Kiosk:
     def _stage_report(self, staged: airgap.Staged) -> None:
         if self.report is None:
             raise airgap.AirgapError("no scan report")
+        # Only on the server: a station keeps no report (_save_report)
+        set_actions(self.report, self.actions)
         target = staged.folder / airgap.REPORT
-        if self.report.path is not None and self.report.path.is_file():
-            shutil.copyfile(self.report.path, target)
-        else:
-            target.write_text(json.dumps(self.report.data, indent=2, ensure_ascii=True))
+        target.write_text(json.dumps(self.report.data, indent=2, ensure_ascii=True) + "\n")
 
     def _report_id(self) -> str:
         return "" if self.report is None else self.report.report_id
@@ -990,8 +989,12 @@ class Kiosk:
         return (Screen.WARNING, kept) if kept else (Screen.CLEAN, [])
 
     def _save_report(self) -> None:
-        """Write the scan report; a failure is logged and shown, not fatal."""
-        if self.report is None:
+        """Write the scan report; a failure is logged and shown, not fatal.
+
+        A station (airgap) keeps nothing of the keys: its reports only go to
+        the server, with the files of the key.
+        """
+        if self.report is None or self.config.airgap.enabled:
             return
         set_actions(self.report, self.actions)
         try:

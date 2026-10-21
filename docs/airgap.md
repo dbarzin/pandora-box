@@ -10,18 +10,19 @@ key itself is not cleaned and leaves with its files.
 1. The user inserts a key; the kiosk scans it.
 2. A key that was **not verified** (a file could not be fully scanned) is
    refused: nothing is copied, nothing is written on it.
-3. Otherwise the kiosk reads the identifier of the key (the hidden file
+3. Otherwise the kiosk reads the token of the key (the hidden file
    `.pandora-box` at its root), or writes a new one on it.
-4. The **clean files** are copied to `<path>/<identifier>/` on the server,
-   with the scan report in `<path>/<identifier>/.pandora-box/`. Malicious
-   and suspicious files are never copied.
+4. The **clean files** are copied to `<path>/<folder>/` on the server, the
+   folder being named after a secret of the token, with the scan report in
+   `<path>/<folder>/.pandora-box/`. Malicious and suspicious files are never
+   copied.
 5. When the key comes back, its folder on the server is **synchronized**:
    new and changed files are copied, files that are no longer on the key, or
    no longer clean, are deleted from the server.
 
 ```text
-/srv/keys/                                   path on the server
-└── 0f8fad5b-d9cb-469f-a165-70867728950e/    identifier of the key
+/srv/keys/                                   path on the server, not listable
+└── 3f9c…e1a7/                               folder of the key (64 hexadecimal digits)
     ├── docs/report.pdf                      clean files of the key
     ├── readme.txt
     └── .pandora-box/                        scan reports, one per insertion
@@ -31,20 +32,33 @@ key itself is not cleaned and leaves with its files.
 
 ## How it works
 
-- **Identifier of the key.** The serial number of a USB key is missing or
-  shared on some keys: at its first insertion, the kiosk writes a random
-  identifier (UUID) in `.pandora-box`, at the root of its first filesystem,
-  signed with a key of the kiosks of the organization (Ed25519). The file
-  comes from the key: it is read as hostile data (size limit, strict format,
-  signature checked). A missing, malformed or foreign token is replaced with
-  a new one, so the key gets a new folder on the server. The signature
-  prevents forging an identifier, not copying the file to another key. This
-  file is the only change made to the key.
+- **Token of the key.** The serial number of a USB key is missing or shared
+  on some keys: at its first insertion, the kiosk writes in `.pandora-box`,
+  at the root of its first filesystem, a random identifier (UUID, written in
+  the scan report) and a random secret of 256 bits, signed with a key of the
+  kiosks of the organization (Ed25519). The file comes from the key: it is
+  read as hostile data (size limit, strict format, signature checked). A
+  missing, malformed or foreign token is replaced with a new one, so the key
+  gets a new folder on the server. The signature prevents forging a token,
+  not copying the file to another key. This file is the only change made to
+  the key.
+- **Folder of the key.** Its name is the SHA-256 of the secret of the token:
+  the kiosk computes it when the key is inserted and never logs, shows or
+  keeps it. Without the key, the folder of its files cannot be found: not
+  from a stolen kiosk, nor from the account of the kiosks on the server,
+  which cannot list the folders (see [The server](#the-server)).
 - **What is copied.** The files whose verdict is clean. Each one is first
   copied by the kiosk into a staging folder (`airgap.staging`) and checked
   against the SHA-256 that was scanned; a file changed since the scan is not
-  copied. The staging folder is deleted once the copy is over, whatever its
-  result.
+  copied. The staging folder is in memory (a tmpfs of at most half the
+  memory: a bigger copy is refused) and is deleted once the copy is over,
+  whatever its result.
+- **Nothing of the keys on the station.** A kiosk that copies to a server
+  keeps no scan report (they go to the server, with the files), has no
+  quarantine (it does not clean), and its log leaves out the names and
+  hashes of the files, the label, vendor, model and serial number of the
+  key and the lines of the screen: only events, verdicts and counts. See
+  [A stolen kiosk](#a-stolen-kiosk) for what is still there.
 - **Who copies.** The kiosk has no network. The service
   `pandora-box-airgap` runs as its own user, without privileges, and is the
   only one besides the update and SIEM services that the firewall lets out.
@@ -130,7 +144,10 @@ With another port, the host is written `[files.example.org]:2222`.
 
 ## The server
 
-Give the kiosks an account that can only write into the folder of the keys.
+Give the kiosks an account that can only write into the folder of the keys,
+and **that cannot list it**: the account creates the folder of a key and
+opens it by its name, which comes from the key. With the credentials of a
+stolen kiosk, the folders of the keys can then neither be listed nor found.
 
 - **SFTP**: an account restricted to SFTP in a chroot, for instance in
   `sshd_config`:
@@ -143,16 +160,28 @@ Give the kiosks an account that can only write into the folder of the keys.
         X11Forwarding no
     ```
 
-    with `path = "/keys"` (the folder in the chroot, writable by the account).
+    with `path = "/keys"`, the folder in the chroot owned by the account,
+    which may write into it and go through it, but not read it:
+
+    ```sh
+    install -d -m 0300 -o kiosk -g kiosk /srv/sftp/keys
+    ```
 - **rsync over SSH**: rsync must be installed on the server. Restrict the key
   of the kiosk to rsync in its folder with `rrsync` (shipped with rsync), in
   `~kiosk/.ssh/authorized_keys`:
 
     ```text
-    command="rrsync /srv/keys",restrict ssh-ed25519 AAAA... pandora-box-kiosk
+    command="rrsync /srv/rsync",restrict ssh-ed25519 AAAA... pandora-box-kiosk
     ```
 
-    then `path = "."`, paths being relative to the folder of `rrsync`.
+    `rrsync` must read its folder (it locks it): the keys go into its
+    subfolder `keys`, which the account cannot read, and `path = "keys"`,
+    paths being relative to the folder of `rrsync`:
+
+    ```sh
+    install -d -m 0700 -o kiosk -g kiosk /srv/rsync
+    install -d -m 0300 -o kiosk -g kiosk /srv/rsync/keys
+    ```
 
 The folder of a key is deleted by nobody but the kiosks: archive or purge the
 old ones on the server.
@@ -191,8 +220,18 @@ later): use `protocol = "sftp"` (Windows has no rsync) and
         PermitTTY no
     ```
 
-    with `path = "/keys"`, the folder `C:\PandoraBox\keys` writable by the
-    account. Without a chroot, the paths are written `/C:/PandoraBox/keys`.
+    with `path = "/keys"`. The folder `C:\PandoraBox\keys` lets the account
+    create the folder of a key (`AD`), go through it (`X`) and read its
+    attributes (`RA`), but not list it, without the rights inherited from
+    `C:\` (the group Users may list it); in the folders of the keys, the
+    account may modify:
+
+    ```powershell
+    icacls C:\PandoraBox\keys /inheritance:r /grant "SYSTEM:(OI)(CI)F" `
+        "Administrators:(OI)(CI)F" "kiosk:(AD,X,RA)" "kiosk:(OI)(CI)(IO)M"
+    ```
+
+    Without a chroot, the paths are written `/C:/PandoraBox/keys`.
 4. Open port 22 to the network of the kiosks: the firewall rule that comes
    with OpenSSH only allows the **Private** network profile, and an
    unidentified network is Public. For instance:
@@ -208,6 +247,28 @@ deleted first, then the new one renamed.
 A Windows server can be tested in a virtual machine: see
 [Tests](#tests).
 
+## A stolen kiosk
+
+What a stolen station holds, and what to do:
+
+- **Not on it**: the files of the keys, their names and hashes, the scan
+  reports, the folders of the keys on the server.
+- **Still on it**: the journal of the system and the audit log of USBGuard
+  keep the vendor, product and serial number of the USB devices plugged in,
+  as the kernel and USBGuard report them; the disk is not encrypted (no TPM
+  yet).
+- **The credentials of the image**: the SSH key of the account of the
+  kiosks, and the key that signs the tokens. With them, someone can connect
+  to the server as a kiosk, but neither list the folders of the keys nor
+  find one without its key.
+
+After a theft, remove the public key of the kiosks from the server
+(`authorized_keys`), then build the images with a new SSH key and install
+them as an update on the other kiosks. To revoke one kiosk without the
+others, build each kiosk with its own `image/credentials.toml`. A new
+`token_key` makes every token invalid: each key then gets a new folder, and
+its old folder stays on the server, to archive or delete.
+
 ## Scan report
 
 `actions.airgap` of the report (see [Scan report](engines.md#scan-report)):
@@ -215,7 +276,7 @@ A Windows server can be tested in a virtual machine: see
 | Field | Content |
 |---|---|
 | `status` | `copied`, `failed`, or `refused` (key not verified) |
-| `key_id` | identifier of the key, the name of its folder |
+| `key_id` | identifier of the key (not the name of its folder) |
 | `destination` | folder of the key on the server |
 | `copied`, `deleted`, `unchanged` | files sent, deleted from the server, already there |
 | `not_copied` | files that are not clean |

@@ -2,14 +2,15 @@
 
 The kiosk has no network. Once a key is scanned and verified:
 
-1. the kiosk reads the identifier of the key (pandora_box.keyid), or writes a
+1. the kiosk reads the token of the key (pandora_box.keyid), or writes a
    new one on it: the only change made to the key, which is not cleaned;
+   the name of the folder of the key comes from a secret of the token;
 2. it copies the clean files of the key into a staging folder
    (airgap.staging), each checked against the SHA-256 that was scanned: the
    malicious and suspicious files, and those not fully scanned, never are;
 3. the service pandora-box-airgap (its own user, the only one besides the
    update and the SIEM services that the firewall lets out) mirrors that
-   folder to <airgap.path>/<identifier>/ on the server, by rsync over SSH,
+   folder to <airgap.path>/<folder>/ on the server, by rsync over SSH,
    or SFTP (pandora_box.remotes), with the scan report in its
    .pandora-box folder; then the kiosk deletes the staging folder.
 
@@ -36,8 +37,15 @@ from pathlib import Path
 from typing import Any
 
 from pandora_box.config import AirgapConfig, ConfigError, load_config
-from pandora_box.keyid import UUID
-from pandora_box.logs import LOGGER_NAME, JsonFormatter, get_logger, log_event, setup_logging
+from pandora_box.keyid import FOLDER, UUID
+from pandora_box.logs import (
+    LOGGER_NAME,
+    JsonFormatter,
+    get_logger,
+    log_event,
+    redact_key_fields,
+    setup_logging,
+)
 from pandora_box.remotes import Secrets, Server, SyncResult, TransferError, describe, upload
 
 logger = get_logger("airgap")
@@ -46,7 +54,7 @@ DEFAULT_CONFIG = Path("/etc/pandora-box/pandora-box.toml")
 # systemd credentials (LoadCredential=/ImportCredential= of the services)
 SSH_KEY_CREDENTIAL = "pandora-box.airgap-ssh-key"
 TOKEN_KEY_CREDENTIAL = "pandora-box.airgap-token-key"  # noqa: S105  (a file name)
-# Files of the key in staging/<identifier>/files, the report next to them
+# Files of the key in staging/<folder>/files, the report next to them
 FILES = "files"
 REPORT = "report.json"
 MAX_LINE = 64 * 1024
@@ -76,20 +84,26 @@ class Staged:
     errors: list[tuple[str, str]] = field(default_factory=list)
 
 
-def staging_folder(config: AirgapConfig, identifier: str) -> Path:
-    if not UUID.match(identifier):
-        raise AirgapError(f"invalid key identifier: {identifier!r}")
-    return config.staging / identifier
+def staging_folder(config: AirgapConfig, folder: str) -> Path:
+    """Where the files of a key are staged; folder: the name of its folder on the server."""
+    if not FOLDER.match(folder):
+        raise AirgapError("invalid key folder")
+    return config.staging / folder
 
 
-def prepare(config: AirgapConfig, identifier: str, needed: int) -> Staged:
+def hide(text: str, folder: str) -> str:
+    """text without the name of the folder of a key (logs, screen)."""
+    return text.replace(folder, "<key folder>") if folder else text
+
+
+def prepare(config: AirgapConfig, key_folder: str, needed: int) -> Staged:
     """An empty staging folder for a key, with room for needed bytes."""
-    folder = staging_folder(config, identifier)
-    remove_staging(config, identifier)
+    folder = staging_folder(config, key_folder)
+    remove_staging(config, key_folder)
     (folder / FILES).mkdir(mode=0o750, parents=True)
     free = shutil.disk_usage(folder).free
     if needed > free:
-        remove_staging(config, identifier)
+        remove_staging(config, key_folder)
         raise AirgapError(
             f"not enough space on the kiosk to copy the key ({needed} bytes, {free} free)"
         )
@@ -132,8 +146,8 @@ def stage_file(staged: Staged, root: Path, relpath: str, target: str, sha256: st
     staged.files.append(target)
 
 
-def remove_staging(config: AirgapConfig, identifier: str) -> None:
-    shutil.rmtree(staging_folder(config, identifier), ignore_errors=True)
+def remove_staging(config: AirgapConfig, folder: str) -> None:
+    shutil.rmtree(staging_folder(config, folder), ignore_errors=True)
 
 
 # -- kiosk: client ---------------------------------------------------------------------
@@ -152,19 +166,19 @@ class Transfer:
 
 def request(
     config: AirgapConfig,
-    identifier: str,
+    folder: str,
     report_id: str,
     progress: Callable[[int, int], None] | None = None,
 ) -> Transfer:
     """Ask the service to copy the staging folder of a key; raise AirgapError."""
-    staging_folder(config, identifier)
+    staging_folder(config, folder)
     # The service sends a line at least every HEARTBEAT seconds
     timeout = config.timeout + 4 * HEARTBEAT
     try:
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
             sock.settimeout(timeout)
             sock.connect(str(config.socket))
-            message = {"key": identifier, "report_id": report_id}
+            message = {"key": folder, "report_id": report_id}
             sock.sendall(json.dumps(message).encode() + b"\n")
             for answer in _lines(sock):
                 event = answer.get("event")
@@ -235,19 +249,19 @@ def secrets() -> Secrets:
 
 def transfer(
     config: AirgapConfig,
-    identifier: str,
+    key_folder: str,
     report_id: str,
     progress: Callable[[int, int], None] | None = None,
     upload_files: Callable[..., SyncResult] = upload,
 ) -> tuple[SyncResult, str]:
     """Mirror the staging folder of a key to the server; the remote folder too."""
-    folder = staging_folder(config, identifier)
+    folder = staging_folder(config, key_folder)
     files, report = folder / FILES, folder / REPORT
     if not files.is_dir() or not report.is_file():
-        raise AirgapError(f"nothing staged for the key {identifier}")
+        raise AirgapError("nothing staged for the key")
     if not UUID.match(report_id):
         raise AirgapError("invalid report identifier")
-    remote = f"{config.path.rstrip('/')}/{identifier}"
+    remote = f"{config.path.rstrip('/')}/{key_folder}"
     server = server_of(config)
     result = upload_files(files, report, server, secrets(), remote, f"{report_id}.json", progress)
     return result, remote
@@ -290,9 +304,11 @@ def handle(
         request_line = next(_lines(connection))
     except (StopIteration, AirgapError, OSError):
         return
-    identifier = str(request_line.get("key", ""))
+    # The name of the folder of the key is never logged: the journal of the
+    # service stays on the disk of the kiosk
+    key_folder = str(request_line.get("key", ""))
     report_id = str(request_line.get("report_id", ""))
-    log_event(logger, "airgap_started", key=identifier, report_id=report_id)
+    log_event(logger, "airgap_started", report_id=report_id)
     done = threading.Event()
 
     def heartbeat() -> None:
@@ -304,19 +320,22 @@ def handle(
     try:
         result, remote = transfer_key(
             config,
-            identifier,
+            key_folder,
             report_id,
             lambda sent, total: send({"event": "progress", "done": sent, "total": total}),
         )
     except (AirgapError, TransferError, OSError) as ex:
         done.set()
-        log_event(logger, "airgap_failed", logging.ERROR, key=identifier, error=str(ex))
+        error = hide(str(ex), key_folder)
+        log_event(logger, "airgap_failed", logging.ERROR, report_id=report_id, error=error)
         with contextlib.suppress(OSError):
-            send({"event": "failed", "error": str(ex)})
+            send({"event": "failed", "error": error})
         return
     done.set()
     summary = describe(result)
-    log_event(logger, "airgap_done", key=identifier, destination=remote, **summary)
+    # The names of the files that could not be copied go to the kiosk only
+    logged = {**summary, "errors": len(result.errors)}
+    log_event(logger, "airgap_done", report_id=report_id, **logged)
     with contextlib.suppress(OSError):
         send({"event": "done", "destination": remote, **summary})
 
@@ -331,6 +350,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
     # JSON lines on stderr: the journal of the service
     setup_logging(config.kiosk.name, config.logging.level, None)
+    redact_key_fields(True)
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(JsonFormatter(config.kiosk.name))
     logging.getLogger(LOGGER_NAME).addHandler(handler)

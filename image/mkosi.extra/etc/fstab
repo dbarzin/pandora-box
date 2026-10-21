@@ -2,3 +2,8 @@
 # systemd-gpt-auto-generator. Variable data is on its own partition, grown to
 # fill the disk at boot (systemd-repart, then x-systemd.growfs).
 PARTLABEL=pandora-box-data /var ext4 defaults,nosuid,nodev,x-systemd.growfs 0 2
+# Clean files of a key staged for the copy to a server (airgap): in memory,
+# so that nothing of a key is left on the disk, even in its free blocks. At
+# most half the memory: a bigger copy is refused ("not enough space").
+# systemd-tmpfiles gives it to the group of the copy service at boot.
+tmpfs /var/lib/pandora-box-airgap/staging tmpfs size=50%,mode=0750,nosuid,nodev,noexec,x-systemd.requires-mounts-for=/var 0 0

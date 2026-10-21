@@ -15,7 +15,7 @@ from pandora_box.config import DEFAULT_CONFIG_PATH, INTERFACES, Config, ConfigEr
 from pandora_box.engines import EngineError
 from pandora_box.kiosk import Kiosk, NoEngineError, build_engines, build_pool, check_signatures
 from pandora_box.lock import AlreadyRunningError, InstanceLock
-from pandora_box.logs import setup_logging
+from pandora_box.logs import redact_key_fields, setup_logging
 from pandora_box.sandbox import SandboxError
 from pandora_box.sigsets import SignatureSetError
 from pandora_box.ui import ConsoleDisplay, Display
@@ -103,6 +103,8 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         setup_logging(config.kiosk.name, config.logging.level, config.logging.file)
+        # A station (airgap) keeps nothing of the keys, its log neither
+        redact_key_fields(config.airgap.enabled)
     except OSError as ex:
         print(f"pandora-box: cannot open log file: {ex}", file=sys.stderr)
         lock.release()

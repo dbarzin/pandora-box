@@ -119,6 +119,18 @@ def wait_screen(vm: Machine, text: str, timeout: float = 30.0) -> str:
         time.sleep(0.5)
 
 
+def wait_screen_name(vm: Machine, name: str, timeout: float = 30.0) -> None:
+    """Wait until the kiosk shows that screen (a station logs no texts of its screen)."""
+    deadline = time.monotonic() + timeout
+    while True:
+        shown = [e.get("screen") for e in events(vm) if e.get("event") == "display_screen"]
+        if shown and shown[-1] == name:
+            return
+        if time.monotonic() > deadline:
+            raise TestFailure(f"screen {name} not shown (last: {shown[-1:]})")
+        time.sleep(0.5)
+
+
 # Color of the header of the built-in theme
 HEADER_COLOR = (0x8B, 0x00, 0x19)
 
@@ -341,28 +353,33 @@ def check_airgap(vm: Machine, workdir: Path) -> None:
         vm.shell.run("systemctl daemon-reload && systemctl restart pandora-box-airgap", timeout=60)
         vm.shell.run("systemctl restart pandora-box", timeout=300)
         wait_next_event(vm, "kiosk_started", started, timeout=300)
-        wait_screen(vm, "Please insert a USB key")
+        wait_screen_name(vm, "ready")
         user = vm.shell.run("ps -o user:32= -p $(systemctl show -P MainPID pandora-box-airgap)")
         check(user.split() == ["pandora-box-airgap"], f"service user: {user}")
 
+        reports_before = vm.shell.run(f"ls {REPORTS} | wc -l").strip()
         image = workdir / "airgap.img"
         make_key(image)
         log = KioskLog(vm)
         vm.insert_key(image)
-        copied = log.wait("airgap_copied", timeout=180)
-        wait_screen(vm, "Files copied to the server")
-        identifier = copied["key"]
-        folder = root / "keys" / identifier
+        log.wait("airgap_copied", timeout=180)
+        wait_screen_name(vm, "transferred")
+        # The folder of the key is named after the secret of its token: the
+        # kiosk neither logs nor keeps it
+        folders = sorted((root / "keys").iterdir())
+        check(len(folders) == 1, f"folders on the server: {folders}")
+        key_folder = folders[0]
+        identifier = key_folder.name
         clean = sorted(path for path, (_, engine) in corpus.KEY.items() if not engine)
         on_server = sorted(
-            p.relative_to(folder).as_posix()
-            for p in folder.rglob("*")
-            if p.is_file() and not p.relative_to(folder).as_posix().startswith(".pandora-box")
+            p.relative_to(key_folder).as_posix()
+            for p in key_folder.rglob("*")
+            if p.is_file() and not p.relative_to(key_folder).as_posix().startswith(".pandora-box")
         )
         check(on_server == clean, f"files on the server: {on_server}")
         for path in clean:
-            check((folder / path).read_bytes() == corpus.KEY[path][0], f"{path}: content")
-        reports = list((folder / ".pandora-box").glob("*.json"))
+            check((key_folder / path).read_bytes() == corpus.KEY[path][0], f"{path}: content")
+        reports = list((key_folder / ".pandora-box").glob("*.json"))
         check(len(reports) == 1, f"reports on the server: {reports}")
         log.wait("device_ejected")
         vm.remove_key()
@@ -372,22 +389,34 @@ def check_airgap(vm: Machine, workdir: Path) -> None:
         infected = sorted(path for path, (_, engine) in corpus.KEY.items() if engine)
         check(all(path in files for path in infected), f"key cleaned: {files}")
         check(".pandora-box" in files, f"no identifier on the key: {files}")
-        print(f"key {identifier}: {len(clean)} clean files copied, {len(infected)} not copied")
+        print(f"{len(clean)} clean files copied, {len(infected)} not copied")
+
+        # The station keeps nothing of the key: no report, no quarantine, a
+        # log without its file names, label or key_folder, staged in memory
+        reports_after = vm.shell.run(f"ls {REPORTS} | wc -l").strip()
+        check(reports_after == reports_before, f"reports kept: {reports_before} -> {reports_after}")
+        logged = vm.shell.run(f"tail -n +{log.line - 20} {LOG}")
+        for secret in (identifier, "readme.txt", "eicar.com", "USBKEY"):
+            check(secret not in logged, f"{secret} in the log of the station")
+        staging = vm.shell.run("findmnt -n -o FSTYPE /var/lib/pandora-box-airgap/staging").strip()
+        check(staging == "tmpfs", f"staging folder on {staging}")
+        print("no report kept, no file name, label or folder in the log, staging in memory")
 
         # A file removed from the key is removed from the server
         subprocess.run(["mdel", "-i", str(image), "::readme.txt"], check=True)
         vm.insert_key(image)
         copied = log.wait("airgap_copied", timeout=180)
-        check(copied["key"] == identifier, f"identifier changed: {copied['key']}")
+        folders = sorted((root / "keys").iterdir())
+        check(folders == [key_folder], f"another folder for the same key: {folders}")
         check(copied["deleted"] == 1 and copied["copied"] == 0, f"synchronization: {copied}")
-        check(not (folder / "readme.txt").exists(), "readme.txt left on the server")
-        check(len(list((folder / ".pandora-box").glob("*.json"))) == 2, "second report missing")
+        check(not (key_folder / "readme.txt").exists(), "readme.txt left on the server")
+        check(len(list((key_folder / ".pandora-box").glob("*.json"))) == 2, "second report missing")
         log.wait("device_ejected")
         vm.remove_key()
         log.wait("device_removed")
         print("inserted again: same identifier, the removed file deleted from the server")
 
-        # The service reads the staging folder, not the reports of the kiosk
+        # The service reads the staging key_folder, not the reports of the kiosk
         airgap_user = "setpriv --reuid=pandora-box-airgap --regid=pandora-box-airgap --init-groups"
         check(
             not vm.shell.succeeds(f"{airgap_user} ls /var/lib/pandora-box"),

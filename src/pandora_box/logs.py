@@ -56,6 +56,26 @@ def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(f"{LOGGER_NAME}.{name}")
 
 
+# Fields of the events that come from a key: names of its files, their
+# hashes, its label, vendor, model and serial number, the lines of the screen
+KEY_FIELDS = frozenset(
+    {
+        "path", "sha256", "sha1", "md5", "label", "vendor", "model", "serial",
+        "partitions", "lines", "incomplete_reasons", "reasons", "output",
+    }
+)  # fmt: skip
+REDACTED = "[redacted]"
+_redacted: frozenset[str] = frozenset()
+
+
+def redact_key_fields(enabled: bool) -> None:
+    """Leave the fields that come from a key out of the log (a station, airgap)."""
+    global _redacted
+    _redacted = KEY_FIELDS if enabled else frozenset()
+
+
 def log_event(logger: logging.Logger, event: str, level: int = logging.INFO, **fields: Any) -> None:
     """Log an event with structured fields."""
+    if _redacted:
+        fields = {k: REDACTED if k in _redacted else v for k, v in fields.items()}
     logger.log(level, event, extra={"fields": fields})

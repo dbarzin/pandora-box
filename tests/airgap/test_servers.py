@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import hashlib
 import os
+import secrets as random
 import shutil
+import subprocess
 import tempfile
 import threading
 import uuid
@@ -33,8 +35,8 @@ SERVERS = {
         Path("/check/ssh"),
     ),
     "rrsync": (
-        dict(protocol="rsync", host="sshd", user="restricted", path="."),
-        Path("/check/ssh/rrsync"),
+        dict(protocol="rsync", host="sshd", user="restricted", path="keys"),
+        Path("/check/ssh/rrsync/keys"),
     ),
     "sftp": (
         dict(protocol="sftp", host="sshd", user="kiosk", path="/srv/keys"),
@@ -79,7 +81,8 @@ def files(root: Path) -> dict[str, bytes]:
 
 @pytest.mark.parametrize("name", sorted(SERVERS))
 def test_mirror(name: str, credentials: Path, tmp_path: Path) -> None:
-    identifier = str(uuid.uuid4())
+    # The name of the folder of a key (pandora_box.keyid.folder_of)
+    identifier = random.token_hex(32)
     srv, (_, check) = server(name), SERVERS[name]
     remote = f"{srv.path}/{identifier}"
     local = tmp_path / "local"
@@ -117,6 +120,40 @@ def test_mirror(name: str, credentials: Path, tmp_path: Path) -> None:
     # Nothing changed: nothing is copied
     result = upload(local, report, srv, secrets(credentials), remote, "second.json")
     assert result.copied == [] and result.deleted == []
+
+
+def test_folders_cannot_be_listed(credentials: Path, tmp_path: Path) -> None:
+    """With the account of the kiosks, the folders of the keys cannot be listed."""
+    import paramiko
+
+    local = tmp_path / "local"
+    write(local / "a.txt", b"a")
+    report = tmp_path / "report.json"
+    report.write_text("{}")
+    folder = random.token_hex(32)
+    upload(local, report, server("sftp"), secrets(credentials), f"/srv/keys/{folder}", "r.json")
+    client = paramiko.SSHClient()
+    client.load_host_keys(str(SECRETS / "known_hosts"))
+    client.connect(
+        "sshd", username="kiosk", key_filename=str(credentials / airgap.SSH_KEY_CREDENTIAL),
+        look_for_keys=False, allow_agent=False, timeout=20,
+    )  # fmt: skip
+    try:
+        sftp = client.open_sftp()
+        with pytest.raises(PermissionError):
+            sftp.listdir("/srv/keys")
+        # By its name, the folder of a key is reached
+        assert "a.txt" in sftp.listdir(f"/srv/keys/{folder}")
+    finally:
+        client.close()
+    # rsync cannot list them either, nor rrsync in its subfolder keys
+    for account, path in (("kiosk", "/srv/keys/"), ("restricted", "keys/")):
+        key = credentials / airgap.SSH_KEY_CREDENTIAL
+        ssh = f"ssh -F none -i {key} -o UserKnownHostsFile={SECRETS / 'known_hosts'}"
+        listing = subprocess.run(
+            ["rsync", "-e", ssh, f"{account}@sshd:{path}"], capture_output=True, text=True
+        )
+        assert listing.returncode != 0, listing.stdout
 
 
 @pytest.mark.parametrize("protocol", ["rsync", "sftp"])
@@ -163,7 +200,7 @@ def test_service(
         **options,  # type: ignore[arg-type]
     )
     threading.Thread(target=airgap.serve, args=(config,), daemon=True).start()
-    identifier, report_id = str(uuid.uuid4()), str(uuid.uuid4())
+    identifier, report_id = random.token_hex(32), str(uuid.uuid4())
     key = tmp_path / "key"
     write(key / "clean.txt", b"clean")
     staged = airgap.prepare(config, identifier, 100)

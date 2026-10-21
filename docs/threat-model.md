@@ -129,7 +129,9 @@ trusted.
   sandboxed.
 - **Physical access beyond the scanning ports.** Opening the enclosure gives
   access to the disk: `/var` is not encrypted (no TPM), so the reports, the
-  logs and the quarantine can be read. Lost BIOS password, disconnected
+  logs and the quarantine can be read. A station that copies to a server
+  keeps none of them, nor the folders of the keys on the server: see
+  [A stolen kiosk](airgap.md#a-stolen-kiosk). Lost BIOS password, disconnected
   intrusion switch or reachable internal ports defeat the boot protections.
 - **The release keys.** Whoever holds the YubiKeys and their PIN can build
   an image that the kiosks boot and trust.

@@ -17,7 +17,15 @@ chown restricted: /home/restricted/.ssh/authorized_keys
 chmod 0600 /home/*/.ssh/authorized_keys
 ssh-keygen -A >/dev/null
 printf 'sshd %s\n' "$(cut -d' ' -f1,2 /etc/ssh/ssh_host_ed25519_key.pub)" >/secrets/known_hosts
-mkdir -p /srv/keys/rrsync
+mkdir -p /srv/keys/rrsync/keys
 chown -R kiosk: /srv/keys
 chown -R restricted: /srv/keys/rrsync
+# As docs/airgap.md advises: the account creates and opens the folder of a
+# key by its name, but cannot list the folders of the keys (the others may
+# go through /srv/keys, to the folder of the restricted account). rrsync
+# locks the folder it is restricted to, which it must read: the keys are in
+# its subfolder keys
+chmod 0311 /srv/keys
+chmod 0700 /srv/keys/rrsync
+chmod 0300 /srv/keys/rrsync/keys
 exec /usr/sbin/sshd -D -e -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no

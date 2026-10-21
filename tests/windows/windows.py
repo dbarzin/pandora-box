@@ -26,7 +26,6 @@ import subprocess
 import sys
 import tempfile
 import time
-import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
@@ -232,6 +231,25 @@ def remote_files(server: Server, known_hosts: Path, root: str) -> dict[str, tupl
     return files
 
 
+def listing_refused(known_hosts: Path, path: str) -> bool:
+    """Whether the account of the kiosks is refused the list of a folder."""
+    client = paramiko.SSHClient()
+    client.load_host_keys(str(known_hosts))
+    client.set_missing_host_key_policy(paramiko.RejectPolicy())
+    client.connect(
+        "127.0.0.1", port=SSH_PORT, username="kiosk", key_filename=str(CLIENT_KEY),
+        look_for_keys=False, allow_agent=False, timeout=30,
+    )  # fmt: skip
+    try:
+        client.open_sftp().listdir(path)
+    except OSError:
+        # OpenSSH of Windows answers "Bad message", not "Permission denied"
+        return True
+    finally:
+        client.close()
+    return False
+
+
 def test() -> int:
     with tempfile.TemporaryDirectory() as tmp, machine() as known_hosts:
         work = Path(tmp)
@@ -243,8 +261,8 @@ def test() -> int:
             known_hosts=known_hosts, timeout=60, windows_names=True,
         )  # fmt: skip
         credentials = Secrets(ssh_key=key)
-        identifier = str(uuid.uuid4())
-        remote = f"/keys/{identifier}"
+        # The name of the folder of a key (pandora_box.keyid.folder_of)
+        remote = f"/keys/{secrets.token_hex(32)}"
         local = work / "local"
         report = work / "report.json"
 
@@ -274,6 +292,11 @@ def test() -> int:
         sent = files["readme.txt"][1]
         check(abs(sent - 1_700_000_000) <= 2, f"modification time: {sent}")
         print(f"{len(result.copied)} files copied, {len(reasons)} names refused, dates kept")
+
+        step("the account of the kiosks cannot list the folders of the keys")
+        check(listing_refused(known_hosts, "/keys"), "the folders of the keys can be listed")
+        check(not listing_refused(known_hosts, remote), "the folder of the key cannot be read")
+        print("/keys cannot be listed, the folder of a key is reached by its name")
 
         step("synchronization: a file replaced, one added, one removed")
         write(local / "Documents/report.pdf", b"%PDF-1.4 new version", mtime=1_700_000_500)

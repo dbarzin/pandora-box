@@ -5,6 +5,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import json
+import logging
 import shutil
 import tempfile
 import threading
@@ -20,6 +21,7 @@ from pandora_box.config import AirgapConfig, Config, ConfigError, parse_config
 from pandora_box.device import UsbDevice
 from pandora_box.keyid import TOKEN_FILE, generate_key, new_token, read_token, verify_token
 from pandora_box.kiosk import Kiosk, build_pool
+from pandora_box.logs import redact_key_fields
 from pandora_box.monitor import Action, DeviceEvent
 from pandora_box.remotes import SyncResult
 from pandora_box.ui.base import Screen
@@ -28,7 +30,8 @@ from pandora_box.workers import WorkerPool
 from .conftest import DirectoryMounter, ListSource, RecordingDisplay
 
 DEVICE = UsbDevice("/dev/sdb1", "vfat", "KEY")
-KEY_ID = "0f8fad5b-d9cb-469f-a165-70867728950e"
+# Name of the folder of a key on the server (pandora_box.keyid.folder_of)
+KEY_ID = "5f" * 32
 REPORT_ID = "7c9e6679-7425-40de-944b-e07fc1f90ae7"
 
 # -- configuration ---------------------------------------------------------------------
@@ -94,7 +97,7 @@ def test_staging_needs_room_and_a_valid_identifier(tmp_path: Path) -> None:
     config = AirgapConfig(staging=tmp_path / "staging")
     with pytest.raises(AirgapError, match="not enough space"):
         airgap.prepare(config, KEY_ID, 1 << 62)
-    with pytest.raises(AirgapError, match="invalid key identifier"):
+    with pytest.raises(AirgapError, match="invalid key folder"):
         airgap.prepare(config, "../../etc", 1)
 
 
@@ -172,7 +175,7 @@ def test_service_unavailable(service_config: AirgapConfig) -> None:
 
 
 def test_transfer_checks_the_request(service_config: AirgapConfig) -> None:
-    with pytest.raises(AirgapError, match="invalid key identifier"):
+    with pytest.raises(AirgapError, match="invalid key folder"):
         airgap.transfer(service_config, "../x", REPORT_ID)
     with pytest.raises(AirgapError, match="nothing staged"):
         airgap.transfer(service_config, KEY_ID, REPORT_ID)
@@ -258,10 +261,9 @@ def run_kiosk(
     return mounter
 
 
-def last_report(config: Config) -> dict[str, Any]:
-    reports = sorted(config.report.folder.glob("*.json"))
-    data: dict[str, Any] = json.loads(reports[-1].read_text())
-    return data
+def reports(config: Config) -> list[Path]:
+    """The reports kept by the kiosk."""
+    return sorted(config.report.folder.glob("*.json"))
 
 
 def test_key_copied_to_the_server(
@@ -277,28 +279,28 @@ def test_key_copied_to_the_server(
     run_kiosk(airgap_config, display, usb_tree, pool)
 
     # The key gets its identifier, and is not cleaned
-    identifier = verify_token(read_token(usb_tree), token_key)
+    identity = verify_token(read_token(usb_tree), token_key)
     assert (usb_tree / "docs" / "eicar.com").exists()
     assert display.confirmations == 0
     # Only the clean files are staged, never the token or the malicious file
-    assert service.keys == [identifier]
+    assert service.keys == [identity.folder]
     assert service.staged == {"readme.txt": b"hello", "docs/report.pdf": b"%PDF-1.4 harmless"}
-    assert service.report["actions"]["airgap"]["key_id"] == identifier
+    assert service.report["actions"]["airgap"]["key_id"] == identity.identifier
     # The staging folder is deleted
-    assert not (airgap_config.airgap.staging / identifier).exists()
+    assert not (airgap_config.airgap.staging / identity.folder).exists()
     screens = [screen for screen, _ in display.screens]
     assert screens[-2:] == [Screen.TRANSFERRING, Screen.TRANSFERRED]
     assert display.screens[-1][1] == ["docs/eicar.com"]
-    action = last_report(airgap_config)["actions"]["airgap"]
-    assert action["status"] == "copied"
-    assert action["copied"] == 2 and action["not_copied"] == ["docs/eicar.com"]
-    assert action["destination"] == f"/srv/keys/{identifier}"
-    assert last_report(airgap_config)["actions"]["cleaned"] is None
+    # The report goes to the server only: the station keeps nothing of the key
+    assert service.report["actions"]["cleaned"] is None
+    assert service.report["actions"]["airgap"]["not_copied"] == ["docs/eicar.com"]
+    assert not reports(airgap_config)
+    assert not airgap_config.quarantine.folder.exists()
 
     # Inserted again: the same identifier, the token is not written again
     token = (usb_tree / TOKEN_FILE).read_bytes()
     run_kiosk(airgap_config, RecordingDisplay(), usb_tree, pool)
-    assert service.keys == [identifier, identifier]
+    assert service.keys == [identity.folder, identity.folder]
     assert (usb_tree / TOKEN_FILE).read_bytes() == token
 
 
@@ -318,8 +320,8 @@ def test_invalid_token_is_replaced(
     service = FakeService()
     monkeypatch.setattr(airgap, "request", service)
     run_kiosk(airgap_config, display, usb_tree, pool)
-    identifier = verify_token(read_token(usb_tree), token_key)
-    assert identifier != foreign and service.keys == [identifier]
+    identity = verify_token(read_token(usb_tree), token_key)
+    assert identity.identifier != foreign.identifier and service.keys == [identity.folder]
 
 
 def test_unverified_key_is_not_copied(
@@ -342,7 +344,7 @@ def test_unverified_key_is_not_copied(
     assert service.keys == []
     assert not (root / TOKEN_FILE).exists()
     assert display.screens[-1][0] is Screen.NOT_VERIFIED
-    assert last_report(config)["actions"]["airgap"]["status"] == "refused"
+    assert not reports(config)
 
 
 def test_copy_failure(
@@ -358,8 +360,7 @@ def test_copy_failure(
     run_kiosk(airgap_config, display, usb_tree, pool)
     assert display.screens[-1][0] is Screen.TRANSFER_FAILED
     assert "Copy to the server FAILED: sftp: [Errno 113] No route to host" in display.messages
-    action = last_report(airgap_config)["actions"]["airgap"]
-    assert action["status"] == "failed" and "No route to host" in action["error"]
+    assert not reports(airgap_config)
     assert not any(airgap_config.airgap.staging.iterdir())
 
 
@@ -375,6 +376,35 @@ def test_no_token_key(
     run_kiosk(airgap_config, display, usb_tree, pool)
     assert display.screens[-1][0] is Screen.TRANSFER_FAILED
     assert not (usb_tree / TOKEN_FILE).exists()
+
+
+def test_station_logs_nothing_of_the_keys(
+    airgap_config: Config,
+    display: RecordingDisplay,
+    usb_tree: Path,
+    pool: WorkerPool,
+    token_key: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """No name of file, label, serial number or folder of the key in the log."""
+    service = FakeService()
+    monkeypatch.setattr(airgap, "request", service)
+    device = UsbDevice("/dev/sdb1", "vfat", "SECRET-LABEL", "Model", "SERIAL-42", "Vendor")
+    redact_key_fields(True)
+    try:
+        with caplog.at_level(logging.DEBUG, logger="pandora_box"):
+            Kiosk(
+                airgap_config, display, ListSource([DeviceEvent(Action.ADD, device)]), pool,
+                DirectoryMounter(usb_tree),
+            ).run()  # fmt: skip
+    finally:
+        redact_key_fields(False)
+    identity = verify_token(read_token(usb_tree), token_key)
+    logged = json.dumps([getattr(r, "fields", {}) for r in caplog.records] + caplog.messages)
+    for secret in ("SECRET-LABEL", "SERIAL-42", "readme.txt", "eicar.com", identity.folder):
+        assert secret not in logged
+    assert identity.identifier not in logged
 
 
 def test_staged_type() -> None:
