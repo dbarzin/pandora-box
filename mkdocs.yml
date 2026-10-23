@@ -59,6 +59,7 @@ plugins:
           nav_translations:
             GETTING STARTED: DÉMARRAGE
             -- Hardware: -- Matériel
+            -- Assembly: -- Assemblage
             INSTALLATION: INSTALLATION
             -- Building the image: -- Construction de l'image
             -- Releases: -- Versions publiées
@@ -104,6 +105,7 @@ nav:
   - GETTING STARTED:
       - Introduction: index.md
       - -- Hardware: hardware.md
+      - -- Assembly: assembly.md
   - INSTALLATION:
       - -- Building the image: build.md
       - -- Releases: release.md
