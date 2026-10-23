@@ -24,7 +24,7 @@ screen_shift = 10;
 width        = 184;     // across the face
 side_wall    = 2;       // side walls
 floor_t      = 3;       // base thickness
-face_t       = 3;       // front face thickness
+face_t       = 2;       // front face thickness
 face_out     = 10;      // outer side of the front face, out of the slope
                         // (set by the rounded back)
 face_angle   = 36.2021; // tilt of the front face from the vertical
@@ -42,10 +42,10 @@ recess_start = 1.744;   // from the bottom edge, along the slope
 // Window and screen holes (positions along the slope are measured from the
 // bottom edge of the front face, before the shift)
 window_w     = 156;
-window_h     = 95;
+window_h     = 93;
 window_ext_l = 3;       // window edges moved outwards, seen from the front:
-window_ext_r = -1;      // left and right (negative = inwards)
-window_u     = 20.744;
+window_ext_r = -3;      // left and right (negative = inwards)
+window_u     = 22.744;
 hole_d       = 3;
 hole_csk_d   = 5.2;     // 90° countersink on the outer face (M2.5 flat head)
 hole_y       = 78.75;   // half the distance across the face (157.5 mm)

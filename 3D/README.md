@@ -21,13 +21,13 @@ ventilation slots on its top.
 ![Views of the 7-inch enclosure](pandora-box-7inch.png)
 
 The 10-inch model has a 180 x 128 mm window. The 7-inch model is sized for
-a 165 x 100 mm screen: a 158 x 95 mm window, 2 mm left of centre seen from
-the front, with a 15.5 mm band above it and a 30.7 mm band below it. Each
+a 165 x 100 mm screen: a 156 x 93 mm window, 3 mm left of centre seen from
+the front, with a 15.5 mm band above it and a 32.7 mm band below it. Each
 band has two 3 mm holes to screw the screen from the front with M2.5
 flat-head screws (90° countersink, 5.2 mm across), 157.5 mm apart
 across the face, 3 mm left of centre, and 115 mm apart along the slope. Its side walls are 2 mm thick, to leave room for the HDMI and
-USB cables. On each side of the window, a 3 mm thick edge (9 mm wide on the left,
-13 mm on the right),
+USB cables. On each side of the window, a 2 mm thick edge (9 mm wide on the left,
+15 mm on the right),
 flush with the front face, joins the top and bottom bands.
 
 The 7-inch model is generated from `pandora-box-7inch.scad`:
