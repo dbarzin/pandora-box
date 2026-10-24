@@ -54,10 +54,15 @@ hole_dy      = -3;      // offset across the face (negative = to the left,
                         // seen from the front)
 
 // Base
-base_open    = [150, 150];  // opening in the base, centred on x = 0
+base_lip     = 10;      // floor left along the walls, inwards
+base_boss    = 8;       // floor left around the base holes
 base_hole_d  = 3.8;
 base_csk_d   = 7;       // 90° countersink on the inner side (M3 flat head)
 base_holes   = [[-57.15, -83.5], [72.85, -83.5], [7.85, 83.5]];
+
+// Access hole in the top, above a base hole, to reach its screw
+access_d     = 5;
+access_hole  = base_holes[0];   // back left, seen from the front
 
 // Cable opening at the back
 cable_y      = [-13, 37];
@@ -84,6 +89,12 @@ function face_pt(u, n) = F + u * U + n * N;
 // The rounded back is centred on C; it moves with the screen.
 C = screen_shift * U;
 L = face_length + screen_shift;
+
+// Opening in the base: the floor is left base_lip wide along the walls,
+// measured on its top from the back wall and from the foot of the front face.
+base_open_x = [C[0] + back_x_in + base_lip,
+               face_pt(floor_t / sin(face_angle), 0)[0] - base_lip];
+base_open_w = width - 2 * side_wall - 2 * base_lip;
 
 function arc(r, a0, a1) =
     [for (i = [0:arc_steps]) C + r * [cos(a0 + (a1 - a0) * i / arc_steps),
@@ -143,8 +154,14 @@ module screen_holes() {
 }
 
 module base_cuts() {
-    translate([0, 0, floor_t / 2])
-        cube([base_open[0], base_open[1], 2 * floor_t], center = true);
+    difference() {
+        translate([base_open_x[0], -base_open_w / 2, -floor_t / 2])
+            cube([base_open_x[1] - base_open_x[0], base_open_w, 2 * floor_t]);
+        for (p = base_holes)
+            translate([p[0], p[1], floor_t / 2])
+                cylinder(r = base_hole_d / 2 + base_boss, h = 2 * floor_t + 2,
+                         center = true, $fn = 64);
+    }
     for (p = base_holes)
         translate([p[0], p[1], 0]) {
             translate([0, 0, -1])
@@ -158,6 +175,11 @@ module base_cuts() {
 module cable_opening() {
     translate([C[0] + back_x_out - 5, cable_y[0], C[1] + cable_z[0]])
         cube([15, cable_y[1] - cable_y[0], cable_z[1] - cable_z[0]]);
+}
+
+module access_hole() {
+    translate([access_hole[0], access_hole[1], floor_t + 1])
+        cylinder(d = access_d, h = 200, $fn = 32);
 }
 
 module vents() {
@@ -174,6 +196,7 @@ module enclosure() {
         screen_holes();
         base_cuts();
         cable_opening();
+        access_hole();
         vents();
     }
 }
